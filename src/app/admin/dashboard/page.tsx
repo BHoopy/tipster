@@ -184,6 +184,12 @@ export default function Dashboard() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <Link
+                            href={`/admin/predictions/${pred.id}/edit`}
+                            className="btn btn-ghost btn-sm"
+                          >
+                            ✏ Edit
+                          </Link>
                           <button
                             onClick={() => handleDelete(pred.id, pred.match || pred.title)}
                             disabled={deleting === pred.id}
