@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronDown, ChevronUp, Copy, Check, Clock, Trophy, Zap, ShieldCheck, CheckCircle2, XCircle, Info, ListPlus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Clock, Zap, CheckCircle2, XCircle, ListPlus } from 'lucide-react';
 import styles from './page.module.css';
 import AuthModal from '@/components/AuthModal';
 
@@ -30,13 +30,6 @@ interface Prediction {
   booking_codes?: { platform: string; code: string; odds?: string }[];
   created_at?: any;
 }
-
-const PLATFORMS: Record<string, string> = {
-  betway: '/betway.webp',
-  sportybet: '/sportybet_logo.webp',
-  bet9ja: '/bet9ja.webp',
-  msport: '/msport.webp',
-};
 
 function StatusBadge({ result, size = 'md' }: { result?: string, size?: 'sm' | 'md' }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
@@ -62,7 +55,7 @@ function StatusBadge({ result, size = 'md' }: { result?: string, size?: 'sm' | '
 }
 
 export default function Home() {
-  const { user, isAdmin, loading: authLoading, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -91,7 +84,11 @@ export default function Home() {
             </Link>
             <nav className={styles.nav}>
               {isAdmin && <Link href="/admin" className="btn btn-ghost btn-sm">Admin</Link>}
-              {user ? <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button> : <button onClick={() => setIsAuthModalOpen(true)} className="btn btn-primary btn-sm">Sign In</button>}
+              {user ? (
+                <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button>
+              ) : (
+                <button onClick={() => setIsAuthModalOpen(true)} className="btn btn-primary btn-sm">Sign In</button>
+              )}
             </nav>
           </div>
         </div>
@@ -137,7 +134,7 @@ export default function Home() {
                   </div>
 
                   {expandedId === ticket.id && (
-                    <div className={styles.bookingExpand} style={{ padding: '0 1.5rem 1.5rem' }}>
+                    <div className={styles.bookingExpand}>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
                         {ticket.selections?.map((sel, idx) => (
                           <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem', background: 'var(--color-surface)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>

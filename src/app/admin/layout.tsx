@@ -10,7 +10,6 @@ import styles from './admin.module.css';
 const navItems = [
   { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
   { href: '/admin/predictions/new', icon: '➕', label: 'New Prediction' },
-  { href: '/admin/categories', icon: '🏷️', label: 'Categories' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -18,14 +17,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, loading, isAdmin } = useAuth();
 
-  // Route Guard: Redirect non-admins to home
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
       router.push('/');
     }
   }, [user, loading, isAdmin, router]);
 
-  // Show loading state while checking permissions
   if (loading) {
     return (
       <div className={styles.loading} style={{ height: '100vh', background: 'var(--color-bg)' }}>
@@ -35,7 +32,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Prevent flash of admin content for non-admins
   if (!user || !isAdmin) {
     return null;
   }
@@ -45,7 +41,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className={styles.adminLayout}>
-      {/* ─── Sidebar ─────────────────────────────────────────────── */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <Image src="/leeman.png" alt="Logo" width={32} height={32} className={styles.sidebarLogoImg} />
@@ -76,7 +71,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* ─── Main Content ────────────────────────────────────────── */}
       <div className={styles.main}>
         <header className={styles.topbar}>
           <span className={styles.topbarTitle}>

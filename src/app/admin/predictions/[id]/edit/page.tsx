@@ -52,17 +52,11 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
     
     // Automatically calculate ticket result
     let finalResult: 'win' | 'lose' | 'pending' = 'pending';
-    
-    // Rule: If ANY individual pick is 'lose', the whole ticket is 'lose'
     if (updated.some(s => s.result === 'lose')) {
       finalResult = 'lose';
-    } 
-    // Rule: If ALL individual picks are 'win', the whole ticket is 'win'
-    else if (updated.every(s => s.result === 'win')) {
+    } else if (updated.every(s => s.result === 'win')) {
       finalResult = 'win';
-    } 
-    // Otherwise, if there's no loss but some are still pending, it's 'pending'
-    else {
+    } else {
       finalResult = 'pending';
     }
     
