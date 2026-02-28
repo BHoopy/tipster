@@ -7,27 +7,13 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
+import { ChevronDown, ChevronUp, Copy, Check, Clock, Trophy, Zap, ShieldCheck } from 'lucide-react';
 import styles from './page.module.css';
 import AuthModal from '@/components/AuthModal';
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface BookingCode {
-  platform: string;
-  code: string;
-  odds?: string;
-}
 
 interface Prediction {
   id: string;
   title: string;
-  content?: string;
-  media_url?: string;
-  category_id: string;
   match?: string;
   league?: string;
   pick?: string;
@@ -35,477 +21,267 @@ interface Prediction {
   time?: string;
   result?: 'win' | 'lose' | 'pending';
   is_premium?: boolean;
-  booking_codes?: BookingCode[];
+  booking_codes?: { platform: string; code: string; odds?: string }[];
   created_at?: any;
 }
 
-const DUMMY_PREDICTIONS: Prediction[] = [
-  {
-    id: 'd1', title: 'Man City vs Chelsea', match: 'Man City vs Chelsea',
-    league: 'Premier League', pick: 'Man City Win', odds: '1.65',
-    time: '17:30', result: 'win', category_id: 'football', is_premium: false,
-    booking_codes: [
-      { platform: 'betway', code: 'LMN-BW-291543', odds: '1.65' },
-      { platform: 'sportybet', code: 'LMSPY-4923X', odds: '1.68' },
-    ],
-  },
-  {
-    id: 'd2', title: 'Real Madrid vs Atletico', match: 'Real Madrid vs Atletico',
-    league: 'La Liga', pick: 'GG (Both Teams Score)', odds: '1.80',
-    time: '20:00', result: 'win', category_id: 'football', is_premium: false,
-    booking_codes: [
-      { platform: 'bet9ja', code: 'B9JA-LM-88874', odds: '1.80' },
-    ],
-  },
-  {
-    id: 'd3', title: 'PSG vs Marseille', match: 'PSG vs Marseille',
-    league: 'Ligue 1', pick: 'Over 2.5 Goals', odds: '1.55',
-    time: '21:00', result: 'pending', category_id: 'football', is_premium: false,
-    booking_codes: [
-      { platform: 'sportybet', code: 'SPY-LEEM-6671', odds: '1.55' },
-      { platform: 'betway', code: 'BW-LEEM-3310', odds: '1.52' },
-    ],
-  },
-  {
-    id: 'd4', title: 'Arsenal vs Tottenham', match: 'Arsenal vs Tottenham',
-    league: 'Premier League', pick: 'Arsenal Win & Over 1.5', odds: '2.10',
-    time: '14:00', result: 'lose', category_id: 'football', is_premium: true,
-    booking_codes: [
-      { platform: 'betway', code: 'LM-ARS-5572', odds: '2.10' },
-      { platform: 'msport', code: 'MS-LEEMAN-4412', odds: '2.15' },
-    ],
-  },
-  {
-    id: 'd5', title: 'Bayern vs Dortmund', match: 'Bayern vs Dortmund',
-    league: 'Bundesliga', pick: 'Over 3.5 Goals', odds: '2.00',
-    time: '18:30', result: 'pending', category_id: 'football', is_premium: false,
-    booking_codes: [
-      { platform: 'sportybet', code: 'SPYLM-7721K', odds: '2.00' },
-    ],
-  },
-  {
-    id: 'd6', title: 'Juventus vs Inter', match: 'Juventus vs Inter',
-    league: 'Serie A', pick: 'Draw', odds: '3.40',
-    time: '19:45', result: 'win', category_id: 'football', is_premium: true,
-    booking_codes: [
-      { platform: 'betway', code: 'BW-JUVE-9921', odds: '3.40' },
-      { platform: 'bet9ja', code: 'B9JA-JUV-8830', odds: '3.35' },
-      { platform: 'sportybet', code: 'SPY-JUVE-1122', odds: '3.45' },
-    ],
-  },
-];
-
-const PLATFORM_META: Record<string, { label: string; cls: string }> = {
-  betway: { label: 'Betway', cls: 'betway' },
-  sportybet: { label: 'SportyBet', cls: 'sportybet' },
-  bet9ja: { label: 'Bet9ja', cls: 'bet9ja' },
-  msport: { label: 'MSport', cls: 'msport' },
+const PLATFORMS: Record<string, string> = {
+  betway: '/betway.webp',
+  sportybet: '/sportybet_logo.webp',
+  bet9ja: '/bet9ja.webp', // Assuming paths, fallback handles missing
+  msport: '/msport.webp',
 };
 
-function BookingCodeCard({ code, platform, odds }: { code: string; platform: string; odds?: string }) {
-  const [copied, setCopied] = useState(false);
-  const meta = PLATFORM_META[platform] || { label: platform, cls: 'sportybet' };
+function ResultBadge({ result }: { result?: string }) {
+  const styles_map: Record<string, { label: string; bg: string; color: string }> = {
+    win: { label: 'WON', bg: 'rgba(0, 200, 81, 0.15)', color: '#00c851' },
+    lose: { label: 'LOST', bg: 'rgba(255, 59, 48, 0.15)', color: '#ff3b30' },
+    pending: { label: 'PENDING', bg: 'rgba(247, 166, 0, 0.15)', color: '#f7a600' },
+  };
+  const rs = styles_map[result || 'pending'] || styles_map.pending;
+  return (
+    <span style={{ 
+      background: rs.bg, 
+      color: rs.color, 
+      padding: '0.35rem 0.75rem', 
+      borderRadius: '6px', 
+      fontSize: '0.65rem', 
+      fontWeight: 800,
+      letterSpacing: '0.04em',
+      border: `1px solid ${rs.color}20`
+    }}>
+      {rs.label}
+    </span>
+  );
+}
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+function BookingItem({ code, platform, odds }: { code: string; platform: string; odds?: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className={`${styles.bookingCard} ${styles[meta.cls]}`}>
+    <div className={styles.bookingCard}>
       <div className={styles.bookingHeader}>
         <div className={styles.bookingPlatform}>
-          <div className={`${styles.bookingLogo} ${styles[meta.cls]}`}>
-            {platform === 'sportybet' ? (
-              <Image
-                src="/sportybet_logo.webp"
-                alt="SportyBet"
-                width={28}
-                height={28}
-                className={styles.platformIconImg}
-              />
-            ) : platform === 'betway' ? (
-              <Image
-                src="/betway.webp"
-                alt="Betway"
-                width={28}
-                height={28}
-                className={styles.platformIconImg}
-              />
-            ) : (
-              meta.label.slice(0, 2).toUpperCase()
-            )}
-          </div>
-          <span className={styles.bookingPlatformName}>{meta.label}</span>
+          {PLATFORMS[platform] ? (
+            <Image src={PLATFORMS[platform]} alt={platform} width={20} height={20} className={styles.platformIcon} />
+          ) : (
+            <div style={{ width: 20, height: 20, background: 'var(--color-surface-2)', borderRadius: 4 }} />
+          )}
+          <span style={{ textTransform: 'capitalize' }}>{platform}</span>
         </div>
-        {odds && <span className={styles.bookingOdds}>@ {odds}</span>}
+        {odds && <span style={{ color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.85rem' }}>@ {odds}</span>}
       </div>
-      <div>
-        <span className={styles.bookingLabel}>Booking Code</span>
-        <div className={styles.bookingCodeBox}>
-          <span className={styles.bookingCode}>{code}</span>
-          <button
-            onClick={handleCopy}
-            className={`${styles.copyBtn} ${copied ? styles.copied : ''}`}
-          >
-            {copied ? '✓ Copied' : '📋 Copy'}
-          </button>
-        </div>
+      <div className={styles.bookingCodeBox}>
+        <span className={styles.bookingCode}>{code}</span>
+        <button onClick={handleCopy} className={styles.copyBtn}>
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+        </button>
       </div>
     </div>
   );
 }
 
-function ResultBadge({ result }: { result?: 'win' | 'lose' | 'pending' | string }) {
-  if (result === 'win') return (
-    <span className={`${styles.badge} ${styles.badgeWin}`} style={{ background: 'rgba(0,200,81,0.12)', color: '#00c851', border: '1px solid rgba(0,200,81,0.25)', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.73rem', fontWeight: 700 }}>
-      ✔ Won
-    </span>
-  );
-  if (result === 'lose') return (
-    <span style={{ background: 'rgba(255,59,48,0.12)', color: '#ff3b30', border: '1px solid rgba(255,59,48,0.25)', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.73rem', fontWeight: 700, display: 'inline-block' }}>
-      ✖ Lost
-    </span>
-  );
-  return (
-    <span style={{ background: 'rgba(247,166,0,0.12)', color: '#f7a600', border: '1px solid rgba(247,166,0,0.25)', padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.73rem', fontWeight: 700, display: 'inline-block' }}>
-      ⏳ Pending
-    </span>
-  );
-}
-
 export default function Home() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { user, isAdmin, loading: authLoading, logout } = useAuth();
   const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [loadingObj, setLoadingObj] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
+  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  const { user, loading, isAdmin, logout } = useAuth();
+  const [filter, setFilter] = useState<'all' | 'vip'>('all');
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
-        const categoriesSnap = await getDocs(
-          query(collection(db, 'categories'), orderBy('name', 'asc'))
-        );
-        setCategories(categoriesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Category[]);
-
-        const predictionsSnap = await getDocs(
-          query(collection(db, 'predictions'), orderBy('created_at', 'desc'))
-        );
-        const preds = predictionsSnap.docs.map(d => ({ id: d.id, ...d.data() })) as Prediction[];
-        setPredictions(preds);
+        const q = query(collection(db, 'predictions'), orderBy('created_at', 'desc'));
+        const snap = await getDocs(q);
+        setPredictions(snap.docs.map(d => ({ id: d.id, ...d.data() })) as Prediction[]);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error(err);
       } finally {
-        setLoadingObj(false);
+        setLoading(false);
       }
-    }
+    };
     fetchData();
   }, []);
 
-  const basePredictions = loadingObj
-    ? []
-    : predictions.length > 0
-      ? predictions
-      : DUMMY_PREDICTIONS;
-
-  const displayPredictions = activeTab === 'vip'
-    ? basePredictions.filter(p => p.is_premium)
-    : basePredictions;
-
-  const wins = displayPredictions.filter(p => p.result === 'win').length;
-  const total = displayPredictions.filter(p => p.result !== 'pending').length || 1;
-  const winRate = Math.round((wins / total) * 100);
+  const displayPredictions = filter === 'vip' 
+    ? predictions.filter(p => p.is_premium)
+    : predictions;
 
   return (
     <main className={styles.main}>
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
-      {/* ─── Header ─────────────────────────────────────────────────────── */}
+      {/* ─── Header ────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
           <div className={styles.headerInner}>
             <Link href="/" className={styles.logoWrap}>
-              <Image
-                src="/leeman.png"
-                alt="Leeman Tips"
-                width={36}
-                height={36}
-                className={styles.logoImg}
-              />
+              <Image src="/leeman.png" alt="Leeman Tips" width={34} height={34} className={styles.logoImg} />
               <span className={styles.logoText}>Leeman Tips</span>
             </Link>
 
             <nav className={styles.nav}>
-              <Link href="/" className={`${styles.navLink} ${activeTab === 'all' ? styles.active : ''}`}>Home</Link>
-            </nav>
-
-            <div className={styles.navActions}>
-              {!loading && (
-                <>
-                  {isAdmin && (
-                    <Link href="/admin" className="btn btn-ghost btn-sm">
-                      ⚙ Admin
-                    </Link>
-                  )}
-                  {user ? (
-                    <>
-                      {user.photoURL && (
-                        <img src={user.photoURL} alt="avatar" className={styles.userAvatar} />
-                      )}
-                      <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button>
-                    </>
-                  ) : (
-                    <button onClick={() => setIsAuthModalOpen(true)} className="btn btn-primary btn-sm">
-                      Sign In
-                    </button>
-                  )}
-                </>
+              {!authLoading && isAdmin && (
+                <Link href="/admin" className="btn btn-ghost btn-sm">Admin</Link>
               )}
-            </div>
+              {user ? (
+                <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button>
+              ) : (
+                <button onClick={() => setIsAuthModalOpen(true)} className="btn btn-primary btn-sm">Sign In</button>
+              )}
+            </nav>
           </div>
         </div>
       </header>
 
-      {/* ─── Hero ────────────────────────────────────────────────────────── */}
+      {/* ─── Hero ──────────────────────────────────────────────── */}
       <section className={styles.hero}>
         <div className="container">
-          <div className={styles.heroContent}>
-            <div className={styles.heroTag}>
-              <span className={styles.heroDot} />
-              Daily Tips Updated
-            </div>
-            <h1>
-              Win More with <span>Leeman Tips</span>
-            </h1>
-            <p>
-              Expert football predictions, booking codes &amp; daily betting tips shared directly by Leeman. Free &amp; premium picks every day.
-            </p>
-            <div className={styles.heroActions}>
-              <button onClick={!user ? () => setIsAuthModalOpen(true) : undefined} className="btn btn-primary btn-lg">
-                🎯 Get Free Tips
-              </button>
-              <Link href="/category/vip" className="btn btn-ghost btn-lg">
-                ⚡ VIP Picks
-              </Link>
-            </div>
-            <div className={styles.heroStats}>
-              <div className={styles.heroStat}>
-                <span className={styles.heroStatValue}>{winRate}%</span>
-                <span className={styles.heroStatLabel}>Win Rate</span>
-              </div>
-              <div className={styles.heroStat}>
-                <span className={styles.heroStatValue}>{displayPredictions.length}+</span>
-                <span className={styles.heroStatLabel}>Tips Today</span>
-              </div>
-              <div className={styles.heroStat}>
-                <span className={styles.heroStatValue}>5K+</span>
-                <span className={styles.heroStatLabel}>Followers</span>
-              </div>
-              <div className={styles.heroStat}>
-                <span className={styles.heroStatValue}>Daily</span>
-                <span className={styles.heroStatLabel}>Updates</span>
-              </div>
-            </div>
+          <div className={styles.heroTag}>
+            <span className={styles.heroDot} />
+            Live Predictions
+          </div>
+          <h1>Winning <span>Starts</span> Here.</h1>
+          <p>Get daily high-accuracy football tips and booking codes from expert analysts.</p>
+          <div className={styles.heroActions}>
+            <button 
+              onClick={() => setFilter('all')} 
+              className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}
+            >
+              Today's Free Tips
+            </button>
+            <button 
+              onClick={() => setFilter('vip')} 
+              className={`btn ${filter === 'vip' ? 'btn-secondary' : 'btn-ghost'}`}
+            >
+              ⚡ VIP Predictions
+            </button>
           </div>
         </div>
       </section>
 
-      {/* ─── Navigation Tabs ───────────────────────────────────────────── */}
-      <div className={styles.categoryBar}>
-        <div className="container" style={{ padding: 0 }}>
-          <div className={styles.categoryTabs}>
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`${styles.categoryTab} ${activeTab === 'all' ? styles.activeTab : ''}`}
-            >
-              ⚽ Today's Tips
-            </button>
-            <button
-              onClick={() => setActiveTab('vip')}
-              className={`${styles.categoryTab} ${activeTab === 'vip' ? styles.activeTab : ''}`}
-            >
-              ⚡ VIP Tips
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Main Content ────────────────────────────────────────────────── */}
-      <section className={styles.content}>
+      {/* ─── Main Content ────────────────────────────────────────── */}
+      <section className={styles.predictionSection}>
         <div className="container">
-          <div className={styles.contentLayout}>
-            {/* Main Column */}
-            <div>
-              {/* Predictions Table */}
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Today's Predictions</h2>
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                  {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </span>
-              </div>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              {filter === 'vip' ? <Zap size={24} color="var(--color-secondary)" /> : <Trophy size={24} color="var(--color-primary)" />}
+              {filter === 'all' ? "Today's Predictions" : "VIP Expert Picks"}
+            </h2>
+          </div>
 
-              <div className={styles.predictionCard}>
-                <div className={styles.predTableWrap}>
-                  <table className={styles.predTable}>
-                    <thead>
-                      <tr>
-                        <th>Match</th>
-                        <th>Pick / Tip</th>
-                        <th>Odds</th>
-                        <th>Time</th>
-                        <th>Result</th>
-                        <th>Codes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loadingObj ? (
-                        Array.from({ length: 4 }).map((_, i) => (
-                          <tr key={i}>
-                            <td colSpan={6}>
-                              <div className={`skeleton loadingRow`} style={{ height: 48, borderRadius: 6 }} />
-                            </td>
-                          </tr>
-                        ))
-                      ) : displayPredictions.length === 0 ? (
-                        <tr>
-                          <td colSpan={6}>
-                            <div className={styles.emptyState}>
-                              <div className={styles.emptyStateIcon}>⚽</div>
-                              <h3>No predictions yet</h3>
-                              <p>Check back soon for today's tips!</p>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        displayPredictions.map(pred => (
-                          <React.Fragment key={pred.id}>
-                            <tr
-                              onClick={() => setExpandedId(expandedId === pred.id ? null : pred.id)}
-                              style={{ cursor: pred.booking_codes?.length ? 'pointer' : 'default' }}
-                            >
-                              <td className={styles.matchCell}>
-                                <div className={styles.matchTeams}>
-                                  {pred.match || pred.title}
-                                  {pred.is_premium && (
-                                    <span style={{ marginLeft: '0.5rem', fontSize: '0.65rem', background: 'rgba(247,166,0,0.15)', color: '#f7a600', border: '1px solid rgba(247,166,0,0.3)', padding: '0.15rem 0.4rem', borderRadius: '999px', fontWeight: 700, verticalAlign: 'middle' }}>
-                                      ⚡ VIP
-                                    </span>
-                                  )}
-                                </div>
-                                <div className={styles.matchMeta}>
-                                  ⚽ <span className={styles.matchLeague}>{pred.league || 'Football'}</span>
-                                </div>
-                              </td>
-                              <td className={styles.pickCell}>{pred.pick || pred.content?.substring(0, 40)}</td>
-                              <td className={styles.oddsCell}>{pred.odds || '—'}</td>
-                              <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', whiteSpace: 'nowrap' }}>
-                                {pred.time || (pred.created_at?.toDate?.() ? new Date(pred.created_at.toDate()).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—')}
-                              </td>
-                              <td><ResultBadge result={pred.result || 'pending'} /></td>
-                              <td>
-                                {pred.booking_codes?.length ? (
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 600, cursor: 'pointer' }}>
-                                    {expandedId === pred.id ? '▲ Hide' : `▼ ${pred.booking_codes.length} code${pred.booking_codes.length > 1 ? 's' : ''}`}
-                                  </span>
-                                ) : (
-                                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>—</span>
-                                )}
-                              </td>
-                            </tr>
-                            {expandedId === pred.id && pred.booking_codes?.length && (
-                              <tr>
-                                <td colSpan={6} style={{ padding: '0 1rem 1rem', background: 'var(--color-surface)' }}>
-                                  <div style={{ paddingTop: '0.75rem' }}>
-                                    <div className={styles.bookingLabel} style={{ marginBottom: '0.625rem' }}>
-                                      📌 Booking Codes for {pred.match || pred.title}
-                                    </div>
-                                    <div className={styles.bookingGrid}>
-                                      {pred.booking_codes.map((bc, i) => (
-                                        <BookingCodeCard key={i} code={bc.code} platform={bc.platform} odds={bc.odds} />
-                                      ))}
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+          <div className={styles.predictionList}>
+            {loading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: '80px', borderRadius: '12px' }} />
+              ))
+            ) : displayPredictions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--color-text-muted)' }}>
+                <p>No predictions posted yet for this category.</p>
               </div>
-            </div>
-
-            {/* Sidebar */}
-            <aside className={styles.sidebar}>
-              <div className={styles.sideCard}>
-                <div className={styles.sideCardHeader}>📊 Performance</div>
-                <div className={styles.sideCardBody}>
-                  <div className={styles.winRateBar}>
-                    <div className={styles.winRateLabel}>
-                      <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>Win Rate</span>
-                      <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{winRate}%</span>
-                    </div>
-                    <div className={styles.winRateTrack}>
-                      <div className={styles.winRateFill} style={{ width: `${winRate}%` }} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.875rem' }}>
-                    {[
-                      { label: 'Won', value: wins, color: 'var(--color-win)' },
-                      { label: 'Lost', value: displayPredictions.filter(p => p.result === 'lose').length, color: 'var(--color-lose)' },
-                      { label: 'Pending', value: displayPredictions.filter(p => p.result === 'pending').length, color: 'var(--color-pending)' },
-                      { label: 'Total', value: displayPredictions.length, color: 'var(--color-text-secondary)' },
-                    ].map(stat => (
-                      <div key={stat.label} style={{ background: 'var(--color-surface)', borderRadius: 8, padding: '0.625rem 0.75rem', textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.375rem', fontWeight: 800, color: stat.color, fontFamily: 'var(--font-display)', lineHeight: 1 }}>{stat.value}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{stat.label}</div>
+            ) : (
+              displayPredictions.map(pred => (
+                <div key={pred.id} className={styles.predictionItem}>
+                  {/* Desktop & Mobile Main Row */}
+                  <div 
+                    className={styles.predictionMain}
+                    onClick={() => setExpandedId(expandedId === pred.id ? null : pred.id)}
+                  >
+                    <div className={styles.matchInfo}>
+                      <div className={styles.matchTeams}>
+                        {pred.match || pred.title}
+                        {pred.is_premium && <span style={{ marginLeft: '8px', color: 'var(--color-secondary)' }}>⚡</span>}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                      <div className={styles.matchMeta}>
+                        <ShieldCheck size={14} />
+                        <span>{pred.league || 'Football'}</span>
+                      </div>
+                    </div>
 
-              <div style={{ background: 'linear-gradient(135deg, rgba(247,166,0,0.1), rgba(255,107,0,0.08))', border: '1px solid rgba(247,166,0,0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--color-secondary)', marginBottom: '0.375rem' }}>Go VIP</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
-                  Get exclusive tips with higher odds & guaranteed booking codes
-                </p>
-                <Link href="/category/vip" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-                  Upgrade to VIP
-                </Link>
-              </div>
-            </aside>
+                    <div className={styles.pickInfo}>
+                      <span className={styles.pickLabel}>Pick</span>
+                      <span className={styles.pickValue}>{pred.pick || '—'}</span>
+                    </div>
+
+                    <div className={styles.oddsInfo}>
+                      <span className={styles.pickLabel}>Odds</span>
+                      <span className={styles.oddsValue}>{pred.odds || '—'}</span>
+                    </div>
+
+                    <div className={styles.timeInfo}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                        <Clock size={14} />
+                        {pred.time || '—'}
+                      </div>
+                    </div>
+
+                    <div className={styles.statusInfo}>
+                      <ResultBadge result={pred.result} />
+                    </div>
+                  </div>
+
+                  {/* Mobile-only Stats View */}
+                  <div className={styles.mobileStatsRow} onClick={() => setExpandedId(expandedId === pred.id ? null : pred.id)}>
+                    <div className={styles.mobileStat}>
+                      <span className={styles.mobileStatLabel}>Pick</span>
+                      <span className={`${styles.mobileStatValue} ${styles.pick}`}>{pred.pick || '—'}</span>
+                    </div>
+                    <div className={styles.mobileStat}>
+                      <span className={styles.mobileStatLabel}>Odds</span>
+                      <span className={`${styles.mobileStatValue} ${styles.odds}`}>{pred.odds || '—'}</span>
+                    </div>
+                    <div className={styles.mobileStat}>
+                      <span className={styles.mobileStatLabel}>Time</span>
+                      <span className={styles.mobileStatValue}>{pred.time || '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Expanded Booking Codes */}
+                  {expandedId === pred.id && (
+                    <div className={styles.bookingExpand}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--color-text-muted)' }}>
+                        AVAILABLE BOOKING CODES
+                      </h4>
+                      {pred.booking_codes && pred.booking_codes.length > 0 ? (
+                        <div className={styles.bookingGrid}>
+                          {pred.booking_codes.map((bc, idx) => (
+                            <BookingItem key={idx} {...bc} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>No codes provided for this match.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
 
-      {/* ─── Footer ──────────────────────────────────────────────────────── */}
+      {/* ─── Footer ────────────────────────────────────────────── */}
       <footer className={styles.footer}>
         <div className="container">
-          <div className={styles.footerInner}>
-            <div>
-              <div className={styles.logoWrap} style={{ marginBottom: '0.5rem' }}>
-                <Image src="/leeman.png" alt="Leeman Tips" width={24} height={24} className={styles.logoImg} />
-                <span className={styles.logoText} style={{ fontSize: '1rem' }}>Leeman Tips</span>
-              </div>
-              <p className={styles.footerText}>© {new Date().getFullYear()} Leeman Tips. Bet responsibly. 18+</p>
-            </div>
-            <div className={styles.footerLinks}>
-              <Link href="/" className={styles.footerLink}>Home</Link>
-              {!loading && isAdmin && (
-                <Link href="/admin" className={styles.footerLink}>Admin</Link>
-              )}
-            </div>
+          <div className={styles.footerLogo}>
+            <Image src="/leeman.png" alt="Leeman" width={24} height={24} />
+            <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>LEEMAN TIPS</span>
           </div>
+          <div className={styles.footerLinks}>
+            <Link href="/" className={styles.footerLink}>Home</Link>
+            {!authLoading && isAdmin && <Link href="/admin" className={styles.footerLink}>Admin Panel</Link>}
+            <a href="#" className={styles.footerLink}>Telegram</a>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+            &copy; {new Date().getFullYear()} Leeman Tips. Play responsibly. 18+ only.
+          </p>
         </div>
       </footer>
     </main>
