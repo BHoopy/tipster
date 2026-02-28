@@ -209,7 +209,7 @@
   align-items: start;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1024px) {
   .pageGrid {
     grid-template-columns: 1fr;
   }
@@ -350,6 +350,17 @@
 .switch.on .switchThumb { transform: translateX(20px); }
 
 /* ===== BOOKING CODES ===== */
+.bookingCodesSectionTitle {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .bookingCodesSection {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -363,6 +374,15 @@
   gap: 0.75rem;
   align-items: end;
   margin-bottom: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .bookingCodeRow {
+    grid-template-columns: 1fr 1fr;
+  }
+  .removeCodeBtn {
+    grid-column: span 2;
+  }
 }
 
 .removeCodeBtn {
@@ -394,6 +414,55 @@
   transition: all 0.2s;
   margin-top: 0.25rem;
 }
+
+/* ===== DASHBOARD STATS ===== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.statIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statIcon.blue { background: rgba(0, 122, 255, 0.1); color: var(--color-info); }
+.statIcon.green { background: rgba(0, 200, 81, 0.1); color: var(--color-primary); }
+
+.statInfo { display: flex; flex-direction: column; }
+.statLabel { font-size: 0.75rem; color: var(--color-text-muted); font-weight: 600; text-transform: uppercase; }
+.statValue { font-size: 1.5rem; font-weight: 800; color: var(--color-text); }
+
+.dataCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.dataCardHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.dataCardTitle { font-weight: 800; font-size: 0.95rem; }
 
 /* ===== LOADING ===== */
 .loading {

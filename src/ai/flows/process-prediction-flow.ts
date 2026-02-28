@@ -33,7 +33,7 @@ export type PredictionOutput = z.infer<typeof PredictionOutputSchema>;
 
 const processPredictionPrompt = ai.definePrompt({
   name: 'processPredictionPrompt',
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: z.object({ rawText: z.string() }) },
   output: { schema: PredictionOutputSchema },
   prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets.
