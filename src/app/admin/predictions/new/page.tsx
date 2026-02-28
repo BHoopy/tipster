@@ -152,15 +152,15 @@ export default function NewPrediction() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className={styles.pageGrid}>
         <div>
           {/* AI Box */}
-          <div style={{ background: 'linear-gradient(135deg, #1e2130, #13161e)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div className={styles.aiBox}>
+            <div className={styles.aiBoxHeader}>
               <Sparkles size={18} color="var(--color-primary)" />
               <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>AI Multi-Pick Extractor</h2>
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className={styles.aiBoxBody}>
               <textarea
                 className="input"
                 style={{ flex: 1, minHeight: '100px' }}
@@ -200,8 +200,8 @@ export default function NewPrediction() {
                         <button type="button" onClick={() => removeSelection(i)} disabled={selections.length === 1} style={{ color: 'var(--color-danger)' }}><Trash2 size={16} /></button>
                       </div>
                       <div className={styles.formGrid}>
-                        <input type="text" className="input" placeholder="Teams (e.g. Man Utd vs Liverpool)" value={s.match} onChange={e => updateSelection(i, 'match', e.target.value)} required />
-                        <input type="text" className="input" placeholder="Pick (e.g. Home Win)" value={s.pick} onChange={e => updateSelection(i, 'pick', e.target.value)} required />
+                        <input type="text" className="input" placeholder="Teams" value={s.match} onChange={e => updateSelection(i, 'match', e.target.value)} required />
+                        <input type="text" className="input" placeholder="Pick" value={s.pick} onChange={e => updateSelection(i, 'pick', e.target.value)} required />
                         <input type="text" className="input" placeholder="Odds" value={s.odds} onChange={e => updateSelection(i, 'odds', e.target.value)} />
                         <input type="text" className="input" placeholder="League" value={s.league} onChange={e => updateSelection(i, 'league', e.target.value)} />
                       </div>
@@ -228,10 +228,10 @@ export default function NewPrediction() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>{loading ? 'Saving...' : 'Publish Ticket'}</button>
                 <label className={styles.switchRow} onClick={() => setForm({...form, is_premium: !form.is_premium})}>
-                  <div className={styles.switchLabel}><span className={styles.switchLabelText}>⚡ VIP</span></div>
+                  <div style={{ flex: 1 }}><span style={{ fontWeight: 600, fontSize: '0.9rem' }}>⚡ VIP</span></div>
                   <div className={`${styles.switch} ${form.is_premium ? styles.on : ''}`}><div className={styles.switchThumb} /></div>
                 </label>
               </div>
@@ -240,17 +240,18 @@ export default function NewPrediction() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className={styles.formCard} style={{ padding: '1.5rem' }}>
+          <div className={styles.formCard}>
             <h2 className={styles.bookingCodesSectionTitle}>🖼️ Media</h2>
             {previewUrl ? (
               <div style={{ position: 'relative' }}>
-                <img src={previewUrl} style={{ width: '100%', borderRadius: 8 }} />
-                <button type="button" onClick={() => setPreviewUrl('')} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', borderRadius: '50%', color: '#fff' }}><X size={16} /></button>
+                <img src={previewUrl} style={{ width: '100%', borderRadius: 8 }} alt="Preview" />
+                <button type="button" onClick={() => { setPreviewUrl(''); setMediaFile(null); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', borderRadius: '50%', color: '#fff', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
               </div>
             ) : (
               <label className={styles.uploadZone}>
-                <ListPlus size={32} />
+                <ListPlus size={32} className={styles.uploadIcon} />
                 <div className={styles.uploadText}>Upload Media</div>
+                <div className={styles.uploadHint}>Image or Video</div>
                 <input type="file" accept="image/*,video/*" onChange={handleFile} style={{ display: 'none' }} />
               </label>
             )}

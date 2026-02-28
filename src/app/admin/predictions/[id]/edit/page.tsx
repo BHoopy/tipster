@@ -85,11 +85,11 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
     <div>
       <div className={styles.pageHeader}>
         <button onClick={() => router.back()} className={styles.backLink}><ChevronLeft size={16} /> Back</button>
-        <h1 className={styles.pageTitle}>Edit Ticket Results</h1>
+        <h1 className={styles.pageTitle}>Edit Ticket</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
+        <div className={styles.pageGrid}>
           <div className={styles.formCard}>
             <h2 className={styles.bookingCodesSectionTitle}>🏆 Individual Match Outcomes</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
@@ -99,7 +99,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {selections.map((s, i) => (
                 <div key={i} style={{ border: '1px solid var(--color-border)', borderRadius: '10px', padding: '1.25rem', background: 'var(--color-surface)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <div>
                       <div style={{ fontWeight: 800 }}>{s.match}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{s.pick} @ {s.odds}</div>
@@ -134,7 +134,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
             </div>
 
             <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Ticket Final Status:</span>
                 <span style={{ 
                   background: form.result === 'win' ? 'rgba(0,200,81,0.1)' : form.result === 'lose' ? 'rgba(255,59,48,0.1)' : 'rgba(247,166,0,0.1)',
@@ -165,7 +165,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
               <input type="text" className="input" value={form.total_odds} onChange={e => setForm({...form, total_odds: e.target.value})} />
             </div>
             <label className={styles.switchRow} onClick={() => setForm({...form, is_premium: !form.is_premium})}>
-              <div className={styles.switchLabel}><span className={styles.switchLabelText}>⚡ VIP Ticket</span></div>
+              <div style={{ flex: 1 }}><span style={{ fontWeight: 600, fontSize: '0.9rem' }}>⚡ VIP Ticket</span></div>
               <div className={`${styles.switch} ${form.is_premium ? styles.on : ''}`}><div className={styles.switchThumb} /></div>
             </label>
           </div>

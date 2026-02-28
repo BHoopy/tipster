@@ -174,6 +174,7 @@
 .content {
   padding: 2rem;
   flex: 1;
+  overflow-y: auto;
 }
 
 /* ===== PAGE HEADER ===== */
@@ -198,6 +199,20 @@
   font-size: 0.875rem;
   color: var(--color-text-muted);
   margin-top: 0.25rem;
+}
+
+/* ===== LAYOUT GRID ===== */
+.pageGrid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .pageGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== STATS GRID ===== */
@@ -236,27 +251,12 @@
   flex-shrink: 0;
 }
 
-.statIcon.green {
-  background: rgba(0, 200, 81, 0.12);
-}
+.statIcon.green { background: rgba(0, 200, 81, 0.12); }
+.statIcon.amber { background: rgba(247, 166, 0, 0.12); }
+.statIcon.blue { background: rgba(0, 122, 255, 0.12); }
+.statIcon.red { background: rgba(255, 59, 48, 0.12); }
 
-.statIcon.amber {
-  background: rgba(247, 166, 0, 0.12);
-}
-
-.statIcon.blue {
-  background: rgba(0, 122, 255, 0.12);
-}
-
-.statIcon.red {
-  background: rgba(255, 59, 48, 0.12);
-}
-
-.statInfo {
-  flex: 1;
-  min-width: 0;
-}
-
+.statInfo { flex: 1; min-width: 0; }
 .statLabel {
   font-size: 0.75rem;
   color: var(--color-text-muted);
@@ -273,13 +273,6 @@
   color: var(--color-text);
   line-height: 1;
   letter-spacing: -0.02em;
-}
-
-.statChange {
-  font-size: 0.75rem;
-  color: var(--color-primary);
-  font-weight: 600;
-  margin-top: 0.25rem;
 }
 
 /* ===== DATA TABLE ===== */
@@ -313,14 +306,20 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: 2rem;
-  max-width: 760px;
+  padding: 1.5rem;
+  width: 100%;
 }
 
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .formGroup {
@@ -356,12 +355,39 @@
   box-shadow: 0 0 0 3px rgba(0, 200, 81, 0.1);
 }
 
+/* ===== AI BOX ===== */
+.aiBox {
+  background: linear-gradient(135deg, #1e2130, #13161e);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.aiBoxHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.aiBoxBody {
+  display: flex;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .aiBoxBody {
+    flex-direction: column;
+  }
+}
+
 /* ===== BOOKING CODE INPUTS ===== */
 .bookingCodesSection {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .bookingCodesSectionTitle {
@@ -382,6 +408,16 @@
   margin-bottom: 0.75rem;
 }
 
+@media (max-width: 640px) {
+  .bookingCodeRow {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bookingCodeRow > *:last-child {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
 .removeCodeBtn {
   height: 40px;
   min-width: 40px;
@@ -397,11 +433,6 @@
   transition: all 0.2s;
   padding: 0;
   flex-shrink: 0;
-}
-
-.removeCodeBtn:hover {
-  background: rgba(255, 59, 48, 0.2);
-  border-color: var(--color-danger);
 }
 
 .addCodeBtn {
@@ -420,12 +451,6 @@
   margin-top: 0.25rem;
 }
 
-.addCodeBtn:hover {
-  background: var(--color-primary-glow);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
 /* ===== SWITCH ===== */
 .switchRow {
   display: flex;
@@ -436,24 +461,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-}
-
-.switchLabel {
-  flex: 1;
-}
-
-.switchLabelText {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--color-text);
-  display: block;
-}
-
-.switchLabelDesc {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  display: block;
-  margin-top: 0.1rem;
 }
 
 .switch {
@@ -467,11 +474,7 @@
   border: 1px solid var(--color-border);
 }
 
-.switch.on {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
+.switch.on { background: var(--color-primary); border-color: var(--color-primary); }
 .switchThumb {
   position: absolute;
   top: 2px;
@@ -483,10 +486,7 @@
   transition: transform 0.2s;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-
-.switch.on .switchThumb {
-  transform: translateX(20px);
-}
+.switch.on .switchThumb { transform: translateX(20px); }
 
 /* ===== FILE UPLOAD ===== */
 .uploadZone {
@@ -497,6 +497,12 @@
   cursor: pointer;
   transition: all 0.2s;
   background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  width: 100%;
 }
 
 .uploadZone:hover {
@@ -504,23 +510,9 @@
   background: var(--color-primary-glow);
 }
 
-.uploadIcon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  opacity: 0.6;
-}
-
-.uploadText {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.25rem;
-  font-weight: 500;
-}
-
-.uploadHint {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
+.uploadIcon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.6; }
+.uploadText { font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.25rem; font-weight: 500; }
+.uploadHint { font-size: 0.75rem; color: var(--color-text-muted); }
 
 /* ===== LOADING ===== */
 .loading {
@@ -542,78 +534,17 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== EMPTY STATE ===== */
-.emptyState {
-  padding: 4rem 2rem;
-  text-align: center;
-  color: var(--color-text-muted);
-}
-
-.emptyStateIcon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.4;
-}
-
-.emptyState h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: 0.5rem;
-}
-
-.emptyState p {
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
-  .sidebar {
-    width: 200px;
-  }
-
-  .content {
-    padding: 1.5rem;
-  }
+  .sidebar { width: 200px; }
+  .content { padding: 1.5rem; }
 }
 
 @media (max-width: 768px) {
-  .adminLayout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
-  }
-
-  .nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 0.5rem;
-  }
-
-  .navSection {
-    display: none;
-  }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .formGroupFull {
-    grid-column: 1;
-  }
-
-  .bookingCodeRow {
-    grid-template-columns: 1fr 1fr;
-  }
+  .adminLayout { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; }
+  .nav { flex-direction: row; overflow-x: auto; padding: 0.5rem; }
+  .navSection { display: none; }
 }
