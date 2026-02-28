@@ -85,15 +85,15 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
     <div>
       <div className={styles.pageHeader}>
         <button onClick={() => router.back()} className={styles.backLink}><ChevronLeft size={16} /> Back</button>
-        <h1 className={styles.pageTitle}>Edit Ticket</h1>
+        <h1 className={styles.pageTitle}>Edit Ticket Results</h1>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
           <div className={styles.formCard}>
-            <h2 className={styles.bookingCodesSectionTitle}>🏆 Match Results</h2>
+            <h2 className={styles.bookingCodesSectionTitle}>🏆 Individual Match Outcomes</h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-              Tick individual outcomes. If all are won, the ticket status updates automatically.
+              Mark each selection. The ticket status updates automatically.
             </p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -115,7 +115,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
                             borderRadius: '8px',
                             border: '1px solid var(--color-border)',
                             background: s.result === r ? 'var(--color-bg-card)' : 'transparent',
-                            borderColor: s.result === r ? 'var(--color-primary)' : 'var(--color-border)',
+                            borderColor: s.result === r ? (r === 'win' ? 'var(--color-primary)' : r === 'lose' ? 'var(--color-danger)' : 'var(--color-secondary)') : 'var(--color-border)',
                             opacity: s.result === r ? 1 : 0.4,
                             display: 'flex',
                             alignItems: 'center',
@@ -149,13 +149,13 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
                 </span>
               </div>
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={saving}>
-                {saving ? 'Saving...' : 'Save Prediction Changes'}
+                {saving ? 'Saving...' : 'Update Ticket'}
               </button>
             </div>
           </div>
 
           <div className={styles.formCard}>
-            <h2 className={styles.bookingCodesSectionTitle}>Ticket Settings</h2>
+            <h2 className={styles.bookingCodesSectionTitle}>Quick Edit</h2>
             <div className={styles.formGroup} style={{ marginBottom: '1rem' }}>
               <label className="label">Ticket Title</label>
               <input type="text" className="input" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />

@@ -42,27 +42,30 @@ const processPredictionPrompt = ai.definePrompt({
   The input often contains multiple matches. For example:
   "Sharing Code 9FL4WS
   28/02/2026 23:15
-  43932 13/06/2026 01:00
   USA - Paraguay
   prematch Home
-  35056 13/06/2026 22:00
   Brazil - Morocco
   prematch Away"
 
   Instructions:
-  1. Identify ALL matches mentioned. In the example above: "USA - Paraguay" is one match (pick: Home), "Brazil - Morocco" is another (pick: Away).
+  1. Identify ALL matches mentioned.
   2. Extract the match date/time if available for each pick.
   3. Extract "Sharing Code" or "Booking Code" and map it to a platform if possible (e.g., SportyBet, Betway, Bet9ja).
-  4. Correct minor spelling errors in team names (e.g., "Man U" to "Man Utd").
+  4. Correct minor spelling errors in team names.
   5. If the text mentions "VIP", "Premium", or high odds, mark is_premium as true.
-  6. Provide a concise summary title for the whole ticket based on the content.
+  6. Provide a concise summary title for the whole ticket.
 
   Raw Text:
   {{{rawText}}}`,
 });
 
 export async function processPrediction(rawText: string): Promise<PredictionOutput> {
-  const { output } = await processPredictionPrompt({ rawText });
-  if (!output) throw new Error('Failed to extract prediction data');
-  return output;
+  try {
+    const { output } = await processPredictionPrompt({ rawText });
+    if (!output) throw new Error('Failed to extract prediction data');
+    return output;
+  } catch (error: any) {
+    console.error('Genkit Error:', error);
+    throw new Error(error.message || 'AI Processing failed. Check your API Key.');
+  }
 }

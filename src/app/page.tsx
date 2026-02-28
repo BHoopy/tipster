@@ -144,7 +144,7 @@ export default function Home() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ color: 'var(--color-secondary)', fontWeight: 800, fontSize: '0.9rem' }}>{sel.pick} <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>@ {sel.odds}</span></div>
-                              <div style={{ marginTop: '0.25rem' }}>
+                              <div style={{ marginTop: '0.25rem', display: 'flex', justifyContent: 'flex-end' }}>
                                 {sel.result === 'win' ? <CheckCircle2 size={16} color="var(--color-primary)" /> : sel.result === 'lose' ? <XCircle size={16} color="var(--color-danger)" /> : <Clock size={16} color="var(--color-text-muted)" />}
                               </div>
                             </div>
