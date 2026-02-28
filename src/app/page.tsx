@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -9,6 +8,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
+import AuthModal from '@/components/AuthModal';
 
 interface Category {
   id: string;
@@ -39,7 +39,6 @@ interface Prediction {
   created_at?: any;
 }
 
-// ─── Dummy data for preview ───────────────────────────────────────────────────
 const DUMMY_PREDICTIONS: Prediction[] = [
   {
     id: 'd1', title: 'Man City vs Chelsea', match: 'Man City vs Chelsea',
@@ -96,7 +95,6 @@ const DUMMY_PREDICTIONS: Prediction[] = [
   },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const PLATFORM_META: Record<string, { label: string; cls: string }> = {
   betway: { label: 'Betway', cls: 'betway' },
   sportybet: { label: 'SportyBet', cls: 'sportybet' },
@@ -184,8 +182,9 @@ export default function Home() {
   const [loadingObj, setLoadingObj] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const { user, loading, isAdmin, signIn, logout } = useAuth();
+  const { user, loading, isAdmin, logout } = useAuth();
 
   useEffect(() => {
     async function fetchData() {
@@ -209,27 +208,24 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Merge real + dummy data for display
   const basePredictions = loadingObj
     ? []
     : predictions.length > 0
       ? predictions
       : DUMMY_PREDICTIONS;
 
-  // Filter based on active tab
   const displayPredictions = activeTab === 'vip'
     ? basePredictions.filter(p => p.is_premium)
     : basePredictions;
 
-
-
-  // Win stats (dummy or real)
   const wins = displayPredictions.filter(p => p.result === 'win').length;
   const total = displayPredictions.filter(p => p.result !== 'pending').length || 1;
   const winRate = Math.round((wins / total) * 100);
 
   return (
     <main className={styles.main}>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+
       {/* ─── Header ─────────────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div className="container">
@@ -265,7 +261,7 @@ export default function Home() {
                       <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button>
                     </>
                   ) : (
-                    <button onClick={signIn} className="btn btn-primary btn-sm">
+                    <button onClick={() => setIsAuthModalOpen(true)} className="btn btn-primary btn-sm">
                       Sign In
                     </button>
                   )}
@@ -291,7 +287,7 @@ export default function Home() {
               Expert football predictions, booking codes &amp; daily betting tips shared directly by Leeman. Free &amp; premium picks every day.
             </p>
             <div className={styles.heroActions}>
-              <button onClick={!user ? signIn : undefined} className="btn btn-primary btn-lg">
+              <button onClick={!user ? () => setIsAuthModalOpen(true) : undefined} className="btn btn-primary btn-lg">
                 🎯 Get Free Tips
               </button>
               <Link href="/category/vip" className="btn btn-ghost btn-lg">
@@ -445,13 +441,10 @@ export default function Home() {
                   </table>
                 </div>
               </div>
-
-
             </div>
 
             {/* Sidebar */}
             <aside className={styles.sidebar}>
-              {/* Win Rate Card */}
               <div className={styles.sideCard}>
                 <div className={styles.sideCardHeader}>📊 Performance</div>
                 <div className={styles.sideCardBody}>
@@ -480,9 +473,6 @@ export default function Home() {
                 </div>
               </div>
 
-
-
-              {/* VIP CTA */}
               <div style={{ background: 'linear-gradient(135deg, rgba(247,166,0,0.1), rgba(255,107,0,0.08))', border: '1px solid rgba(247,166,0,0.2)', borderRadius: 'var(--radius-md)', padding: '1.25rem', textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
                 <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', color: 'var(--color-secondary)', marginBottom: '0.375rem' }}>Go VIP</h3>
