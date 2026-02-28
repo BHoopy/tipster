@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronDown, ChevronUp, Copy, Check, Clock, Trophy, Zap, ShieldCheck, CheckCircle2, XCircle, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, Check, Clock, Trophy, Zap, ShieldCheck, CheckCircle2, XCircle, Info, ListPlus } from 'lucide-react';
 import styles from './page.module.css';
 import AuthModal from '@/components/AuthModal';
 
@@ -187,6 +187,11 @@ export default function Home() {
         <div className="container">
           <div className={styles.footerLogo}><span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>LEEMAN TIPS</span></div>
           <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>&copy; {new Date().getFullYear()} Leeman Tips. Play responsibly. 18+</p>
+          {isAdmin && (
+            <div style={{ marginTop: '1rem' }}>
+              <Link href="/admin" style={{ color: 'var(--color-primary)', fontSize: '0.8rem', fontWeight: 700 }}>Admin Dashboard</Link>
+            </div>
+          )}
         </div>
       </footer>
     </main>
