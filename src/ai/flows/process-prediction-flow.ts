@@ -33,7 +33,7 @@ export type PredictionOutput = z.infer<typeof PredictionOutputSchema>;
 
 const processPredictionPrompt = ai.definePrompt({
   name: 'processPredictionPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: 'googleai/gemini-2.0-flash',
   input: { schema: z.object({ rawText: z.string() }) },
   output: { schema: PredictionOutputSchema },
   prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets, often representing a "bet slip" or "accumulator ticket".
@@ -52,10 +52,10 @@ const processPredictionPrompt = ai.definePrompt({
   Instructions:
   1. Identify ALL matches mentioned. In the example above: "USA - Paraguay" is one match (pick: Home), "Brazil - Morocco" is another (pick: Away).
   2. Extract the match date/time if available for each pick.
-  3. Extract "Sharing Code" or "Booking Code" and map it to a platform if possible (default to "SportyBet" if unknown but looks like a reservation code).
+  3. Extract "Sharing Code" or "Booking Code" and map it to a platform if possible (e.g., SportyBet, Betway, Bet9ja).
   4. Correct minor spelling errors in team names (e.g., "Man U" to "Man Utd").
   5. If the text mentions "VIP", "Premium", or high odds, mark is_premium as true.
-  6. Provide a concise summary title for the whole ticket.
+  6. Provide a concise summary title for the whole ticket based on the content.
 
   Raw Text:
   {{{rawText}}}`,
