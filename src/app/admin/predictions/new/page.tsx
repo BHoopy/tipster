@@ -1,9 +1,12 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { processPrediction } from '@/ai/flows/process-prediction-flow';
+import { Sparkles, Trash2, Plus, Check, X } from 'lucide-react';
 import styles from '../../admin.module.css';
 
 interface Category { id: string; name: string; }
@@ -30,6 +33,8 @@ export default function NewPrediction() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [processingAi, setProcessingAi] = useState(false);
+  const [aiInput, setAiInput] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [bookingCodes, setBookingCodes] = useState<BookingCode[]>([emptyCode()]);
@@ -56,7 +61,39 @@ export default function NewPrediction() {
   const set = (field: string, value: any) =>
     setForm(prev => ({ ...prev, [field]: value }));
 
-  // Booking code helpers
+  const handleAiProcess = async () => {
+    if (!aiInput.trim()) return;
+    setProcessingAi(true);
+    try {
+      const result = await processPrediction(aiInput);
+      setForm(prev => ({
+        ...prev,
+        title: result.title || prev.title,
+        match: result.match || prev.match,
+        league: result.league || prev.league,
+        pick: result.pick || prev.pick,
+        odds: result.odds || prev.odds,
+        time: result.time || prev.time,
+        content: result.content || prev.content,
+        is_premium: result.is_premium ?? prev.is_premium,
+      }));
+
+      if (result.booking_codes && result.booking_codes.length > 0) {
+        setBookingCodes(result.booking_codes.map(bc => ({
+          platform: bc.platform.toLowerCase(),
+          code: bc.code,
+          odds: bc.odds || '',
+        })));
+      }
+      setAiInput('');
+    } catch (err) {
+      console.error(err);
+      alert('AI processing failed. Please fill the form manually.');
+    } finally {
+      setProcessingAi(false);
+    }
+  };
+
   const addCode = () => setBookingCodes(prev => [...prev, emptyCode()]);
   const removeCode = (i: number) => setBookingCodes(prev => prev.filter((_, idx) => idx !== i));
   const updateCode = (i: number, field: keyof BookingCode, value: string) =>
@@ -92,7 +129,6 @@ export default function NewPrediction() {
         mediaUrl = data.secure_url;
       }
 
-      // Filter out empty booking codes
       const codes = bookingCodes.filter(c => c.code.trim() !== '');
 
       await addDoc(collection(db, 'predictions'), {
@@ -113,273 +149,274 @@ export default function NewPrediction() {
 
   return (
     <div>
-      {/* Page Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>New Prediction</h1>
-          <p className={styles.pageSubtitle}>Create a new betting tip with booking codes</p>
+          <p className={styles.pageSubtitle}>Create a new betting tip with AI assistance</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className={styles.formCard}>
-
-          {/* ── Section: Match Info ── */}
-          <div style={{ marginBottom: '1.75rem' }}>
-            <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              ⚽ Match Info
-            </h2>
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label className="label">Match (e.g. Man City vs Chelsea)</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="Team A vs Team B"
-                  value={form.match}
-                  onChange={e => set('match', e.target.value)}
-                  required
-                />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {/* Left Column: Form */}
+        <div>
+          {/* ── AI Assistant Card ── */}
+          <div style={{ background: 'linear-gradient(135deg, #1e2130, #13161e)', border: '1px solid var(--color-primary)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', marginBottom: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--color-primary-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+                <Sparkles size={18} />
               </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">League / Tournament</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Premier League"
-                  value={form.league}
-                  onChange={e => set('league', e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">Pick / Tip</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Over 2.5 Goals"
-                  value={form.pick}
-                  onChange={e => set('pick', e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">Odds</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 1.85"
-                  value={form.odds}
-                  onChange={e => set('odds', e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">Match Time</label>
-                <input
-                  type="text"
-                  className="input"
-                  placeholder="e.g. 20:00"
-                  value={form.time}
-                  onChange={e => set('time', e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">Category</label>
-                <select
-                  className={styles.select}
-                  value={form.category_id}
-                  onChange={e => set('category_id', e.target.value)}
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className="label">Result</label>
-                <select
-                  className={styles.select}
-                  value={form.result}
-                  onChange={e => set('result', e.target.value)}
-                >
-                  {RESULT_OPTIONS.map(o => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.formGroup} style={{ alignSelf: 'end' }}>
-                {/* VIP Toggle */}
-                <label
-                  className={styles.switchRow}
-                  onClick={() => set('is_premium', !form.is_premium)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={styles.switchLabel}>
-                    <span className={styles.switchLabelText}>⚡ VIP / Premium</span>
-                    <span className={styles.switchLabelDesc}>Exclusive paid pick</span>
-                  </div>
-                  <div className={`${styles.switch} ${form.is_premium ? styles.on : ''}`}>
-                    <div className={styles.switchThumb} />
-                  </div>
-                </label>
-              </div>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-text)' }}>AI Quick Fill</h2>
             </div>
-          </div>
-
-          <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0 0 1.75rem' }} />
-
-          {/* ── Section: Booking Codes ── */}
-          <div style={{ marginBottom: '1.75rem' }}>
-            <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              🎰 Booking Codes
-            </h2>
-
-            <div className={styles.bookingCodesSection}>
-              <div className={styles.bookingCodesSectionTitle}>
-                Add booking codes from different platforms
-              </div>
-
-              {bookingCodes.map((bc, i) => (
-                <div key={i} className={styles.bookingCodeRow}>
-                  <div className={styles.formGroup}>
-                    {i === 0 && <label className="label">Platform</label>}
-                    <select
-                      className={styles.select}
-                      value={bc.platform}
-                      onChange={e => updateCode(i, 'platform', e.target.value)}
-                    >
-                      {PLATFORMS.map(p => (
-                        <option key={p.value} value={p.value}>{p.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    {i === 0 && <label className="label">Booking Code</label>}
-                    <input
-                      type="text"
-                      className="input"
-                      placeholder="e.g. LMN-BW-291543"
-                      value={bc.code}
-                      onChange={e => updateCode(i, 'code', e.target.value)}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    {i === 0 && <label className="label">Odds (opt.)</label>}
-                    <input
-                      type="text"
-                      className="input"
-                      placeholder="e.g. 5.20"
-                      value={bc.odds}
-                      onChange={e => updateCode(i, 'odds', e.target.value)}
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeCode(i)}
-                    className={styles.removeCodeBtn}
-                    style={{ marginTop: i === 0 ? '1.5rem' : 0 }}
-                    disabled={bookingCodes.length === 1}
-                    title="Remove"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-
-              <button type="button" onClick={addCode} className={styles.addCodeBtn}>
-                + Add Platform Code
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginBottom: '1rem' }}>
+              Paste your raw pick text here, and the AI will automatically fill the form fields for you.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <textarea
+                className="input"
+                style={{ flex: 1, minHeight: '80px', fontSize: '0.875rem' }}
+                placeholder="e.g. Man City vs Arsenal, Premier League. Pick: Home Win @ 1.85. Booking: LMN-123 (Sportybet)"
+                value={aiInput}
+                onChange={e => setAiInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ height: 'auto', alignSelf: 'stretch' }}
+                onClick={handleAiProcess}
+                disabled={processingAi || !aiInput.trim()}
+              >
+                {processingAi ? '...' : 'Process'}
               </button>
             </div>
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0 0 1.75rem' }} />
+          <form onSubmit={handleSubmit}>
+            <div className={styles.formCard}>
+              <div style={{ marginBottom: '1.75rem' }}>
+                <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚽ Match Info
+                </h2>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label className="label">Match</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="Team A vs Team B"
+                      value={form.match}
+                      onChange={e => set('match', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">League</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="e.g. Premier League"
+                      value={form.league}
+                      onChange={e => set('league', e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">Pick</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="e.g. Over 2.5 Goals"
+                      value={form.pick}
+                      onChange={e => set('pick', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">Odds</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="1.85"
+                      value={form.odds}
+                      onChange={e => set('odds', e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">Match Time</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="20:00"
+                      value={form.time}
+                      onChange={e => set('time', e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">Category</label>
+                    <select
+                      className={styles.select}
+                      value={form.category_id}
+                      onChange={e => set('category_id', e.target.value)}
+                    >
+                      <option value="">Select category</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className="label">Result</label>
+                    <select
+                      className={styles.select}
+                      value={form.result}
+                      onChange={e => set('result', e.target.value)}
+                    >
+                      {RESULT_OPTIONS.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={styles.formGroup} style={{ alignSelf: 'end' }}>
+                    <label
+                      className={styles.switchRow}
+                      onClick={() => set('is_premium', !form.is_premium)}
+                    >
+                      <div className={styles.switchLabel}>
+                        <span className={styles.switchLabelText}>⚡ VIP / Premium</span>
+                      </div>
+                      <div className={`${styles.switch} ${form.is_premium ? styles.on : ''}`}>
+                        <div className={styles.switchThumb} />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
 
-          {/* ── Section: Extra Info ── */}
-          <div style={{ marginBottom: '1.75rem' }}>
-            <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem' }}>
-              📝 Analysis / Notes (Optional)
-            </h2>
+              <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0 0 1.75rem' }} />
 
-            <div className={styles.formGroup}>
-              <label className="label">Content / Analysis</label>
-              <textarea
-                className="input textarea"
-                placeholder="Add your match analysis, stats, or reasoning here..."
-                value={form.content}
-                onChange={e => set('content', e.target.value)}
-                style={{ minHeight: 120 }}
-              />
+              <div style={{ marginBottom: '1.75rem' }}>
+                <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem' }}>
+                  🎰 Booking Codes
+                </h2>
+                <div className={styles.bookingCodesSection}>
+                  {bookingCodes.map((bc, i) => (
+                    <div key={i} className={styles.bookingCodeRow}>
+                      <div className={styles.formGroup}>
+                        {i === 0 && <label className="label">Platform</label>}
+                        <select
+                          className={styles.select}
+                          value={bc.platform}
+                          onChange={e => updateCode(i, 'platform', e.target.value)}
+                        >
+                          {PLATFORMS.map(p => (
+                            <option key={p.value} value={p.value}>{p.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className={styles.formGroup}>
+                        {i === 0 && <label className="label">Code</label>}
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="CODE"
+                          value={bc.code}
+                          onChange={e => updateCode(i, 'code', e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        {i === 0 && <label className="label">Odds</label>}
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Odds"
+                          value={bc.odds}
+                          onChange={e => updateCode(i, 'odds', e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeCode(i)}
+                        className={styles.removeCodeBtn}
+                        disabled={bookingCodes.length === 1}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addCode} className={styles.addCodeBtn}>
+                    <Plus size={14} /> Add Code
+                  </button>
+                </div>
+              </div>
+
+              <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0 0 1.75rem' }} />
+
+              <div style={{ marginBottom: '1.75rem' }}>
+                <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem' }}>
+                  📝 Details
+                </h2>
+                <div className={styles.formGroup}>
+                  <label className="label">Analysis</label>
+                  <textarea
+                    className="input textarea"
+                    placeholder="Notes..."
+                    value={form.content}
+                    onChange={e => set('content', e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup} style={{ marginTop: '1rem' }}>
+                  <label className="label">Page Title</label>
+                  <input
+                    type="text"
+                    className="input"
+                    placeholder="Display title"
+                    value={form.title}
+                    onChange={e => set('title', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
+                  {loading ? 'Saving...' : 'Publish Prediction'}
+                </button>
+                <button type="button" onClick={() => router.back()} className="btn btn-ghost btn-lg">
+                  Cancel
+                </button>
+              </div>
             </div>
+          </form>
+        </div>
 
-            <div className={styles.formGroup} style={{ marginTop: '1.25rem' }}>
-              <label className="label">Title (for page heading)</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g. Man City vs Chelsea — Premier League Tip"
-                value={form.title}
-                onChange={e => set('title', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0 0 1.75rem' }} />
-
-          {/* ── Section: Media ── */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1.125rem' }}>
-              🖼️ Media (Optional)
+        {/* Right Column: Media */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className={styles.formCard} style={{ padding: '1.5rem' }}>
+            <h2 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', marginBottom: '1rem' }}>
+              🖼️ Media
             </h2>
-
             {previewUrl ? (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+              <div style={{ position: 'relative' }}>
                 {mediaFile?.type.startsWith('video/') ? (
-                  <video src={previewUrl} style={{ maxWidth: 240, borderRadius: 8, border: '1px solid var(--color-border)' }} controls />
+                  <video src={previewUrl} style={{ width: '100%', borderRadius: 8 }} controls />
                 ) : (
-                  <img src={previewUrl} alt="Preview" style={{ maxWidth: 240, borderRadius: 8, border: '1px solid var(--color-border)', objectFit: 'cover' }} />
+                  <img src={previewUrl} alt="Preview" style={{ width: '100%', borderRadius: 8 }} />
                 )}
-                <button type="button" onClick={removeMedia} className="btn btn-danger btn-sm">
-                  ✕ Remove
+                <button
+                  type="button"
+                  onClick={removeMedia}
+                  style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                >
+                  <X size={16} />
                 </button>
               </div>
             ) : (
-              <label className={styles.uploadZone} style={{ cursor: 'pointer', display: 'block' }}>
+              <label className={styles.uploadZone}>
                 <div className={styles.uploadIcon}>📁</div>
-                <div className={styles.uploadText}>Click to upload image or video</div>
-                <div className={styles.uploadHint}>JPG, PNG, GIF, MP4 — max 10MB</div>
+                <div className={styles.uploadText}>Upload Media</div>
                 <input type="file" accept="image/*,video/*" onChange={handleFile} style={{ display: 'none' }} />
               </label>
             )}
           </div>
-
-          {/* ── Submit ── */}
-          <div style={{ display: 'flex', gap: '1rem', paddingTop: '0.5rem' }}>
-            <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ minWidth: 180 }}>
-              {loading ? (
-                <>
-                  <span className={styles.spinner} style={{ width: 16, height: 16, borderWidth: 2 }} />
-                  Saving...
-                </>
-              ) : (
-                '✓ Publish Prediction'
-              )}
-            </button>
-            <button type="button" onClick={() => router.back()} className="btn btn-ghost btn-lg">
-              Cancel
-            </button>
-          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
