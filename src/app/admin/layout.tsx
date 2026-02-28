@@ -2,7 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 import styles from './admin.module.css';
 
 const navItems = [
@@ -13,6 +15,30 @@ const navItems = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, isAdmin } = useAuth();
+
+  // Route Guard: Redirect non-admins to home
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      router.push('/');
+    }
+  }, [user, loading, isAdmin, router]);
+
+  // Show loading state while checking permissions
+  if (loading) {
+    return (
+      <div className={styles.loading} style={{ height: '100vh', background: 'var(--color-bg)' }}>
+        <div className={styles.spinner} />
+        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Verifying admin access...</span>
+      </div>
+    );
+  }
+
+  // Prevent flash of admin content for non-admins
+  if (!user || !isAdmin) {
+    return null;
+  }
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + '/');
