@@ -209,99 +209,13 @@
   align-items: start;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
   .pageGrid {
     grid-template-columns: 1fr;
   }
 }
 
-/* ===== STATS GRID ===== */
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.statCard {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.statCard:hover {
-  border-color: var(--color-border-light);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.statIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.statIcon.green { background: rgba(0, 200, 81, 0.12); }
-.statIcon.amber { background: rgba(247, 166, 0, 0.12); }
-.statIcon.blue { background: rgba(0, 122, 255, 0.12); }
-.statIcon.red { background: rgba(255, 59, 48, 0.12); }
-
-.statInfo { flex: 1; min-width: 0; }
-.statLabel {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.375rem;
-}
-
-.statValue {
-  font-family: var(--font-display);
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--color-text);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-/* ===== DATA TABLE ===== */
-.dataCard {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.dataCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.125rem 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.dataCardTitle {
-  font-weight: 700;
-  font-size: 0.9375rem;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ===== FORM ===== */
+/* ===== FORM CARD ===== */
 .formCard {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -328,10 +242,6 @@
   gap: 0.5rem;
 }
 
-.formGroupFull {
-  grid-column: 1 / -1;
-}
-
 .select {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -347,12 +257,6 @@
   background-repeat: no-repeat;
   background-position: right 1rem center;
   padding-right: 2.5rem;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 200, 81, 0.1);
 }
 
 /* ===== AI BOX ===== */
@@ -382,74 +286,31 @@
   }
 }
 
-/* ===== BOOKING CODE INPUTS ===== */
-.bookingCodesSection {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+/* ===== UPLOAD ZONE ===== */
+.uploadZone {
+  border: 2px dashed var(--color-border-light);
   border-radius: var(--radius-md);
-  padding: 1rem;
-}
-
-.bookingCodesSectionTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 1rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--color-surface);
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.bookingCodeRow {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 0.8fr auto;
-  gap: 0.75rem;
-  align-items: end;
-  margin-bottom: 0.75rem;
-}
-
-@media (max-width: 640px) {
-  .bookingCodeRow {
-    grid-template-columns: 1fr 1fr;
-  }
-  .bookingCodeRow > *:last-child {
-    grid-column: 2;
-    justify-self: end;
-  }
-}
-
-.removeCodeBtn {
-  height: 40px;
-  min-width: 40px;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 59, 48, 0.1);
-  color: var(--color-danger);
-  border: 1px solid rgba(255, 59, 48, 0.2);
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-  flex-shrink: 0;
+  min-height: 180px;
+  width: 100%;
 }
 
-.addCodeBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.875rem;
-  background: var(--color-surface-2);
-  color: var(--color-text-secondary);
-  border: 1px dashed var(--color-border-light);
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 0.25rem;
+.uploadZone:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-glow);
 }
+
+.uploadIcon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.6; }
+.uploadText { font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.25rem; font-weight: 500; }
+.uploadHint { font-size: 0.75rem; color: var(--color-text-muted); }
 
 /* ===== SWITCH ===== */
 .switchRow {
@@ -488,31 +349,51 @@
 }
 .switch.on .switchThumb { transform: translateX(20px); }
 
-/* ===== FILE UPLOAD ===== */
-.uploadZone {
-  border: 2px dashed var(--color-border-light);
-  border-radius: var(--radius-md);
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
+/* ===== BOOKING CODES ===== */
+.bookingCodesSection {
   background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.bookingCodeRow {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 0.8fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.removeCodeBtn {
+  height: 40px;
+  min-width: 40px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 160px;
-  width: 100%;
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.uploadZone:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-glow);
+.addCodeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 0.25rem;
 }
-
-.uploadIcon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.6; }
-.uploadText { font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: 0.25rem; font-weight: 500; }
-.uploadHint { font-size: 0.75rem; color: var(--color-text-muted); }
 
 /* ===== LOADING ===== */
 .loading {
@@ -535,16 +416,3 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
-  .sidebar { width: 200px; }
-  .content { padding: 1.5rem; }
-}
-
-@media (max-width: 768px) {
-  .adminLayout { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; position: static; }
-  .nav { flex-direction: row; overflow-x: auto; padding: 0.5rem; }
-  .navSection { display: none; }
-}

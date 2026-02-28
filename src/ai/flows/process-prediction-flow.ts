@@ -36,28 +36,18 @@ const processPredictionPrompt = ai.definePrompt({
   model: 'googleai/gemini-2.0-flash',
   input: { schema: z.object({ rawText: z.string() }) },
   output: { schema: PredictionOutputSchema },
-  prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets, often representing a "bet slip" or "accumulator ticket".
-
-  Context for formatting:
-  The input often contains multiple matches and markets. Sometimes the pick or market appears immediately BEFORE or AFTER the match name.
+  prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets.
   
-  Example Input:
-  "Home
-  USA v Paraguay
-  1X22.07
-  Home or Away
-  Haiti v Scotland
-  Double Chance1.18"
+  Format instructions:
+  - Input often has a Match Code, Date/Time, Teams, Market, and Odds.
+  - Sometimes the "Pick" or "Market" appears before the match names.
+  - Correct spelling of teams (e.g., "USA" instead of "Usa").
+  - Identify the League if possible from team names.
 
-  Instructions:
-  1. Identify ALL matches mentioned (e.g., USA vs Paraguay).
-  2. Extract the "Pick" or "Market" associated with each match (e.g., "Home", "Home or Away", "Over 2.5").
-  3. Extract the Odds for each selection (e.g., "2.07", "1.18").
-  4. Infer the League or Tournament for each match if possible based on the team names.
-  5. Correct team names and league names for professional display.
-  6. If the text mentions "VIP", "Premium", or "Banker", mark is_premium as true.
-  7. Generate a catchy Title for the ticket.
-
+  Example Input structure:
+  "USA v Paraguay
+  Home Win 2.07"
+  
   Raw Text:
   {{{rawText}}}`,
 });
@@ -68,7 +58,10 @@ export async function processPrediction(rawText: string): Promise<PredictionOutp
     if (!output) throw new Error('Failed to extract prediction data');
     return output;
   } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+      throw new Error('AI Quota exceeded. Please wait a minute or fill the form manually.');
+    }
     console.error('Genkit Error:', error);
-    throw new Error(error.message || 'AI Processing failed. Check your API Key.');
+    throw new Error(error.message || 'AI Processing failed.');
   }
 }

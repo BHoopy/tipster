@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { processPrediction } from '@/ai/flows/process-prediction-flow';
 import { Sparkles, Trash2, Plus, X, ListPlus } from 'lucide-react';
 import styles from '../../admin.module.css';
 
-interface Category { id: string; name: string; }
 interface BookingCode { platform: string; code: string; odds: string; }
 interface Selection { match: string; pick: string; odds: string; league: string; time: string; result: 'win' | 'lose' | 'pending'; }
 
@@ -25,7 +24,6 @@ const emptyCode = (): BookingCode => ({ platform: 'betway', code: '', odds: '' }
 
 export default function NewPrediction() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingAi, setProcessingAi] = useState(false);
   const [aiInput, setAiInput] = useState('');
@@ -39,15 +37,8 @@ export default function NewPrediction() {
     title: '',
     total_odds: '',
     content: '',
-    category_id: '',
     is_premium: false,
   });
-
-  useEffect(() => {
-    getDocs(collection(db, 'categories')).then(snap => {
-      setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() } as Category)));
-    });
-  }, []);
 
   const handleAiProcess = async () => {
     if (!aiInput.trim()) return;
@@ -81,9 +72,9 @@ export default function NewPrediction() {
         })));
       }
       setAiInput('');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('AI processing failed. Please fill manually.');
+      alert(err.message || 'AI processing failed. Please fill manually.');
     } finally {
       setProcessingAi(false);
     }
@@ -144,16 +135,16 @@ export default function NewPrediction() {
   };
 
   return (
-    <div>
+    <div className="fade-in">
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>New Ticket</h1>
-          <p className={styles.pageSubtitle}>Create a new set of predictions</p>
+          <p className={styles.pageSubtitle}>Create and publish a new set of picks</p>
         </div>
       </div>
 
       <div className={styles.pageGrid}>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* AI Box */}
           <div className={styles.aiBox}>
             <div className={styles.aiBoxHeader}>
@@ -164,7 +155,7 @@ export default function NewPrediction() {
               <textarea
                 className="input"
                 style={{ flex: 1, minHeight: '100px' }}
-                placeholder="Paste bet slip reservation text or multiple picks here..."
+                placeholder="Paste bet slip text or multiple picks here..."
                 value={aiInput}
                 onChange={e => setAiInput(e.target.value)}
               />
@@ -174,7 +165,7 @@ export default function NewPrediction() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className={styles.formCard}>
               <div style={{ marginBottom: '1.5rem' }}>
                 <h2 className={styles.bookingCodesSectionTitle}>🎟️ Ticket Info</h2>
@@ -200,10 +191,18 @@ export default function NewPrediction() {
                         <button type="button" onClick={() => removeSelection(i)} disabled={selections.length === 1} style={{ color: 'var(--color-danger)' }}><Trash2 size={16} /></button>
                       </div>
                       <div className={styles.formGrid}>
-                        <input type="text" className="input" placeholder="Teams" value={s.match} onChange={e => updateSelection(i, 'match', e.target.value)} required />
-                        <input type="text" className="input" placeholder="Pick" value={s.pick} onChange={e => updateSelection(i, 'pick', e.target.value)} required />
-                        <input type="text" className="input" placeholder="Odds" value={s.odds} onChange={e => updateSelection(i, 'odds', e.target.value)} />
-                        <input type="text" className="input" placeholder="League" value={s.league} onChange={e => updateSelection(i, 'league', e.target.value)} />
+                        <div className={styles.formGroup}>
+                          <input type="text" className="input" placeholder="Match (e.g. USA vs Paraguay)" value={s.match} onChange={e => updateSelection(i, 'match', e.target.value)} required />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <input type="text" className="input" placeholder="Pick (e.g. Home Win)" value={s.pick} onChange={e => updateSelection(i, 'pick', e.target.value)} required />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <input type="text" className="input" placeholder="Odds" value={s.odds} onChange={e => updateSelection(i, 'odds', e.target.value)} />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <input type="text" className="input" placeholder="League" value={s.league} onChange={e => updateSelection(i, 'league', e.target.value)} />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -228,7 +227,7 @@ export default function NewPrediction() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>{loading ? 'Saving...' : 'Publish Ticket'}</button>
                 <label className={styles.switchRow} onClick={() => setForm({...form, is_premium: !form.is_premium})}>
                   <div style={{ flex: 1 }}><span style={{ fontWeight: 600, fontSize: '0.9rem' }}>⚡ VIP</span></div>
@@ -242,19 +241,21 @@ export default function NewPrediction() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className={styles.formCard}>
             <h2 className={styles.bookingCodesSectionTitle}>🖼️ Media</h2>
-            {previewUrl ? (
-              <div style={{ position: 'relative' }}>
-                <img src={previewUrl} style={{ width: '100%', borderRadius: 8 }} alt="Preview" />
-                <button type="button" onClick={() => { setPreviewUrl(''); setMediaFile(null); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', borderRadius: '50%', color: '#fff', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
-              </div>
-            ) : (
-              <label className={styles.uploadZone}>
-                <ListPlus size={32} className={styles.uploadIcon} />
-                <div className={styles.uploadText}>Upload Media</div>
-                <div className={styles.uploadHint}>Image or Video</div>
-                <input type="file" accept="image/*,video/*" onChange={handleFile} style={{ display: 'none' }} />
-              </label>
-            )}
+            <div style={{ width: '100%' }}>
+              {previewUrl ? (
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <img src={previewUrl} style={{ width: '100%', borderRadius: 8, display: 'block' }} alt="Preview" />
+                  <button type="button" onClick={() => { setPreviewUrl(''); setMediaFile(null); }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', borderRadius: '50%', color: '#fff', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                </div>
+              ) : (
+                <label className={styles.uploadZone}>
+                  <ListPlus size={32} className={styles.uploadIcon} />
+                  <div className={styles.uploadText}>Upload Media</div>
+                  <div className={styles.uploadHint}>Image or Video</div>
+                  <input type="file" accept="image/*,video/*" onChange={handleFile} style={{ display: 'none' }} />
+                </label>
+              )}
+            </div>
           </div>
         </div>
       </div>
