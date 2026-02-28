@@ -39,20 +39,23 @@ const processPredictionPrompt = ai.definePrompt({
   prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets, often representing a "bet slip" or "accumulator ticket".
 
   Context for formatting:
-  The input might look like this:
+  The input often contains multiple matches. For example:
   "Sharing Code 9FL4WS
   28/02/2026 23:15
   43932 13/06/2026 01:00
   USA - Paraguay
-  prematch Home"
+  prematch Home
+  35056 13/06/2026 22:00
+  Brazil - Morocco
+  prematch Away"
 
   Instructions:
-  1. Identify ALL matches mentioned. In the example above: "USA - Paraguay" is the match, "Home" is the pick.
-  2. Extract the match date/time if available.
-  3. Extract "Sharing Code" or "Booking Code".
-  4. Correct minor spelling errors in team names.
+  1. Identify ALL matches mentioned. In the example above: "USA - Paraguay" is one match (pick: Home), "Brazil - Morocco" is another (pick: Away).
+  2. Extract the match date/time if available for each pick.
+  3. Extract "Sharing Code" or "Booking Code" and map it to a platform if possible (default to "SportyBet" if unknown but looks like a reservation code).
+  4. Correct minor spelling errors in team names (e.g., "Man U" to "Man Utd").
   5. If the text mentions "VIP", "Premium", or high odds, mark is_premium as true.
-  6. Provide a concise summary title.
+  6. Provide a concise summary title for the whole ticket.
 
   Raw Text:
   {{{rawText}}}`,

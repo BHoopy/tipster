@@ -52,13 +52,20 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
     
     // Automatically calculate ticket result
     let finalResult: 'win' | 'lose' | 'pending' = 'pending';
+    
+    // Rule: If ANY individual pick is 'lose', the whole ticket is 'lose'
     if (updated.some(s => s.result === 'lose')) {
       finalResult = 'lose';
-    } else if (updated.every(s => s.result === 'win')) {
+    } 
+    // Rule: If ALL individual picks are 'win', the whole ticket is 'win'
+    else if (updated.every(s => s.result === 'win')) {
       finalResult = 'win';
-    } else {
+    } 
+    // Otherwise, if there's no loss but some are still pending, it's 'pending'
+    else {
       finalResult = 'pending';
     }
+    
     setForm(prev => ({ ...prev, result: finalResult }));
   };
 
@@ -91,10 +98,14 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '1.5rem' }}>
           <div className={styles.formCard}>
             <h2 className={styles.bookingCodesSectionTitle}>🏆 Match Results</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+              Tick individual outcomes. If all are won, the ticket status updates automatically.
+            </p>
+            
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {selections.map((s, i) => (
                 <div key={i} style={{ border: '1px solid var(--color-border)', borderRadius: '10px', padding: '1.25rem', background: 'var(--color-surface)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontWeight: 800 }}>{s.match}</div>
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{s.pick} @ {s.odds}</div>
@@ -106,17 +117,20 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
                           type="button"
                           onClick={() => updateSelectionResult(i, r)}
                           style={{
-                            padding: '0.5rem',
+                            padding: '0.5rem 0.75rem',
                             borderRadius: '8px',
                             border: '1px solid var(--color-border)',
                             background: s.result === r ? 'var(--color-bg-card)' : 'transparent',
+                            borderColor: s.result === r ? 'var(--color-primary)' : 'var(--color-border)',
                             opacity: s.result === r ? 1 : 0.4,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.25rem'
+                            gap: '0.25rem',
+                            transition: 'all 0.2s'
                           }}
                         >
                           {RESULT_ICONS[r]}
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'capitalize' }}>{r}</span>
                         </button>
                       ))}
                     </div>
@@ -125,14 +139,24 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
               ))}
             </div>
 
-            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-              <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '...' : 'Save Changes'}</button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0 1rem', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Ticket Status:</span>
-                <span style={{ color: form.result === 'win' ? 'var(--color-primary)' : form.result === 'lose' ? 'var(--color-danger)' : 'var(--color-secondary)', fontWeight: 800 }}>
+            <div style={{ marginTop: '2.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>Ticket Final Status:</span>
+                <span style={{ 
+                  background: form.result === 'win' ? 'rgba(0,200,81,0.1)' : form.result === 'lose' ? 'rgba(255,59,48,0.1)' : 'rgba(247,166,0,0.1)',
+                  color: form.result === 'win' ? 'var(--color-primary)' : form.result === 'lose' ? 'var(--color-danger)' : 'var(--color-secondary)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 800,
+                  fontSize: '0.9rem',
+                  border: '1px solid currentColor'
+                }}>
                   {form.result.toUpperCase()}
                 </span>
               </div>
+              <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Prediction Changes'}
+              </button>
             </div>
           </div>
 
