@@ -501,7 +501,9 @@ export default function Home() {
             </div>
             <div className={styles.footerLinks}>
               <Link href="/" className={styles.footerLink}>Home</Link>
-              <Link href="/admin" className={styles.footerLink}>Admin</Link>
+              {!loading && isAdmin && (
+                <Link href="/admin" className={styles.footerLink}>Admin</Link>
+              )}
             </div>
           </div>
         </div>
