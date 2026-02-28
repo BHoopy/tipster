@@ -51,13 +51,15 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
     setSelections(updated);
     
     // Automatically calculate ticket result
+    let finalResult: 'win' | 'lose' | 'pending' = 'pending';
     if (updated.some(s => s.result === 'lose')) {
-      setForm(prev => ({ ...prev, result: 'lose' }));
+      finalResult = 'lose';
     } else if (updated.every(s => s.result === 'win')) {
-      setForm(prev => ({ ...prev, result: 'win' }));
+      finalResult = 'win';
     } else {
-      setForm(prev => ({ ...prev, result: 'pending' }));
+      finalResult = 'pending';
     }
+    setForm(prev => ({ ...prev, result: finalResult }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,7 +128,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
             <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
               <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '...' : 'Save Changes'}</button>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0 1rem', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Ticket Result:</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Ticket Status:</span>
                 <span style={{ color: form.result === 'win' ? 'var(--color-primary)' : form.result === 'lose' ? 'var(--color-danger)' : 'var(--color-secondary)', fontWeight: 800 }}>
                   {form.result.toUpperCase()}
                 </span>
@@ -135,15 +137,19 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className={styles.formCard}>
-            <h2 className={styles.bookingCodesSectionTitle}>Quick Settings</h2>
-            <div className={styles.formGroup}>
+            <h2 className={styles.bookingCodesSectionTitle}>Ticket Settings</h2>
+            <div className={styles.formGroup} style={{ marginBottom: '1rem' }}>
               <label className="label">Ticket Title</label>
               <input type="text" className="input" value={form.title} onChange={e => setForm({...form, title: e.target.value})} />
             </div>
-            <div className={styles.formGroup}>
+            <div className={styles.formGroup} style={{ marginBottom: '1rem' }}>
               <label className="label">Total Odds</label>
               <input type="text" className="input" value={form.total_odds} onChange={e => setForm({...form, total_odds: e.target.value})} />
             </div>
+            <label className={styles.switchRow} onClick={() => setForm({...form, is_premium: !form.is_premium})}>
+              <div className={styles.switchLabel}><span className={styles.switchLabelText}>⚡ VIP Ticket</span></div>
+              <div className={`${styles.switch} ${form.is_premium ? styles.on : ''}`}><div className={styles.switchThumb} /></div>
+            </label>
           </div>
         </div>
       </form>
