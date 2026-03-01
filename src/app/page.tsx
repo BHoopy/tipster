@@ -60,7 +60,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'vip'>('all');
+  const [filter, setFilter] = useState<'free' | 'vip'>('free');
 
   useEffect(() => {
     getDocs(query(collection(db, 'predictions'), orderBy('created_at', 'desc'))).then(snap => {
@@ -69,7 +69,7 @@ export default function Home() {
     });
   }, []);
 
-  const display = filter === 'vip' ? predictions.filter(p => p.is_premium) : predictions;
+  const display = predictions.filter(p => filter === 'vip' ? p.is_premium : !p.is_premium);
 
   return (
     <main className={styles.main}>
@@ -100,7 +100,7 @@ export default function Home() {
           <h1>Expert <span>Daily</span> Tickets.</h1>
           <p>Winning accumulator tips and booking codes from top football analysts.</p>
           <div className={styles.heroActions}>
-            <button onClick={() => setFilter('all')} className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-ghost'}`}>Free Tickets</button>
+            <button onClick={() => setFilter('free')} className={`btn ${filter === 'free' ? 'btn-primary' : 'btn-ghost'}`}>Free Tickets</button>
             <button onClick={() => setFilter('vip')} className={`btn ${filter === 'vip' ? 'btn-secondary' : 'btn-ghost'}`}>⚡ VIP Picks</button>
           </div>
         </div>
@@ -112,7 +112,10 @@ export default function Home() {
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: '140px', borderRadius: '16px', marginBottom: '1rem' }} />)
             ) : display.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '4rem' }}>No tickets found.</div>
+              <div style={{ textAlign: 'center', padding: '4rem' }}>
+                <div style={{ marginBottom: '1rem', opacity: 0.5 }}><Zap size={48} /></div>
+                <p style={{ color: 'var(--color-text-muted)' }}>No {filter === 'vip' ? 'VIP' : 'Free'} tickets available right now.</p>
+              </div>
             ) : (
               display.map(ticket => (
                 <div key={ticket.id} className={styles.predictionItem} style={{ border: ticket.is_premium ? '2px solid var(--color-gold)' : '1px solid var(--color-border)' }}>
