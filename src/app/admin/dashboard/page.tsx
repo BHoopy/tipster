@@ -49,7 +49,7 @@ export default function Dashboard() {
   const winRate = predictions.length > 0 ? Math.round((wins / Math.max(wins + losses, 1)) * 100) : 0;
 
   return (
-    <div>
+    <div className="fade-in">
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Admin Dashboard</h1>
@@ -62,7 +62,7 @@ export default function Dashboard() {
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.blue}`}><Trophy size={20} /></div>
           <div className={styles.statInfo}>
-            <div className={styles.statLabel}>Tickets</div>
+            <div className={styles.statLabel}>Total Tickets</div>
             <div className={styles.statValue}>{predictions.length}</div>
           </div>
         </div>
@@ -84,11 +84,10 @@ export default function Dashboard() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Ticket Title</th>
+                  <th>Ticket</th>
                   <th>Games</th>
                   <th>Type</th>
                   <th>Result</th>
-                  <th>Date</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -97,19 +96,40 @@ export default function Dashboard() {
                   const rs = RESULT_STYLES[pred.result || 'pending'];
                   return (
                     <tr key={pred.id}>
-                      <td style={{ fontWeight: 700 }}>{pred.title}</td>
-                      <td>{pred.selections?.length || 0} matches</td>
+                      <td style={{ fontWeight: 700 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span>{pred.title}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', fontWeight: 400 }}>
+                            {pred.created_at?.toDate ? pred.created_at.toDate().toLocaleDateString() : '—'}
+                          </span>
+                        </div>
+                      </td>
+                      <td>{pred.selections?.length || 0}</td>
                       <td>{pred.is_premium ? '⚡ VIP' : 'Free'}</td>
                       <td>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: rs.bg, color: rs.color, padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800 }}>
+                        <span style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '6px', 
+                          background: rs.bg, 
+                          color: rs.color, 
+                          padding: '0.25rem 0.5rem', 
+                          borderRadius: '6px', 
+                          fontSize: '0.65rem', 
+                          fontWeight: 800,
+                          textTransform: 'uppercase'
+                        }}>
                           {rs.icon} {rs.label}
                         </span>
                       </td>
-                      <td style={{ fontSize: '0.8rem', opacity: 0.6 }}>{pred.created_at?.toDate ? pred.created_at.toDate().toLocaleDateString() : '—'}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          <Link href={`/admin/predictions/${pred.id}/edit`} className="btn btn-ghost btn-sm"><Edit3 size={14} /></Link>
-                          <button onClick={() => handleDelete(pred.id, pred.title)} className="btn btn-danger btn-sm"><Trash2 size={14} /></button>
+                          <Link href={`/admin/predictions/${pred.id}/edit`} className="btn btn-ghost btn-sm" style={{ padding: '0.4rem' }}>
+                            <Edit3 size={16} />
+                          </Link>
+                          <button onClick={() => handleDelete(pred.id, pred.title)} className="btn btn-danger btn-sm" style={{ padding: '0.4rem' }}>
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -117,6 +137,11 @@ export default function Dashboard() {
                 })}
               </tbody>
             </table>
+            {predictions.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)' }}>
+                No tickets found.
+              </div>
+            )}
           </div>
         )}
       </div>
