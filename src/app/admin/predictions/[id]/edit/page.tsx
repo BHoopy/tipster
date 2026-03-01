@@ -8,13 +8,41 @@ import { Trash2, Plus, X, ChevronLeft, CheckCircle2, XCircle, Timer } from 'luci
 import styles from '../../../admin.module.css';
 
 interface BookingCode { platform: string; code: string; odds: string; }
-interface Selection { match: string; pick: string; odds: string; league: string; time: string; result: 'win' | 'lose' | 'pending'; }
+interface Selection { home_team: string; away_team: string; pick: string; odds: string; league: string; time: string; match_date: string; result: 'win' | 'lose' | 'pending'; }
 
 const RESULT_ICONS = {
   win: <CheckCircle2 size={16} color="var(--color-primary)" />,
   lose: <XCircle size={16} color="var(--color-danger)" />,
   pending: <Timer size={16} color="var(--color-secondary)" />,
 };
+
+const MARKETS_LABELS: Record<string, string> = {
+  '1': 'Home Win',
+  'X': 'Draw',
+  '2': 'Away Win',
+  '1X': 'Double Chance 1X',
+  '12': 'Double Chance 12',
+  'X2': 'Double Chance X2',
+  'Over 0.5': 'Over 0.5',
+  'Over 1.5': 'Over 1.5',
+  'Over 2.5': 'Over 2.5',
+  'Over 3.5': 'Over 3.5',
+  'Under 2.5': 'Under 2.5',
+  'Under 3.5': 'Under 3.5',
+  'BTTS Yes': 'BTTS Yes',
+  'BTTS No': 'BTTS No',
+  'GG': 'GG',
+  'NG': 'NG',
+  '1 & Over 1.5': '1 & Over 1.5',
+  '2 & Over 1.5': '2 & Over 1.5',
+  '1HT': '1st Half Home',
+  'XHT': '1st Half Draw',
+  '2HT': '1st Half Away',
+  'Corners Over 7.5': 'Corners O7.5',
+  'Corners Over 9.5': 'Corners O9.5',
+};
+
+const getMarketLabel = (value: string) => MARKETS_LABELS[value] || value;
 
 export default function EditPrediction({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -96,13 +124,18 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
               Mark each selection. The ticket status updates automatically.
             </p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {selections.map((s, i) => (
                 <div key={i} style={{ border: '1px solid var(--color-border)', borderRadius: '10px', padding: '1.25rem', background: 'var(--color-surface)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ fontWeight: 800 }}>{s.match}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{s.pick} @ {s.odds}</div>
+                      <div style={{ fontWeight: 800 }}>{s.home_team} vs {s.away_team}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{getMarketLabel(s.pick)} @ {s.odds}</div>
+                      {(s.league || s.match_date || s.time) && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
+                          {s.league}{s.league && s.match_date && ' • '}{s.match_date}{s.match_date && s.time && ' • '}{s.time}
+                        </div>
+                      )}
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       {(['pending', 'win', 'lose'] as const).map(r => (

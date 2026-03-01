@@ -1,18 +1,19 @@
 'use server';
 /**
- * @fileOverview Hybrid Betting Pick Processor.
- * Uses a robust regex-based parser for common betslip formats and 
- * falls back to OpenRouter AI for complex text extraction.
+ * @fileOverview OpenRouter AI Betting Pick Processor.
+ * Uses OpenRouter AI to extract structured betting data from raw text.
  */
 
 import { z } from 'genkit';
 
 const SelectionSchema = z.object({
-  match: z.string().describe('The teams playing, e.g., "Man City vs Chelsea"'),
+  home_team: z.string().describe('The home team name'),
+  away_team: z.string().describe('The away team name'),
+  pick: z.string().describe('The betting pick (e.g., 1, X, 2, Over 1.5, BTTS Yes, etc.)'),
+  odds: z.string().describe('The odds for this selection'),
   league: z.string().optional().describe('The league or tournament name'),
-  pick: z.string().describe('The actual betting tip, e.g., "Home Win", "Over 2.5"'),
-  odds: z.string().optional().describe('The odds for this specific selection'),
-  time: z.string().optional().describe('The match start time if mentioned'),
+  time: z.string().optional().describe('The match start time'),
+  match_date: z.string().optional().describe('The match date in YYYY-MM-DD format'),
   result: z.enum(['win', 'lose', 'pending']).default('pending'),
 });
 
@@ -33,107 +34,61 @@ const PredictionOutputSchema = z.object({
 
 export type PredictionOutput = z.infer<typeof PredictionOutputSchema>;
 
-const OPENROUTER_API_KEY = "sk-or-v1-placeholder";
+const MARKET_MAPPINGS: Record<string, string> = {
+  'home win': '1', 'home': '1', '1': '1', 'home win full time': '1',
+  'draw': 'X', 'x': 'X', 'draw full time': 'X',
+  'away win': '2', 'away': '2', '2': '2', 'away win full time': '2',
+  'double chance home draw': '1X', '1x': '1X', 'double chance 1x': '1X',
+  'double chance home away': '12', '12': '12', 'double chance 12': '12',
+  'double chance draw away': 'X2', 'x2': 'X2', 'double chance x2': 'X2',
+  'over 0.5': 'Over 0.5', 'over 0.5 goals': 'Over 0.5',
+  'over 1.5': 'Over 1.5', 'over 1.5 goals': 'Over 1.5', 'over one point five': 'Over 1.5',
+  'over 2.5': 'Over 2.5', 'over 2.5 goals': 'Over 2.5', 'over two point five': 'Over 2.5',
+  'over 3.5': 'Over 3.5', 'over 3.5 goals': 'Over 3.5',
+  'under 2.5': 'Under 2.5', 'under 2.5 goals': 'Under 2.5',
+  'under 3.5': 'Under 3.5', 'under 3.5 goals': 'Under 3.5',
+  'both teams to score yes': 'BTTS Yes', 'btts yes': 'BTTS Yes', 'gg': 'GG', 'goal goal': 'GG',
+  'both teams to score no': 'BTTS No', 'btts no': 'BTTS No', 'ng': 'NG', 'no goal': 'NG',
+  'home and over 1.5': '1 & Over 1.5', '1 and over 1.5': '1 & Over 1.5',
+  'away and over 1.5': '2 & Over 1.5', '2 and over 1.5': '2 & Over 1.5',
+  'first half home': '1HT', '1ht': '1HT', 'half time home': '1HT',
+  'first half draw': 'XHT', 'xht': 'XHT', 'half time draw': 'XHT',
+  'first half away': '2HT', '2ht': '2HT', 'half time away': '2HT',
+  'corners over 7.5': 'Corners Over 7.5', 'corners over 7': 'Corners Over 7.5',
+  'corners over 9.5': 'Corners Over 9.5', 'corners over 9': 'Corners Over 9.5',
+};
 
-/**
- * Robust Regex Parser for predictable betslip formats.
- * Handles patterns like "Team A v Team B", "Home Win", and "1X22.07" odds.
- */
-function robustParseBetslip(text: string): PredictionOutput | null {
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const selections: any[] = [];
-  let detectedTotalOdds = "";
-
-  // 1. Look for explicit Total Odds in text first
-  const totalOddsPattern = /(?:Total\s*Odds|Accumulated|Total\s*@|Odds\s*Sum|Total)\s*[:@]?\s*(\d+\.\d+)/i;
-  const totalMatch = text.match(totalOddsPattern);
-  if (totalMatch) {
-    detectedTotalOdds = totalMatch[1];
-  }
-  
-  // 2. Parse matches and individual odds
-  // Pattern 1: Multi-line block (Pick \n Match \n Market+Odds)
-  for (let i = 0; i < lines.length - 2; i++) {
-    const line1 = lines[i]; // Potential Pick (e.g. Home)
-    const line2 = lines[i+1]; // Potential Match (e.g. USA v Paraguay)
-    const line3 = lines[i+2]; // Potential Market + Odds (e.g. 1X22.07)
-
-    if (line2.includes(' v ') || line2.includes(' - ')) {
-      // Improved regex to separate market headers from numeric odds
-      // Specifically handles the user's "1X22.07" case where "2" is part of the market name
-      const marketPattern = /^(1X2|12|1X|X2|Double\s*Chance|Over\/Under|GG\/NG|Home\/Away|Draw\s*No\s*Bet|Over|Under)?\s*(\d+\.\d+)$/i;
-      const oddsMatch = line3.match(marketPattern);
-      
-      if (oddsMatch) {
-        selections.push({
-          match: line2,
-          pick: line1,
-          odds: oddsMatch[2], // Group 2 is the actual numeric odds (e.g. 2.07)
-          league: "Detected Match",
-          time: "Today",
-          result: 'pending'
-        });
-        i += 2; 
-      }
-    }
-  }
-
-  // Fallback Pattern: Single line with " - " or " v "
-  if (selections.length === 0) {
-    lines.forEach(line => {
-      const matchPattern = /(.+?)(?:\s[v-]\s)(.+?)\s(?:prematch\s)?(.+)/i;
-      const parts = line.match(matchPattern);
-      if (parts) {
-        const pickAndOdds = parts[3].trim();
-        const oddsOnly = pickAndOdds.match(/(\d+\.\d+)$/);
-        selections.push({
-          match: `${parts[1].trim()} vs ${parts[2].trim()}`,
-          pick: pickAndOdds.replace(/(\d+\.\d+)$/, '').trim(),
-          odds: oddsOnly ? oddsOnly[1] : "",
-          league: "Detected",
-          time: "Today",
-          result: 'pending'
-        });
-      }
-    });
-  }
-
-  if (selections.length > 0) {
-    // 3. Calculate total odds if not explicitly found
-    if (!detectedTotalOdds) {
-      let calc = 1.0;
-      let hasValidOdds = false;
-      selections.forEach(s => {
-        const val = parseFloat(s.odds);
-        if (!isNaN(val) && val > 0) {
-          calc *= val;
-          hasValidOdds = true;
-        }
-      });
-      if (hasValidOdds) detectedTotalOdds = calc.toFixed(2);
-    }
-
-    return {
-      title: `${selections.length} Games Accumulator`,
-      selections,
-      total_odds: detectedTotalOdds,
-      is_premium: false,
-      booking_codes: [],
-      content: "Automatically parsed from text slip."
-    };
-  }
-
-  return null;
+function normalizeMarket(pickText: string): string {
+  const normalized = pickText.toLowerCase().trim();
+  return MARKET_MAPPINGS[normalized] || pickText;
 }
 
-/**
- * OpenRouter AI Extraction Fallback.
- */
+function calculateTotalOdds(selections: { odds: string }[]): string {
+  let total = 1.0;
+  let hasValidOdds = false;
+  
+  for (const sel of selections) {
+    const val = parseFloat(sel.odds);
+    if (!isNaN(val) && val > 0) {
+      total *= val;
+      hasValidOdds = true;
+    }
+  }
+  
+  return hasValidOdds ? total.toFixed(2) : '';
+}
+
 async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  
+  if (!apiKey) {
+    throw new Error('OPENROUTER_API_KEY not configured');
+  }
+
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+      "Authorization": `Bearer ${apiKey}`,
       "HTTP-Referer": "https://leemantips.com",
       "Content-Type": "application/json"
     },
@@ -142,26 +97,36 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
       "messages": [
         {
           "role": "system",
-          "content": `You are a betting expert. Extract structured JSON from betting slips. 
+          "content": `You are a betting expert. Extract structured JSON from betting slips text.
           
-          CRITICAL INSTRUCTIONS:
-          - Markets like '1X2' are often prefixes to odds (e.g., '1X22.07' means odds 2.07 for the 1X2 market). 
-          - NEVER include market identifiers (like the '2' in '1X2') in the numeric odds field.
-          - Look for 'Total Odds' or 'Accumulated' in the text. If missing, calculate it by multiplying individual selection odds.
-          
-          Return only valid JSON matching this schema: 
-          { 
-            "title": string, 
-            "selections": [{"match": string, "pick": string, "odds": string, "league": string}], 
-            "total_odds": string, 
-            "is_premium": boolean, 
-            "booking_codes": [{"platform": string, "code": string}],
-            "content": string 
-          }`
+IMPORTANT INSTRUCTIONS:
+1. Parse team names - identify home team and away team from the text (e.g., "Man City vs Chelsea" means home=Man City, away=Chelsea)
+2. Normalize market names to standard format:
+   - Home win = 1, Draw = X, Away win = 2
+   - Double chance = 1X, 12, X2
+   - Over/Under goals = Over 1.5, Over 2.5, Under 2.5, etc.
+   - Both Teams To Score = BTTS Yes, BTTS No
+   - GG = Goal/Goal, NG = No Goal
+   - Half time = 1HT, XHT, 2HT
+   - Corners = Corners Over 7.5, Corners Over 9.5
+3. Extract individual odds for each selection
+4. Look for "Total Odds", "Accumulated", "Total @", "Odds Sum" in the text - if found, use that value
+5. If no total odds found, calculate it by multiplying all individual odds
+6. Extract any booking codes found in the text with their platform
+
+Return only valid JSON matching this schema:
+{
+  "title": string,
+  "selections": [{"home_team": string, "away_team": string, "pick": string, "odds": string, "league": string, "time": string, "match_date": string}],
+  "total_odds": string,
+  "is_premium": boolean,
+  "booking_codes": [{"platform": string, "code": string, "odds": string}],
+  "content": string
+}`
         },
         {
           "role": "user",
-          "content": `Extract betting data from this text: \n\n${rawText}`
+          "content": `Extract betting data from this text:\n\n${rawText}`
         }
       ],
       "response_format": { "type": "json_object" }
@@ -177,18 +142,17 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
   const content = data.choices[0].message.content;
   const result = JSON.parse(content) as PredictionOutput;
 
-  // Final validation/calculation for total_odds if AI missed it
+  // Normalize markets in selections
+  if (result.selections?.length) {
+    result.selections = result.selections.map(s => ({
+      ...s,
+      pick: normalizeMarket(s.pick)
+    }));
+  }
+
+  // Calculate total odds if not found or invalid
   if (!result.total_odds && result.selections?.length > 0) {
-    let calc = 1.0;
-    let hasValidOdds = false;
-    result.selections.forEach(s => {
-      const val = parseFloat(s.odds || "");
-      if (!isNaN(val) && val > 0) {
-        calc *= val;
-        hasValidOdds = true;
-      }
-    });
-    if (hasValidOdds) result.total_odds = calc.toFixed(2);
+    result.total_odds = calculateTotalOdds(result.selections);
   }
 
   return result;
@@ -196,11 +160,6 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
 
 export async function processPrediction(rawText: string): Promise<PredictionOutput> {
   try {
-    // 1. Try Robust Local Parser first (Instant, No API Cost)
-    const localResult = robustParseBetslip(rawText);
-    if (localResult) return localResult;
-
-    // 2. Fallback to OpenRouter AI
     return await openRouterExtract(rawText);
   } catch (error: any) {
     console.error('Processing Error:', error);

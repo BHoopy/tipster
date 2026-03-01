@@ -5,11 +5,11 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { processPrediction } from '@/ai/flows/process-prediction-flow';
-import { Sparkles, Trash2, Plus, X, ListPlus, ChevronLeft } from 'lucide-react';
+import { ImagePlus, Trash2, Plus, X, ListPlus, ChevronLeft, ScanText, Sparkles } from 'lucide-react';
 import styles from '../../admin.module.css';
 
 interface BookingCode { platform: string; code: string; odds: string; }
-interface Selection { match: string; pick: string; odds: string; league: string; time: string; result: 'win' | 'lose' | 'pending'; }
+interface Selection { home_team: string; away_team: string; pick: string; odds: string; league: string; time: string; match_date: string; result: 'win' | 'lose' | 'pending'; }
 
 const PLATFORMS = [
   { value: 'betway', label: 'Betway' },
@@ -19,7 +19,36 @@ const PLATFORMS = [
   { value: '1xbet', label: '1xBet' },
 ];
 
-const emptySelection = (): Selection => ({ match: '', pick: '', odds: '', league: '', time: '', result: 'pending' });
+const MARKETS = [
+  { value: '1', label: 'Home Win (1)' },
+  { value: 'X', label: 'Draw (X)' },
+  { value: '2', label: 'Away Win (2)' },
+  { value: '1X', label: 'Double Chance - Home Win/Draw (1X)' },
+  { value: '12', label: 'Double Chance - Home Win/Away Win (12)' },
+  { value: 'X2', label: 'Double Chance - Draw/Away Win (X2)' },
+  { value: 'Over 0.5', label: 'Over 0.5 Goals' },
+  { value: 'Over 1.5', label: 'Over 1.5 Goals' },
+  { value: 'Over 2.5', label: 'Over 2.5 Goals' },
+  { value: 'Over 3.5', label: 'Over 3.5 Goals' },
+  { value: 'Under 2.5', label: 'Under 2.5 Goals' },
+  { value: 'Under 3.5', label: 'Under 3.5 Goals' },
+  { value: 'BTTS Yes', label: 'Both Teams To Score - Yes' },
+  { value: 'BTTS No', label: 'Both Teams To Score - No' },
+  { value: 'GG', label: 'Goal/Goal (GG)' },
+  { value: 'NG', label: 'No Goal (NG)' },
+  { value: '1 & Over 1.5', label: 'Home Win & Over 1.5' },
+  { value: '2 & Over 1.5', label: 'Away Win & Over 1.5' },
+  { value: '1HT', label: '1st Half - Home Win' },
+  { value: 'XHT', label: '1st Half - Draw' },
+  { value: '2HT', label: '1st Half - Away Win' },
+  { value: 'Corners Over 7.5', label: 'Corners Over 7.5' },
+  { value: 'Corners Over 9.5', label: 'Corners Over 9.5' },
+  { value: 'Custom', label: 'Custom...' },
+];
+
+const getMarketLabel = (value: string) => MARKETS.find(m => m.value === value)?.label || value;
+
+const emptySelection = (): Selection => ({ home_team: '', away_team: '', pick: '', odds: '', league: '', time: '', match_date: '', result: 'pending' });
 const emptyCode = (): BookingCode => ({ platform: 'betway', code: '', odds: '' });
 
 export default function NewPrediction() {
@@ -27,6 +56,10 @@ export default function NewPrediction() {
   const [loading, setLoading] = useState(false);
   const [processingAi, setProcessingAi] = useState(false);
   const [aiInput, setAiInput] = useState('');
+  const [processingImage, setProcessingImage] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [extractedText, setExtractedText] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
   
@@ -39,6 +72,36 @@ export default function NewPrediction() {
     content: '',
     is_premium: false,
   });
+
+  const handleImageExtract = async () => {
+    if (!imageFile) return;
+    setProcessingImage(true);
+    setExtractedText('');
+    
+    try {
+      const fd = new FormData();
+      fd.append('file', imageFile);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      const imageUrl = data.secure_url;
+
+      const extractRes = await fetch('/api/extract-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      });
+      
+      if (!extractRes.ok) throw new Error('OCR extraction failed');
+      const extractData = await extractRes.json();
+      setExtractedText(extractData.text || 'No text detected');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Image extraction failed. Please fill manually.');
+    } finally {
+      setProcessingImage(false);
+    }
+  };
 
   const handleAiProcess = async () => {
     if (!aiInput.trim()) return;
@@ -55,11 +118,13 @@ export default function NewPrediction() {
 
       if (result.selections?.length) {
         setSelections(result.selections.map(s => ({
-          match: s.match || '',
+          home_team: s.home_team || '',
+          away_team: s.away_team || '',
           pick: s.pick || '',
           odds: s.odds || '',
           league: s.league || '',
           time: s.time || '',
+          match_date: s.match_date || '',
           result: 'pending'
         })));
       }
@@ -84,6 +149,8 @@ export default function NewPrediction() {
   const removeSelection = (i: number) => setSelections(prev => prev.filter((_, idx) => idx !== i));
   const updateSelection = (i: number, field: keyof Selection, value: string) =>
     setSelections(prev => prev.map((s, idx) => idx === i ? { ...s, [field]: value } : s));
+  
+  const getMatchString = (s: Selection) => s.home_team && s.away_team ? `${s.home_team} vs ${s.away_team}` : s.home_team || s.away_team || '';
 
   const addCode = () => setBookingCodes(prev => [...prev, emptyCode()]);
   const removeCode = (i: number) => setBookingCodes(prev => prev.filter((_, idx) => idx !== i));
@@ -95,6 +162,15 @@ export default function NewPrediction() {
       const file = e.target.files[0];
       setMediaFile(file);
       setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setExtractedText('');
     }
   };
 
@@ -113,7 +189,7 @@ export default function NewPrediction() {
         mediaUrl = data.secure_url;
       }
 
-      const validSelections = selections.filter(s => s.match.trim() !== '');
+      const validSelections = selections.filter(s => s.home_team.trim() !== '' && s.away_team.trim() !== '');
       const validCodes = bookingCodes.filter(c => c.code.trim() !== '');
 
       await addDoc(collection(db, 'predictions'), {
@@ -142,29 +218,77 @@ export default function NewPrediction() {
             <ChevronLeft size={16} /> Back to Dashboard
           </button>
           <h1 className={styles.pageTitle}>Create New Ticket</h1>
-          <p className={styles.pageSubtitle}>Fill in match details or use AI for fast extraction</p>
+          <p className={styles.pageSubtitle}>Fill in match details manually or extract from image</p>
         </div>
       </div>
 
       <div className={styles.pageGrid}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-          {/* AI Box */}
-          <div className={styles.aiBox}>
-            <div className={styles.aiBoxHeader}>
-              <Sparkles size={18} color="var(--color-primary)" />
-              <h2 style={{ fontSize: '1rem', fontWeight: 800 }}>AI Multi-Pick Extractor</h2>
+          <div className={styles.formCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <ScanText size={20} color="var(--color-primary)" />
+              <h2 className={styles.bookingCodesSectionTitle} style={{ marginBottom: 0 }}>AI Text Extractor</h2>
             </div>
-            <div className={styles.aiBoxBody}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
+              Paste raw text from bet slip. AI will extract teams, markets, odds and calculate total odds.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <textarea
                 className="input"
-                style={{ flex: 1, minHeight: '110px' }}
-                placeholder="Paste bet slip text or multiple picks here..."
+                style={{ minHeight: '150px', resize: 'vertical' }}
+                placeholder="Paste bet slip text here...&#10;Example:&#10;Man City vs Liverpool&#10;Home Win @ 1.85&#10;Over 2.5 @ 1.90&#10;Total Odds: 3.52&#10;&#10;Or paste multiple games:&#10;Arsenal vs Chelsea - 1 @ 2.00&#10;Man Utd vs Liverpool - Over 2.5 @ 1.75&#10;Total Odds: 3.50"
                 value={aiInput}
                 onChange={e => setAiInput(e.target.value)}
               />
-              <button type="button" className="btn btn-primary" onClick={handleAiProcess} disabled={processingAi || !aiInput.trim()} style={{ height: 'fit-content' }}>
-                {processingAi ? 'Processing...' : 'Extract Picks'}
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleAiProcess} 
+                disabled={processingAi || !aiInput.trim()}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <Sparkles size={16} />
+                {processingAi ? 'Processing...' : 'Extract Picks with AI'}
               </button>
+            </div>
+          </div>
+
+          <div className={styles.formCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <ImagePlus size={20} color="var(--color-primary)" />
+              <h2 className={styles.bookingCodesSectionTitle} style={{ marginBottom: 0 }}>Or Extract from Image</h2>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
+              Upload a betslip screenshot. The extracted text will appear as a reference - fill in the selections manually below.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <label className={styles.uploadZone} style={{ minHeight: '120px' }}>
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" style={{ maxHeight: '100px', borderRadius: '8px' }} />
+                ) : (
+                  <>
+                    <ScanText size={28} className={styles.uploadIcon} style={{ width: 28, height: 28 }} />
+                    <div className={styles.uploadText}>Upload Bet Slip Image</div>
+                  </>
+                )}
+                <input type="file" accept="image/*" onChange={handleImageFile} style={{ display: 'none' }} />
+              </label>
+              {imagePreview && (
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={handleImageExtract} 
+                  disabled={processingImage || !imageFile}
+                >
+                  {processingImage ? 'Extracting...' : 'Extract Text'}
+                </button>
+              )}
+              {extractedText && (
+                <div style={{ padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Extracted Text (Reference)</div>
+                  <pre style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', color: 'var(--color-text-secondary)' }}>{extractedText}</pre>
+                </div>
+              )}
             </div>
           </div>
 
@@ -195,12 +319,24 @@ export default function NewPrediction() {
                       </div>
                       <div className={styles.formGrid}>
                         <div className={styles.formGroup}>
-                          <label className="label">Match</label>
-                          <input type="text" className="input" placeholder="Teams (e.g. USA vs Paraguay)" value={s.match} onChange={e => updateSelection(i, 'match', e.target.value)} required />
+                          <label className="label">Home Team</label>
+                          <input type="text" className="input" placeholder="e.g. Manchester City" value={s.home_team} onChange={e => updateSelection(i, 'home_team', e.target.value)} required />
                         </div>
                         <div className={styles.formGroup}>
-                          <label className="label">Market/Pick</label>
-                          <input type="text" className="input" placeholder="Pick (e.g. Home Win)" value={s.pick} onChange={e => updateSelection(i, 'pick', e.target.value)} required />
+                          <label className="label">Away Team</label>
+                          <input type="text" className="input" placeholder="e.g. Liverpool" value={s.away_team} onChange={e => updateSelection(i, 'away_team', e.target.value)} required />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className="label">Market</label>
+                          <select 
+                            className="input" 
+                            value={MARKETS.some(m => m.value === s.pick) ? s.pick : 'Custom'} 
+                            onChange={e => updateSelection(i, 'pick', e.target.value)}
+                          >
+                            {MARKETS.map(m => (
+                              <option key={m.value} value={m.value}>{m.label}</option>
+                            ))}
+                          </select>
                         </div>
                         <div className={styles.formGroup}>
                           <label className="label">Odds</label>
@@ -209,6 +345,14 @@ export default function NewPrediction() {
                         <div className={styles.formGroup}>
                           <label className="label">League</label>
                           <input type="text" className="input" placeholder="Competition" value={s.league} onChange={e => updateSelection(i, 'league', e.target.value)} />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className="label">Date</label>
+                          <input type="date" className="input" value={s.match_date} onChange={e => updateSelection(i, 'match_date', e.target.value)} />
+                        </div>
+                        <div className={styles.formGroup}>
+                          <label className="label">Time</label>
+                          <input type="time" className="input" value={s.time} onChange={e => updateSelection(i, 'time', e.target.value)} />
                         </div>
                       </div>
                     </div>

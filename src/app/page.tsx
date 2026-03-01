@@ -7,16 +7,18 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
-import { ChevronDown, ChevronUp, Copy, Clock, Zap, CheckCircle2, XCircle, ListPlus } from 'lucide-react';
+import { Copy, Clock, Zap, CheckCircle2, XCircle, ListPlus } from 'lucide-react';
 import styles from './page.module.css';
 import AuthModal from '@/components/AuthModal';
 
 interface Selection {
-  match: string;
+  home_team: string;
+  away_team: string;
   pick: string;
   odds: string;
   league?: string;
   time?: string;
+  match_date?: string;
   result: 'win' | 'lose' | 'pending';
 }
 
@@ -28,8 +30,37 @@ interface Prediction {
   result: 'win' | 'lose' | 'pending';
   is_premium?: boolean;
   booking_codes?: { platform: string; code: string; odds?: string }[];
+  media_url?: string;
   created_at?: any;
 }
+
+const MARKETS_LABELS: Record<string, string> = {
+  '1': 'Home Win',
+  'X': 'Draw',
+  '2': 'Away Win',
+  '1X': 'Double Chance 1X',
+  '12': 'Double Chance 12',
+  'X2': 'Double Chance X2',
+  'Over 0.5': 'Over 0.5',
+  'Over 1.5': 'Over 1.5',
+  'Over 2.5': 'Over 2.5',
+  'Over 3.5': 'Over 3.5',
+  'Under 2.5': 'Under 2.5',
+  'Under 3.5': 'Under 3.5',
+  'BTTS Yes': 'BTTS Yes',
+  'BTTS No': 'BTTS No',
+  'GG': 'GG',
+  'NG': 'NG',
+  '1 & Over 1.5': '1 & Over 1.5',
+  '2 & Over 1.5': '2 & Over 1.5',
+  '1HT': '1st Half Home',
+  'XHT': '1st Half Draw',
+  '2HT': '1st Half Away',
+  'Corners Over 7.5': 'Corners O7.5',
+  'Corners Over 9.5': 'Corners O9.5',
+};
+
+const getMarketLabel = (value: string) => MARKETS_LABELS[value] || value;
 
 function StatusBadge({ result, size = 'md' }: { result?: string, size?: 'sm' | 'md' }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
@@ -58,7 +89,6 @@ export default function Home() {
   const { user, isAdmin, logout } = useAuth();
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [filter, setFilter] = useState<'free' | 'vip'>('free');
 
@@ -119,7 +149,7 @@ export default function Home() {
             ) : (
               display.map(ticket => (
                 <div key={ticket.id} className={styles.predictionItem} style={{ border: ticket.is_premium ? '2px solid var(--color-gold)' : '1px solid var(--color-border)' }}>
-                  <div className={styles.predictionMain} onClick={() => setExpandedId(expandedId === ticket.id ? null : ticket.id)}>
+                  <div className={styles.predictionMain}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>{ticket.title}</h3>
@@ -132,50 +162,66 @@ export default function Home() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <StatusBadge result={ticket.result} />
-                      {expandedId === ticket.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                     </div>
                   </div>
 
-                  {expandedId === ticket.id && (
-                    <div className={styles.bookingExpand}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-                        {ticket.selections?.map((sel, idx) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.85rem', background: 'var(--color-surface)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
-                            <div>
-                              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{sel.match}</div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{sel.league}</div>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ color: 'var(--color-secondary)', fontWeight: 800, fontSize: '0.9rem' }}>{sel.pick} <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>@ {sel.odds}</span></div>
-                              <div style={{ marginTop: '0.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                                {sel.result === 'win' ? <CheckCircle2 size={16} color="var(--color-primary)" /> : sel.result === 'lose' ? <XCircle size={16} color="var(--color-danger)" /> : <Clock size={16} color="var(--color-text-muted)" />}
-                              </div>
+                  <div className={styles.bookingExpand}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                      {ticket.selections?.map((sel, idx) => (
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center', 
+                            padding: '0.85rem', 
+                            background: sel.result === 'win' ? 'rgba(0, 200, 81, 0.08)' : sel.result === 'lose' ? 'rgba(255, 59, 48, 0.08)' : 'var(--color-surface)', 
+                            borderRadius: '10px', 
+                            border: '1px solid var(--color-border)' 
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{sel.home_team} vs {sel.away_team}</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                              {sel.league}{sel.league && (sel.match_date || sel.time) && ' • '}{sel.match_date}{sel.match_date && sel.time && ' • '}{sel.time}
                             </div>
                           </div>
-                        ))}
-                      </div>
-
-                      {ticket.booking_codes && ticket.booking_codes.length > 0 && (
-                        <div style={{ marginTop: '1.5rem' }}>
-                          <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Booking Codes</h4>
-                          <div className={styles.bookingGrid}>
-                            {ticket.booking_codes.map((bc, idx) => (
-                              <div key={idx} className={styles.bookingCard}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                  <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{bc.platform}</span>
-                                  {bc.odds && <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>@ {bc.odds}</span>}
-                                </div>
-                                <div className={styles.bookingCodeBox}>
-                                  <span className={styles.bookingCode}>{bc.code}</span>
-                                  <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bc.code); alert('Copied!'); }} className={styles.copyBtn}><Copy size={14} /></button>
-                                </div>
-                              </div>
-                            ))}
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ color: 'var(--color-secondary)', fontWeight: 800, fontSize: '0.9rem' }}>{getMarketLabel(sel.pick)} <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>@ {sel.odds}</span></div>
+                            <div style={{ marginTop: '0.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+                              {sel.result === 'win' ? <CheckCircle2 size={16} color="var(--color-primary)" /> : sel.result === 'lose' ? <XCircle size={16} color="var(--color-danger)" /> : <Clock size={16} color="var(--color-text-muted)" />}
+                            </div>
                           </div>
                         </div>
-                      )}
+                      ))}
                     </div>
-                  )}
+
+                    {ticket.media_url && (
+                      <div className={styles.tipImage}>
+                        <img src={ticket.media_url} alt="Betslip" />
+                      </div>
+                    )}
+
+                    {ticket.booking_codes && ticket.booking_codes.length > 0 && (
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Booking Codes</h4>
+                        <div className={styles.bookingGrid}>
+                          {ticket.booking_codes.map((bc, idx) => (
+                            <div key={idx} className={styles.bookingCard}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{bc.platform}</span>
+                                {bc.odds && <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>@ {bc.odds}</span>}
+                              </div>
+                              <div className={styles.bookingCodeBox}>
+                                <span className={styles.bookingCode}>{bc.code}</span>
+                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bc.code); alert('Copied!'); }} className={styles.copyBtn}><Copy size={14} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))
             )}
