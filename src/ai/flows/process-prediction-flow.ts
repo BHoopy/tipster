@@ -42,61 +42,54 @@ const OPENROUTER_API_KEY = "sk-or-v1-placeholder";
 function robustParseBetslip(text: string): PredictionOutput | null {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const selections: any[] = [];
+  let detectedTotalOdds = "";
+
+  // 1. Look for explicit Total Odds in text first
+  const totalOddsPattern = /(?:Total\s*Odds|Accumulated|Total\s*@|Odds\s*Sum|Total)\s*[:@]?\s*(\d+\.\d+)/i;
+  const totalMatch = text.match(totalOddsPattern);
+  if (totalMatch) {
+    detectedTotalOdds = totalMatch[1];
+  }
   
+  // 2. Parse matches and individual odds
   // Pattern 1: Multi-line block (Pick \n Match \n Market+Odds)
-  // Example: 
-  // Home
-  // USA v Paraguay
-  // 1X22.07
   for (let i = 0; i < lines.length - 2; i++) {
-    const line1 = lines[i]; // Pick (e.g. Home)
-    const line2 = lines[i+1]; // Match (e.g. USA v Paraguay)
-    const line3 = lines[i+2]; // Market + Odds (e.g. 1X22.07)
+    const line1 = lines[i]; // Potential Pick (e.g. Home)
+    const line2 = lines[i+1]; // Potential Match (e.g. USA v Paraguay)
+    const line3 = lines[i+2]; // Potential Market + Odds (e.g. 1X22.07)
 
     if (line2.includes(' v ') || line2.includes(' - ')) {
-      // Regex to detect common markets and extract only the odds at the end
-      // This prevents "1X2" or "Double Chance" from inflating the odds value
-      const marketPattern = /^(1X2|Double Chance|Over\/Under|GG\/NG|Home\/Away|Draw No Bet)?(\d+\.\d+)$/i;
+      // Improved regex to separate market headers from numeric odds
+      // Specifically handles the user's "1X22.07" case where "2" is part of the market name
+      const marketPattern = /^(1X2|12|1X|X2|Double\s*Chance|Over\/Under|GG\/NG|Home\/Away|Draw\s*No\s*Bet|Over|Under)?\s*(\d+\.\d+)$/i;
       const oddsMatch = line3.match(marketPattern);
       
       if (oddsMatch) {
         selections.push({
           match: line2,
           pick: line1,
-          odds: oddsMatch[2], // Group 2 is the actual numeric odds
+          odds: oddsMatch[2], // Group 2 is the actual numeric odds (e.g. 2.07)
           league: "Detected Match",
           time: "Today",
           result: 'pending'
         });
-        i += 2; // Skip processed lines
-      } else {
-        // Fallback: search for any float at the very end of the line
-        const simpleOdds = line3.match(/(\d+\.\d+)$/);
-        if (simpleOdds) {
-          selections.push({
-            match: line2,
-            pick: line1,
-            odds: simpleOdds[1],
-            league: "Detected Match",
-            time: "Today",
-            result: 'pending'
-          });
-          i += 2;
-        }
+        i += 2; 
       }
     }
   }
 
-  // Pattern 2: Single line with " - " or " v "
+  // Fallback Pattern: Single line with " - " or " v "
   if (selections.length === 0) {
     lines.forEach(line => {
       const matchPattern = /(.+?)(?:\s[v-]\s)(.+?)\s(?:prematch\s)?(.+)/i;
       const parts = line.match(matchPattern);
       if (parts) {
+        const pickAndOdds = parts[3].trim();
+        const oddsOnly = pickAndOdds.match(/(\d+\.\d+)$/);
         selections.push({
           match: `${parts[1].trim()} vs ${parts[2].trim()}`,
-          pick: parts[3].trim(),
-          odds: "",
+          pick: pickAndOdds.replace(/(\d+\.\d+)$/, '').trim(),
+          odds: oddsOnly ? oddsOnly[1] : "",
           league: "Detected",
           time: "Today",
           result: 'pending'
@@ -106,10 +99,24 @@ function robustParseBetslip(text: string): PredictionOutput | null {
   }
 
   if (selections.length > 0) {
+    // 3. Calculate total odds if not explicitly found
+    if (!detectedTotalOdds) {
+      let calc = 1.0;
+      let hasValidOdds = false;
+      selections.forEach(s => {
+        const val = parseFloat(s.odds);
+        if (!isNaN(val) && val > 0) {
+          calc *= val;
+          hasValidOdds = true;
+        }
+      });
+      if (hasValidOdds) detectedTotalOdds = calc.toFixed(2);
+    }
+
     return {
       title: `${selections.length} Games Accumulator`,
       selections,
-      total_odds: "",
+      total_odds: detectedTotalOdds,
       is_premium: false,
       booking_codes: [],
       content: "Automatically parsed from text slip."
@@ -138,17 +145,18 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
           "content": `You are a betting expert. Extract structured JSON from betting slips. 
           
           CRITICAL INSTRUCTIONS:
-          - Markets like '1X2', 'Double Chance', or 'Over/Under' are often prefixed to the odds (e.g., '1X22.07' means odds 2.07 for the 1X2 market). 
-          - Do NOT include the '1X2' digits in the odds field.
-          - Identify the match, pick/market, and clean numeric odds.
+          - Markets like '1X2' are often prefixes to odds (e.g., '1X22.07' means odds 2.07 for the 1X2 market). 
+          - NEVER include market identifiers (like the '2' in '1X2') in the numeric odds field.
+          - Look for 'Total Odds' or 'Accumulated' in the text. If missing, calculate it by multiplying individual selection odds.
           
           Return only valid JSON matching this schema: 
           { 
-            title: string, 
-            selections: [{match: string, pick: string, odds: string, league: string}], 
-            total_odds: string, 
-            is_premium: boolean, 
-            booking_codes: [{platform: string, code: string}] 
+            "title": string, 
+            "selections": [{"match": string, "pick": string, "odds": string, "league": string}], 
+            "total_odds": string, 
+            "is_premium": boolean, 
+            "booking_codes": [{"platform": string, "code": string}],
+            "content": string 
           }`
         },
         {
@@ -167,7 +175,23 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
 
   const data = await response.json();
   const content = data.choices[0].message.content;
-  return JSON.parse(content) as PredictionOutput;
+  const result = JSON.parse(content) as PredictionOutput;
+
+  // Final validation/calculation for total_odds if AI missed it
+  if (!result.total_odds && result.selections?.length > 0) {
+    let calc = 1.0;
+    let hasValidOdds = false;
+    result.selections.forEach(s => {
+      const val = parseFloat(s.odds || "");
+      if (!isNaN(val) && val > 0) {
+        calc *= val;
+        hasValidOdds = true;
+      }
+    });
+    if (hasValidOdds) result.total_odds = calc.toFixed(2);
+  }
+
+  return result;
 }
 
 export async function processPrediction(rawText: string): Promise<PredictionOutput> {
