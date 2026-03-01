@@ -1,6 +1,7 @@
 'use server';
 /**
  * @fileOverview AI flow to extract multiple structured betting picks from raw text.
+ * Uses a lookup tool to verify league information.
  */
 
 import { ai } from '@/ai/genkit';
@@ -31,23 +32,41 @@ const PredictionOutputSchema = z.object({
 
 export type PredictionOutput = z.infer<typeof PredictionOutputSchema>;
 
+/**
+ * Mock Tool to simulate a football API lookup for league and schedule.
+ * In a production app, this would call API-Football or similar.
+ */
+const getMatchDetailsTool = ai.defineTool(
+  {
+    name: 'getMatchDetailsTool',
+    description: 'Searches for the official league name and match time for two teams playing today.',
+    inputSchema: z.object({ matchName: z.string() }),
+    outputSchema: z.object({ league: z.string(), time: z.string() }),
+  },
+  async (input) => {
+    // This is where you would integrate your Football API
+    console.log(`Simulated API Search for: ${input.matchName}`);
+    return {
+      league: "Pro League", // Default placeholder if not found
+      time: "Scheduled Today",
+    };
+  }
+);
+
 const processPredictionPrompt = ai.definePrompt({
   name: 'processPredictionPrompt',
   model: 'googleai/gemini-1.5-flash',
+  tools: [getMatchDetailsTool],
   input: { schema: z.object({ rawText: z.string() }) },
   output: { schema: PredictionOutputSchema },
-  prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text snippets.
+  prompt: `You are a sports betting expert. Your task is to extract structured betting data from raw text.
   
   Format instructions:
-  - Input often has a Match Code, Date/Time, Teams, Market, and Odds.
-  - Sometimes the "Pick" or "Market" appears before the match names.
-  - Correct spelling of teams (e.g., "USA" instead of "Usa").
-  - Identify the League if possible from team names.
+  - Input often includes a list of matches, codes, and picks.
+  - USE the getMatchDetailsTool to verify or find the LEAGUE and TIME for each match found.
+  - If the pick appears before the teams (e.g., "Home Win USA v Paraguay"), correctly identify the teams and the pick.
+  - Return a structured array of selections.
 
-  Example Input structure:
-  "USA v Paraguay
-  Home Win 2.07"
-  
   Raw Text:
   {{{rawText}}}`,
 });

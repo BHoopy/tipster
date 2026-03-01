@@ -217,9 +217,6 @@
     flex-direction: column;
     margin-bottom: 1.75rem;
   }
-  .pageHeader .btn {
-    width: 100%;
-  }
 }
 
 .pageTitle {
@@ -321,9 +318,6 @@
   .aiBoxBody {
     flex-direction: column;
   }
-  .aiBoxBody .btn {
-    width: 100%;
-  }
 }
 
 /* ===== UPLOAD ZONE ===== */
@@ -366,8 +360,6 @@
   transition: all 0.2s;
 }
 
-.switchRow:hover { border-color: var(--color-border-light); }
-
 .switch {
   width: 44px;
   height: 24px;
@@ -389,7 +381,6 @@
   background: #fff;
   border-radius: 50%;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .switch.on .switchThumb { transform: translateX(20px); }
 
@@ -423,7 +414,6 @@
 .statIcon.blue { background: rgba(0, 122, 255, 0.15); color: #007aff; }
 .statIcon.green { background: rgba(0, 200, 81, 0.15); color: var(--color-primary); }
 
-.statInfo { display: flex; flex-direction: column; }
 .statLabel { font-size: 0.7rem; color: var(--color-text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 .statValue { font-size: 1.5rem; font-weight: 900; color: var(--color-text); }
 
@@ -462,7 +452,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 0.625rem;
   }
-  .bookingCodeRow button { grid-column: 2; grid-row: 1; justify-self: flex-end; }
 }
 
 .addCodeBtn {
