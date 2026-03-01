@@ -19,35 +19,6 @@ const PLATFORMS = [
   { value: '1xbet', label: '1xBet' },
 ];
 
-const MARKETS = [
-  { value: '1', label: 'Home Win (1)' },
-  { value: 'X', label: 'Draw (X)' },
-  { value: '2', label: 'Away Win (2)' },
-  { value: '1X', label: 'Double Chance - Home Win/Draw (1X)' },
-  { value: '12', label: 'Double Chance - Home Win/Away Win (12)' },
-  { value: 'X2', label: 'Double Chance - Draw/Away Win (X2)' },
-  { value: 'Over 0.5', label: 'Over 0.5 Goals' },
-  { value: 'Over 1.5', label: 'Over 1.5 Goals' },
-  { value: 'Over 2.5', label: 'Over 2.5 Goals' },
-  { value: 'Over 3.5', label: 'Over 3.5 Goals' },
-  { value: 'Under 2.5', label: 'Under 2.5 Goals' },
-  { value: 'Under 3.5', label: 'Under 3.5 Goals' },
-  { value: 'BTTS Yes', label: 'Both Teams To Score - Yes' },
-  { value: 'BTTS No', label: 'Both Teams To Score - No' },
-  { value: 'GG', label: 'Goal/Goal (GG)' },
-  { value: 'NG', label: 'No Goal (NG)' },
-  { value: '1 & Over 1.5', label: 'Home Win & Over 1.5' },
-  { value: '2 & Over 1.5', label: 'Away Win & Over 1.5' },
-  { value: '1HT', label: '1st Half - Home Win' },
-  { value: 'XHT', label: '1st Half - Draw' },
-  { value: '2HT', label: '1st Half - Away Win' },
-  { value: 'Corners Over 7.5', label: 'Corners Over 7.5' },
-  { value: 'Corners Over 9.5', label: 'Corners Over 9.5' },
-  { value: 'Custom', label: 'Custom...' },
-];
-
-const getMarketLabel = (value: string) => MARKETS.find(m => m.value === value)?.label || value;
-
 const emptySelection = (): Selection => ({ home_team: '', away_team: '', pick: '', odds: '', league: '', time: '', match_date: '', result: 'pending' });
 const emptyCode = (): BookingCode => ({ platform: 'betway', code: '', odds: '' });
 
@@ -328,15 +299,13 @@ export default function NewPrediction() {
                         </div>
                         <div className={styles.formGroup}>
                           <label className="label">Market</label>
-                          <select 
+                          <input 
+                            type="text" 
                             className="input" 
-                            value={MARKETS.some(m => m.value === s.pick) ? s.pick : 'Custom'} 
-                            onChange={e => updateSelection(i, 'pick', e.target.value)}
-                          >
-                            {MARKETS.map(m => (
-                              <option key={m.value} value={m.value}>{m.label}</option>
-                            ))}
-                          </select>
+                            placeholder="e.g. 1, X, 2, Over 1.5, BTTS Yes"
+                            value={s.pick} 
+                            onChange={e => updateSelection(i, 'pick', e.target.value)} 
+                          />
                         </div>
                         <div className={styles.formGroup}>
                           <label className="label">Odds</label>

@@ -2,6 +2,7 @@
 /**
  * @fileOverview OpenRouter AI Betting Pick Processor.
  * Uses OpenRouter AI to extract structured betting data from raw text.
+ * Uses AI knowledge to identify leagues for matches.
  */
 
 import { z } from 'genkit';
@@ -78,6 +79,88 @@ function calculateTotalOdds(selections: { odds: string }[]): string {
   return hasValidOdds ? total.toFixed(2) : '';
 }
 
+async function findLeaguesForMatches(selections: Array<{ home_team: string; away_team: string; league?: string; match_date?: string }>): Promise<string[]> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return selections.map(() => '');
+  
+  const matchesToSearch = selections.filter(s => !s.league && s.home_team && s.away_team);
+  if (matchesToSearch.length === 0) return selections.map(s => s.league || '');
+  
+  const matchesText = matchesToSearch.map((m, i) => 
+    `${i + 1}. ${m.home_team} vs ${m.away_team} (${m.match_date || 'upcoming'})`
+  ).join('\n');
+  
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://leemantips.com",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "model": "google/gemini-2.0-flash-001",
+        "messages": [
+          {
+            "role": "system",
+            "content": `You are a football expert. For each match listed, identify the league/competition it belongs to.
+            
+For matches around ${new Date().toISOString().split('T')[0]} to the next few days, use your knowledge of upcoming fixtures.
+Common leagues: Premier League, Championship, La Liga, Segunda Division, Serie A, Serie B, Bundesliga, 2. Bundesliga, Ligue 1, Ligue 2, Champions League, Europa League, Conference League, Primeira Liga, Segunda Liga, Eredivisie, Belgian Pro League, Swiss Super League, Austrian Bundesliga, Turkish Super Lig, Greek Super League, Championship (England), League One, League Two, FA Cup, League Cup, Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, etc.
+Also include lower leagues and cups from Uruguay, Chile, Argentina, Brazil, Paraguay, Colombia, Mexico, USA, etc.
+
+Return ONLY a JSON array of league names (one per match in order), like:
+["Premier League", "La Liga", "Serie A"]
+
+If you're uncertain about a league, make your best guess based on the teams and date.`
+          },
+          {
+            "role": "user",
+            "content": `Identify leagues for:\n${matchesText}`
+          }
+        ],
+        "response_format": { "type": "json_object" }
+      })
+    });
+    
+    if (!response.ok) return selections.map(() => '');
+    
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    const leagues = JSON.parse(content);
+    
+    if (Array.isArray(leagues)) return leagues;
+    if (leagues.leagues) return leagues.leagues;
+    
+    return selections.map(() => '');
+  } catch (error) {
+    console.error('League search error:', error);
+    return selections.map(() => '');
+  }
+}
+
+function parseDateTime(dateStr: string, timeStr: string): { match_date: string; time: string } {
+  if (!dateStr) return { match_date: '', time: '' };
+  
+  const dateMatch = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (dateMatch) {
+    let day = dateMatch[1].padStart(2, '0');
+    let month = dateMatch[2].padStart(2, '0');
+    let year = dateMatch[3];
+    if (year.length === 2) {
+      year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+    }
+    return { match_date: `${year}-${month}-${day}`, time: timeStr || '' };
+  }
+  
+  return { match_date: dateStr, time: timeStr || '' };
+}
+
+function extractSharingCode(text: string): string | null {
+  const match = text.match(/(?:sharing\s*code|code)[:\s]*([A-Z0-9]{6,10})/i);
+  return match ? match[1] : null;
+}
+
 async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   
@@ -100,8 +183,9 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
           "content": `You are a betting expert. Extract structured JSON from betting slips text.
           
 IMPORTANT INSTRUCTIONS:
-1. Parse team names - identify home team and away team from the text (e.g., "Man City vs Chelsea" means home=Man City, away=Chelsea)
-2. Normalize market names to standard format:
+1. Parse team names - identify home team and away team from the text (e.g., "Man City vs Chelsea" or "Deportivo Maldonado - CA Juventud de Las Piedras" means home=Deportivo Maldonado, away=CA Juventud de Las Piedras)
+2. When teams are separated by " - " (dash), the left side is home team, right side is away team
+3. Normalize market names to standard format:
    - Home win = 1, Draw = X, Away win = 2
    - Double chance = 1X, 12, X2
    - Over/Under goals = Over 1.5, Over 2.5, Under 2.5, etc.
@@ -109,15 +193,21 @@ IMPORTANT INSTRUCTIONS:
    - GG = Goal/Goal, NG = No Goal
    - Half time = 1HT, XHT, 2HT
    - Corners = Corners Over 7.5, Corners Over 9.5
-3. Extract individual odds for each selection
-4. Look for "Total Odds", "Accumulated", "Total @", "Odds Sum" in the text - if found, use that value
-5. If no total odds found, calculate it by multiplying all individual odds
-6. Extract any booking codes found in the text with their platform
+4. Extract date and time from the text when available:
+   - Format like "01/03/2026 22:33" or "02/03/2026 23:00" - parse as DD/MM/YYYY HH:MM
+   - Convert to ISO format: match_date = YYYY-MM-DD, time = HH:MM
+   - If date is not provided but looks like it's in the next few days, you can leave empty
+5. Extract individual odds for each selection if available
+6. For the title, generate a concise accumulator title like "X Odds Accumulator" or "X Odds Daily Ticket" where X is the number of games. DO NOT include team names in the title.
+7. Look for "Total Odds", "Accumulated", "Total @", "Odds Sum" in the text - if found, use that value
+8. If no total odds found, calculate it by multiplying all individual odds
+9. Extract any booking codes (sharing codes) found in the text
+10. Identify the league from the text if mentioned. Common leagues: Premier League, Champions League, La Liga, Serie A, Bundesliga, Ligue 1, FA Cup, etc. If not mentioned, leave empty string.
 
 Return only valid JSON matching this schema:
 {
-  "title": string,
-  "selections": [{"home_team": string, "away_team": string, "pick": string, "odds": string, "league": string, "time": string, "match_date": string}],
+  "title": string (e.g., "5 Odds Accumulator", "10 Odds Daily Ticket"),
+  "selections": [{"home_team": string, "away_team": string, "pick": string, "odds": string, "league": string (if mentioned, otherwise empty string), "time": string (HH:MM format), "match_date": string (YYYY-MM-DD format)}],
   "total_odds": string,
   "is_premium": boolean,
   "booking_codes": [{"platform": string, "code": string, "odds": string}],
@@ -150,6 +240,13 @@ Return only valid JSON matching this schema:
     }));
   }
 
+  // Generate proper title if it contains team names or is invalid
+  const selectionCount = result.selections?.length || 0;
+  const hasTeamNameInTitle = result.title?.includes(' vs ') || result.title?.includes(' - ');
+  if (hasTeamNameInTitle || !result.title) {
+    result.title = `${selectionCount} Odds Accumulator`;
+  }
+
   // Calculate total odds if not found or invalid
   if (!result.total_odds && result.selections?.length > 0) {
     result.total_odds = calculateTotalOdds(result.selections);
@@ -160,7 +257,35 @@ Return only valid JSON matching this schema:
 
 export async function processPrediction(rawText: string): Promise<PredictionOutput> {
   try {
-    return await openRouterExtract(rawText);
+    const sharingCode = extractSharingCode(rawText);
+    const result = await openRouterExtract(rawText);
+    
+    if (result.selections?.length) {
+      const leagues = await findLeaguesForMatches(
+        result.selections.map(s => ({
+          home_team: s.home_team,
+          away_team: s.away_team,
+          league: s.league,
+          match_date: s.match_date,
+        }))
+      );
+      
+      result.selections = result.selections.map((s, idx) => {
+        const parsed = parseDateTime(s.match_date || '', s.time || '');
+        return {
+          ...s,
+          match_date: parsed.match_date || s.match_date || '',
+          time: parsed.time || s.time || '',
+          league: s.league || leagues[idx] || '',
+        };
+      });
+    }
+    
+    if (sharingCode && !result.booking_codes?.length) {
+      result.booking_codes = [{ platform: 'betway', code: sharingCode, odds: '' }];
+    }
+    
+    return result;
   } catch (error: any) {
     console.error('Processing Error:', error);
     throw new Error(error.message || 'Failed to process prediction data.');
