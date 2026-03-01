@@ -37,38 +37,57 @@ const OPENROUTER_API_KEY = "sk-or-v1-placeholder";
 
 /**
  * Robust Regex Parser for predictable betslip formats.
- * Handles patterns like "Team A v Team B", "Home Win", and "2.07" odds.
+ * Handles patterns like "Team A v Team B", "Home Win", and "1X22.07" odds.
  */
 function robustParseBetslip(text: string): PredictionOutput | null {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const selections: any[] = [];
   
   // Pattern 1: Multi-line block (Pick \n Match \n Market+Odds)
-  // Example: Home \n USA v Paraguay \n 1X22.07
+  // Example: 
+  // Home
+  // USA v Paraguay
+  // 1X22.07
   for (let i = 0; i < lines.length - 2; i++) {
-    const line1 = lines[i];
-    const line2 = lines[i+1];
-    const line3 = lines[i+2];
+    const line1 = lines[i]; // Pick (e.g. Home)
+    const line2 = lines[i+1]; // Match (e.g. USA v Paraguay)
+    const line3 = lines[i+2]; // Market + Odds (e.g. 1X22.07)
 
     if (line2.includes(' v ') || line2.includes(' - ')) {
-      // Check if line3 contains odds (usually numbers at the end)
-      const oddsMatch = line3.match(/(\d+\.\d+)$/);
+      // Regex to detect common markets and extract only the odds at the end
+      // This prevents "1X2" or "Double Chance" from inflating the odds value
+      const marketPattern = /^(1X2|Double Chance|Over\/Under|GG\/NG|Home\/Away|Draw No Bet)?(\d+\.\d+)$/i;
+      const oddsMatch = line3.match(marketPattern);
+      
       if (oddsMatch) {
         selections.push({
           match: line2,
           pick: line1,
-          odds: oddsMatch[1],
+          odds: oddsMatch[2], // Group 2 is the actual numeric odds
           league: "Detected Match",
           time: "Today",
           result: 'pending'
         });
         i += 2; // Skip processed lines
+      } else {
+        // Fallback: search for any float at the very end of the line
+        const simpleOdds = line3.match(/(\d+\.\d+)$/);
+        if (simpleOdds) {
+          selections.push({
+            match: line2,
+            pick: line1,
+            odds: simpleOdds[1],
+            league: "Detected Match",
+            time: "Today",
+            result: 'pending'
+          });
+          i += 2;
+        }
       }
     }
   }
 
   // Pattern 2: Single line with " - " or " v "
-  // Example: "USA - Paraguay prematch Home"
   if (selections.length === 0) {
     lines.forEach(line => {
       const matchPattern = /(.+?)(?:\s[v-]\s)(.+?)\s(?:prematch\s)?(.+)/i;
@@ -108,7 +127,7 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://leemantips.com", // Optional, for OpenRouter tracking
+      "HTTP-Referer": "https://leemantips.com",
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -116,7 +135,21 @@ async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
       "messages": [
         {
           "role": "system",
-          "content": "You are a betting expert. Extract structured JSON from betting slips. Return only valid JSON matching this schema: { title: string, selections: [{match: string, pick: string, odds: string, league: string}], total_odds: string, is_premium: boolean, booking_codes: [{platform: string, code: string}] }"
+          "content": `You are a betting expert. Extract structured JSON from betting slips. 
+          
+          CRITICAL INSTRUCTIONS:
+          - Markets like '1X2', 'Double Chance', or 'Over/Under' are often prefixed to the odds (e.g., '1X22.07' means odds 2.07 for the 1X2 market). 
+          - Do NOT include the '1X2' digits in the odds field.
+          - Identify the match, pick/market, and clean numeric odds.
+          
+          Return only valid JSON matching this schema: 
+          { 
+            title: string, 
+            selections: [{match: string, pick: string, odds: string, league: string}], 
+            total_odds: string, 
+            is_premium: boolean, 
+            booking_codes: [{platform: string, code: string}] 
+          }`
         },
         {
           "role": "user",
