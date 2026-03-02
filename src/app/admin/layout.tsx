@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
-import { Menu, X, LayoutDashboard, FilePlus2, LogOut, ArrowLeft } from 'lucide-react';
+import { Menu, X, LayoutDashboard, FilePlus2, LogOut, ArrowLeft, Sparkles } from 'lucide-react';
 import styles from './admin.module.css';
 
 const navItems = [
   { href: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
   { href: '/admin/predictions/new', icon: <FilePlus2 size={20} />, label: 'New Prediction' },
+  { href: '/admin/ai-odds', icon: <Sparkles size={20} />, label: 'AI Safe Odds' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -99,7 +100,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </span>
           <Link href="/admin/predictions/new" className="btn btn-primary btn-sm">
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <FilePlus2 size={16} /> <span style={{ display: 'none', sm: 'inline' }}>New</span>
+              <FilePlus2 size={16} /> <span style={{ display: 'none' }}>New</span>
             </span>
           </Link>
         </header>
