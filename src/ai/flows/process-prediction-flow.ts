@@ -67,7 +67,7 @@ function normalizeMarket(pickText: string): string {
 function calculateTotalOdds(selections: { odds: string }[]): string {
   let total = 1.0;
   let hasValidOdds = false;
-  
+
   for (const sel of selections) {
     const val = parseFloat(sel.odds);
     if (!isNaN(val) && val > 0) {
@@ -75,21 +75,21 @@ function calculateTotalOdds(selections: { odds: string }[]): string {
       hasValidOdds = true;
     }
   }
-  
+
   return hasValidOdds ? total.toFixed(2) : '';
 }
 
 async function findLeaguesForMatches(selections: Array<{ home_team: string; away_team: string; league?: string; match_date?: string }>): Promise<string[]> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return selections.map(() => '');
-  
+
   const matchesToSearch = selections.filter(s => !s.league && s.home_team && s.away_team);
   if (matchesToSearch.length === 0) return selections.map(s => s.league || '');
-  
-  const matchesText = matchesToSearch.map((m, i) => 
+
+  const matchesText = matchesToSearch.map((m, i) =>
     `${i + 1}. ${m.home_team} vs ${m.away_team} (${m.match_date || 'upcoming'})`
   ).join('\n');
-  
+
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -122,16 +122,16 @@ If you're uncertain about a league, make your best guess based on the teams and 
         "response_format": { "type": "json_object" }
       })
     });
-    
+
     if (!response.ok) return selections.map(() => '');
-    
+
     const data = await response.json();
     const content = data.choices[0].message.content;
     const leagues = JSON.parse(content);
-    
+
     if (Array.isArray(leagues)) return leagues;
     if (leagues.leagues) return leagues.leagues;
-    
+
     return selections.map(() => '');
   } catch (error) {
     console.error('League search error:', error);
@@ -141,18 +141,24 @@ If you're uncertain about a league, make your best guess based on the teams and 
 
 function parseDateTime(dateStr: string, timeStr: string): { match_date: string; time: string } {
   if (!dateStr) return { match_date: '', time: '' };
-  
+
+  // If already in YYYY-MM-DD format, return it as is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return { match_date: dateStr, time: timeStr || '' };
+  }
+
+  // Parse DD/MM/YYYY or DD-MM-YYYY
   const dateMatch = dateStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
   if (dateMatch) {
     let day = dateMatch[1].padStart(2, '0');
     let month = dateMatch[2].padStart(2, '0');
     let year = dateMatch[3];
     if (year.length === 2) {
-      year = parseInt(year) > 50 ? `19${year}` : `20${year}`;
+      year = `20${year}`;
     }
     return { match_date: `${year}-${month}-${day}`, time: timeStr || '' };
   }
-  
+
   return { match_date: dateStr, time: timeStr || '' };
 }
 
@@ -163,7 +169,7 @@ function extractSharingCode(text: string): string | null {
 
 async function openRouterExtract(rawText: string): Promise<PredictionOutput> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error('OPENROUTER_API_KEY not configured');
   }
@@ -194,9 +200,10 @@ IMPORTANT INSTRUCTIONS:
    - Half time = 1HT, XHT, 2HT
    - Corners = Corners Over 7.5, Corners Over 9.5
 4. Extract date and time from the text when available:
-   - Format like "01/03/2026 22:33" or "02/03/2026 23:00" - parse as DD/MM/YYYY HH:MM
+   - Format like "01/03/2026 22:33" or "02/03/2026 23:00" - ALWAYS parse as DD/MM/YYYY HH:MM
+   - IMPORTANT: The current date is Sunday, March 1st, 2026. Use 2026 as the year.
    - Convert to ISO format: match_date = YYYY-MM-DD, time = HH:MM
-   - If date is not provided but looks like it's in the next few days, you can leave empty
+   - If date is not provided but looks like it's in the next few days, you can leave empty string or use 2026-03-01 / 2026-03-02 as appropriate.
 5. Extract individual odds for each selection if available
 6. For the title, generate a concise accumulator title like "X Odds Accumulator" or "X Odds Daily Ticket" where X is the number of games. DO NOT include team names in the title.
 7. Look for "Total Odds", "Accumulated", "Total @", "Odds Sum" in the text - if found, use that value
@@ -259,7 +266,7 @@ export async function processPrediction(rawText: string): Promise<PredictionOutp
   try {
     const sharingCode = extractSharingCode(rawText);
     const result = await openRouterExtract(rawText);
-    
+
     if (result.selections?.length) {
       const leagues = await findLeaguesForMatches(
         result.selections.map(s => ({
@@ -269,7 +276,7 @@ export async function processPrediction(rawText: string): Promise<PredictionOutp
           match_date: s.match_date,
         }))
       );
-      
+
       result.selections = result.selections.map((s, idx) => {
         const parsed = parseDateTime(s.match_date || '', s.time || '');
         return {
@@ -280,11 +287,11 @@ export async function processPrediction(rawText: string): Promise<PredictionOutp
         };
       });
     }
-    
+
     if (sharingCode && !result.booking_codes?.length) {
       result.booking_codes = [{ platform: 'betway', code: sharingCode, odds: '' }];
     }
-    
+
     return result;
   } catch (error: any) {
     console.error('Processing Error:', error);

@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { processPrediction } from '@/ai/flows/process-prediction-flow';
-import { ImagePlus, Trash2, Plus, X, ListPlus, ChevronLeft, ScanText, Sparkles } from 'lucide-react';
+import { Trash2, Plus, X, ListPlus, ChevronLeft, ScanText, Sparkles } from 'lucide-react';
 import styles from '../../admin.module.css';
 
 interface BookingCode { platform: string; code: string; odds: string; }
@@ -27,10 +27,6 @@ export default function NewPrediction() {
   const [loading, setLoading] = useState(false);
   const [processingAi, setProcessingAi] = useState(false);
   const [aiInput, setAiInput] = useState('');
-  const [processingImage, setProcessingImage] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
-  const [extractedText, setExtractedText] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
   
@@ -43,36 +39,6 @@ export default function NewPrediction() {
     content: '',
     is_premium: false,
   });
-
-  const handleImageExtract = async () => {
-    if (!imageFile) return;
-    setProcessingImage(true);
-    setExtractedText('');
-    
-    try {
-      const fd = new FormData();
-      fd.append('file', imageFile);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
-      const imageUrl = data.secure_url;
-
-      const extractRes = await fetch('/api/extract-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl }),
-      });
-      
-      if (!extractRes.ok) throw new Error('OCR extraction failed');
-      const extractData = await extractRes.json();
-      setExtractedText(extractData.text || 'No text detected');
-    } catch (err: any) {
-      console.error(err);
-      alert(err.message || 'Image extraction failed. Please fill manually.');
-    } finally {
-      setProcessingImage(false);
-    }
-  };
 
   const handleAiProcess = async () => {
     if (!aiInput.trim()) return;
@@ -136,15 +102,6 @@ export default function NewPrediction() {
     }
   };
 
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const file = e.target.files[0];
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setExtractedText('');
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -189,7 +146,7 @@ export default function NewPrediction() {
             <ChevronLeft size={16} /> Back to Dashboard
           </button>
           <h1 className={styles.pageTitle}>Create New Ticket</h1>
-          <p className={styles.pageSubtitle}>Fill in match details manually or extract from image</p>
+          <p className={styles.pageSubtitle}>Paste bet slip text for AI to extract picks automatically</p>
         </div>
       </div>
 
@@ -221,45 +178,6 @@ export default function NewPrediction() {
                 <Sparkles size={16} />
                 {processingAi ? 'Processing...' : 'Extract Picks with AI'}
               </button>
-            </div>
-          </div>
-
-          <div className={styles.formCard}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-              <ImagePlus size={20} color="var(--color-primary)" />
-              <h2 className={styles.bookingCodesSectionTitle} style={{ marginBottom: 0 }}>Or Extract from Image</h2>
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-              Upload a betslip screenshot. The extracted text will appear as a reference - fill in the selections manually below.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <label className={styles.uploadZone} style={{ minHeight: '120px' }}>
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" style={{ maxHeight: '100px', borderRadius: '8px' }} />
-                ) : (
-                  <>
-                    <ScanText size={28} className={styles.uploadIcon} style={{ width: 28, height: 28 }} />
-                    <div className={styles.uploadText}>Upload Bet Slip Image</div>
-                  </>
-                )}
-                <input type="file" accept="image/*" onChange={handleImageFile} style={{ display: 'none' }} />
-              </label>
-              {imagePreview && (
-                <button 
-                  type="button" 
-                  className="btn btn-primary" 
-                  onClick={handleImageExtract} 
-                  disabled={processingImage || !imageFile}
-                >
-                  {processingImage ? 'Extracting...' : 'Extract Text'}
-                </button>
-              )}
-              {extractedText && (
-                <div style={{ padding: '1rem', background: 'var(--color-surface)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--color-text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Extracted Text (Reference)</div>
-                  <pre style={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0, fontFamily: 'inherit', color: 'var(--color-text-secondary)' }}>{extractedText}</pre>
-                </div>
-              )}
             </div>
           </div>
 
@@ -317,7 +235,7 @@ export default function NewPrediction() {
                         </div>
                         <div className={styles.formGroup}>
                           <label className="label">Date</label>
-                          <input type="date" className="input" value={s.match_date} onChange={e => updateSelection(i, 'match_date', e.target.value)} />
+                          <input type="text" className="input" placeholder="e.g. 02/03/2026" value={s.match_date} onChange={e => updateSelection(i, 'match_date', e.target.value)} />
                         </div>
                         <div className={styles.formGroup}>
                           <label className="label">Time</label>

@@ -18,29 +18,19 @@ const RESULT_ICONS = {
 
 const MARKETS_LABELS: Record<string, string> = {
   '1': 'Home Win',
-  'X': 'Draw',
-  '2': 'Away Win',
-  '1X': 'Double Chance 1X',
-  '12': 'Double Chance 12',
-  'X2': 'Double Chance X2',
-  'Over 0.5': 'Over 0.5',
-  'Over 1.5': 'Over 1.5',
-  'Over 2.5': 'Over 2.5',
-  'Over 3.5': 'Over 3.5',
-  'Under 2.5': 'Under 2.5',
-  'Under 3.5': 'Under 3.5',
-  'BTTS Yes': 'BTTS Yes',
-  'BTTS No': 'BTTS No',
-  'GG': 'GG',
-  'NG': 'NG',
-  '1 & Over 1.5': '1 & Over 1.5',
-  '2 & Over 1.5': '2 & Over 1.5',
-  '1HT': '1st Half Home',
-  'XHT': '1st Half Draw',
-  '2HT': '1st Half Away',
-  'Corners Over 7.5': 'Corners O7.5',
-  'Corners Over 9.5': 'Corners O9.5',
 };
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr + 'T00:00:00');
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+  return `${day}${suffix} ${month}, ${year}`;
+}
 
 const getMarketLabel = (value: string) => MARKETS_LABELS[value] || value;
 
@@ -133,7 +123,7 @@ export default function EditPrediction({ params }: { params: Promise<{ id: strin
                       <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{getMarketLabel(s.pick)} @ {s.odds}</div>
                       {(s.league || s.match_date || s.time) && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                          {s.league}{s.league && s.match_date && ' • '}{s.match_date}{s.match_date && s.time && ' • '}{s.time}
+                          {s.league}{s.league && s.match_date && ' • '}{formatDate(s.match_date)}{s.match_date && s.time && ' • '}{s.time}
                         </div>
                       )}
                     </div>

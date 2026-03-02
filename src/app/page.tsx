@@ -26,12 +26,24 @@ interface Prediction {
   id: string;
   title: string;
   selections: Selection[];
-  total_odds?: string;
-  result: 'win' | 'lose' | 'pending';
-  is_premium?: boolean;
-  booking_codes?: { platform: string; code: string; odds?: string }[];
+  total_odds: string;
+  createdAt: string;
+  is_premium: boolean;
+  booking_codes?: { platform: string; code: string; odds: string }[];
   media_url?: string;
-  created_at?: any;
+  status?: 'pending' | 'won' | 'lost';
+}
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr + 'T00:00:00');
+  if (isNaN(date.getTime())) return dateStr;
+  const day = date.getDate();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const suffix = day === 1 || day === 21 || day === 31 ? 'st' : day === 2 || day === 22 ? 'nd' : day === 3 || day === 23 ? 'rd' : 'th';
+  return `${day}${suffix} ${month}, ${year}`;
 }
 
 const MARKETS_LABELS: Record<string, string> = {
@@ -183,7 +195,7 @@ export default function Home() {
                           <div>
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{sel.home_team} vs {sel.away_team}</div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                              {sel.league}{sel.league && (sel.match_date || sel.time) && ' • '}{sel.match_date}{sel.match_date && sel.time && ' • '}{sel.time}
+                              {sel.league}{sel.league && (sel.match_date || sel.time) && ' • '}{formatDate(sel.match_date || '')}{sel.match_date && sel.time && ' • '}{sel.time}
                             </div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
