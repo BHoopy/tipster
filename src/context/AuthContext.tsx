@@ -1,12 +1,12 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  signOut, 
-  signInWithEmailAndPassword, 
+import {
+  User,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth';
@@ -21,6 +21,7 @@ interface AuthContextType {
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
+  isVip: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,19 +30,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isVip, setIsVip] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      
+
       if (currentUser) {
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         const userData = userDoc.data();
         setIsAdmin(userData?.role === 'admin');
+        setIsVip(userData?.is_vip || userData?.role === 'admin'); // Admins are VIP by default
       } else {
         setIsAdmin(false);
+        setIsVip(false);
       }
-      
+
       setLoading(false);
     });
 
@@ -100,14 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      signInWithGoogle, 
-      loginWithEmail, 
-      registerWithEmail, 
-      logout, 
-      isAdmin 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signInWithGoogle,
+      loginWithEmail,
+      registerWithEmail,
+      logout,
+      isAdmin,
+      isVip
     }}>
       {children}
     </AuthContext.Provider>

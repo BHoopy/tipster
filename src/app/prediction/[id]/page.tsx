@@ -1,14 +1,37 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useAuth } from '@/context/AuthContext';
 import styles from './prediction.module.css';
+import VipLocked from '@/components/VipLocked';
 
-export default async function PredictionPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  
-  const predDoc = await getDoc(doc(db, 'predictions', id));
-  
-  if (!predDoc.exists()) {
+export default function PredictionPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { isVip, loading: authLoading } = useAuth();
+  const [prediction, setPrediction] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      getDoc(doc(db, 'predictions', id as string)).then(snap => {
+        if (snap.exists()) {
+          setPrediction(snap.data());
+        }
+        setLoading(false);
+      });
+    }
+  }, [id]);
+
+  if (loading || authLoading) {
+    return <div className={styles.loading}>Loading...</div>;
+  }
+
+  if (!prediction) {
     return (
       <main className={styles.main}>
         <div className="container">
@@ -19,8 +42,17 @@ export default async function PredictionPage({ params }: { params: Promise<{ id:
     );
   }
 
-  const pred = predDoc.data();
-  const createdAt = pred.created_at?.toDate ? pred.created_at.toDate().toLocaleDateString() : 'N/A';
+  if (prediction.is_premium && !isVip) {
+    return (
+      <main className={styles.main}>
+        <div className="container">
+          <VipLocked onSuccess={() => window.location.reload()} />
+        </div>
+      </main>
+    );
+  }
+
+  const createdAt = prediction.created_at?.toDate ? prediction.created_at.toDate().toLocaleDateString() : 'N/A';
 
   return (
     <main className={styles.main}>
@@ -41,23 +73,23 @@ export default async function PredictionPage({ params }: { params: Promise<{ id:
       <section className={styles.content}>
         <div className="container">
           <Link href="/" className={styles.backLink}>← Back to Home</Link>
-          
+
           <article className={styles.article}>
-            <h1>{pred.title}</h1>
+            <h1>{prediction.title}</h1>
             <p className={styles.meta}>Published on {createdAt}</p>
-            
-            {pred.media_url && (
+
+            {prediction.media_url && (
               <div className={styles.media}>
-                {pred.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <img src={pred.media_url} alt={pred.title} />
+                {prediction.media_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                  <img src={prediction.media_url} alt={prediction.title} />
                 ) : (
-                  <video src={pred.media_url} controls />
+                  <video src={prediction.media_url} controls />
                 )}
               </div>
             )}
-            
+
             <div className={styles.content}>
-              {pred.content}
+              {prediction.content}
             </div>
           </article>
         </div>

@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Copy, Clock, Zap, CheckCircle2, XCircle, ListPlus } from 'lucide-react';
 import styles from './page.module.css';
 import AuthModal from '@/components/AuthModal';
+import VipLocked from '@/components/VipLocked';
 
 interface Selection {
   home_team: string;
@@ -32,6 +33,7 @@ interface Prediction {
   booking_codes?: { platform: string; code: string; odds: string }[];
   media_url?: string;
   status?: 'pending' | 'won' | 'lost';
+  result?: 'win' | 'lose' | 'pending';
 }
 
 function formatDate(dateStr: string): string {
@@ -75,19 +77,22 @@ const MARKETS_LABELS: Record<string, string> = {
 const getMarketLabel = (value: string) => MARKETS_LABELS[value] || value;
 
 function StatusBadge({ result, size = 'md' }: { result?: string, size?: 'sm' | 'md' }) {
+  const status = result?.toLowerCase() || 'pending';
   const map: Record<string, { label: string; color: string; bg: string }> = {
     win: { label: 'WON', color: '#00c851', bg: 'rgba(0, 200, 81, 0.15)' },
+    won: { label: 'WON', color: '#00c851', bg: 'rgba(0, 200, 81, 0.15)' },
     lose: { label: 'LOST', color: '#ff3b30', bg: 'rgba(255, 59, 48, 0.15)' },
+    lost: { label: 'LOST', color: '#ff3b30', bg: 'rgba(255, 59, 48, 0.15)' },
     pending: { label: 'PENDING', color: '#f7a600', bg: 'rgba(247, 166, 0, 0.15)' },
   };
-  const s = map[result || 'pending'] || map.pending;
+  const s = map[status] || map.pending;
   return (
-    <span style={{ 
-      background: s.bg, 
-      color: s.color, 
-      padding: size === 'sm' ? '0.2rem 0.5rem' : '0.4rem 0.8rem', 
-      borderRadius: '6px', 
-      fontSize: size === 'sm' ? '0.6rem' : '0.7rem', 
+    <span style={{
+      background: s.bg,
+      color: s.color,
+      padding: size === 'sm' ? '0.2rem 0.5rem' : '0.4rem 0.8rem',
+      borderRadius: '6px',
+      fontSize: size === 'sm' ? '0.6rem' : '0.7rem',
       fontWeight: 800,
       border: `1px solid ${s.color}20`,
       whiteSpace: 'nowrap'
@@ -98,7 +103,7 @@ function StatusBadge({ result, size = 'md' }: { result?: string, size?: 'sm' | '
 }
 
 export default function Home() {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, isVip, logout } = useAuth();
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -138,12 +143,25 @@ export default function Home() {
 
       <section className={styles.hero}>
         <div className="container">
-          <div className={styles.heroTag}><span className={styles.heroDot} /> Live Tickets</div>
-          <h1>Expert <span>Daily</span> Tickets.</h1>
-          <p>Winning accumulator tips and booking codes from top football analysts.</p>
+          <div className={styles.heroTag}><span className={styles.heroDot} /> {predictions.length} Tickets Live</div>
+          <h1>Expert <span>Daily</span> Picks.</h1>
+          <p>{filter === 'vip' ? '🔥 Guaranteed wins. VIP-only access. Join now.' : 'The highest quality football betting analysis and booking codes from top professional tipsters.'}</p>
           <div className={styles.heroActions}>
-            <button onClick={() => setFilter('free')} className={`btn ${filter === 'free' ? 'btn-primary' : 'btn-ghost'}`}>Free Tickets</button>
-            <button onClick={() => setFilter('vip')} className={`btn ${filter === 'vip' ? 'btn-secondary' : 'btn-ghost'}`}>⚡ VIP Picks</button>
+            <button
+              onClick={() => setFilter('free')}
+              className={`btn btn-lg ${filter === 'free' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{ paddingLeft: '2rem', paddingRight: '2rem' }}
+            >
+              Free Tickets
+            </button>
+            <button
+              onClick={() => setFilter('vip')}
+              className={`btn btn-lg ${filter === 'vip' ? 'btn-secondary' : 'btn-ghost'}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', background: filter === 'vip' ? 'linear-gradient(135deg, var(--color-gold), #b37700)' : 'transparent' }}
+            >
+              <Zap size={18} fill={filter === 'vip' ? '#000' : 'currentColor'} color={filter === 'vip' ? '#000' : 'currentColor'} />
+              VIP Exclusive
+            </button>
           </div>
         </div>
       </section>
@@ -153,6 +171,8 @@ export default function Home() {
           <div className={styles.predictionList}>
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <div key={i} className="skeleton" style={{ height: '140px', borderRadius: '16px', marginBottom: '1rem' }} />)
+            ) : filter === 'vip' && !isVip ? (
+              <VipLocked onSuccess={() => window.location.reload()} />
             ) : display.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem' }}>
                 <div style={{ marginBottom: '1rem', opacity: 0.5 }}><Zap size={48} /></div>
@@ -160,48 +180,59 @@ export default function Home() {
               </div>
             ) : (
               display.map(ticket => (
-                <div key={ticket.id} className={styles.predictionItem} style={{ border: ticket.is_premium ? '2px solid var(--color-gold)' : '1px solid var(--color-border)' }}>
+                <div
+                  key={ticket.id}
+                  className={`${styles.predictionItem} ${ticket.is_premium ? styles.vipItem : ''}`}
+                >
                   <div className={styles.predictionMain}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>{ticket.title}</h3>
-                        {ticket.is_premium && <Zap size={16} color="var(--color-gold)" fill="var(--color-gold)" />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: ticket.is_premium ? 'var(--color-gold)' : 'inherit' }}>{ticket.title}</h3>
+                        {ticket.is_premium && <div style={{ background: 'var(--color-gold)', borderRadius: '4px', padding: '2px 6px', display: 'flex', alignItems: 'center', gap: '4px' }}><Zap size={10} color="#000" fill="#000" /><span style={{ fontSize: '0.6rem', fontWeight: 900, color: '#000' }}>VIP</span></div>}
                       </div>
-                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><ListPlus size={14} /> {ticket.selections?.length || 0} Games</span>
-                        <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>{ticket.total_odds ? `@ ${ticket.total_odds}` : ''}</span>
+                      <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}><ListPlus size={16} opacity={0.6} /> {ticket.selections?.length || 0} Selections</span>
+                        {ticket.total_odds && (
+                          <span style={{
+                            background: ticket.is_premium ? 'rgba(247, 166, 0, 0.1)' : 'rgba(0, 200, 81, 0.1)',
+                            color: ticket.is_premium ? 'var(--color-gold)' : 'var(--color-primary)',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontWeight: 800,
+                            border: '1px solid currentColor'
+                          }}>
+                            @ {ticket.total_odds}
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <StatusBadge result={ticket.result} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                      <StatusBadge result={ticket.status || ticket.result} />
                     </div>
                   </div>
 
                   <div className={styles.bookingExpand}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
                       {ticket.selections?.map((sel, idx) => (
-                        <div 
-                          key={idx} 
-                          style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center', 
-                            padding: '0.85rem', 
-                            background: sel.result === 'win' ? 'rgba(0, 200, 81, 0.08)' : sel.result === 'lose' ? 'rgba(255, 59, 48, 0.08)' : 'var(--color-surface)', 
-                            borderRadius: '10px', 
-                            border: '1px solid var(--color-border)' 
-                          }}
+                        <div
+                          key={idx}
+                          className={`${styles.matchRow} ${sel.result === 'win' ? styles.matchRowWin : sel.result === 'lose' ? styles.matchRowLose : ''}`}
                         >
-                          <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{sel.home_team} vs {sel.away_team}</div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                              {sel.league}{sel.league && (sel.match_date || sel.time) && ' • '}{formatDate(sel.match_date || '')}{sel.match_date && sel.time && ' • '}{sel.time}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 800, fontSize: '0.975rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {sel.home_team} <span style={{ opacity: 0.3, fontSize: '0.7rem' }}>VS</span> {sel.away_team}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                              {sel.league} {sel.time && ` • ${sel.time}`}
                             </div>
                           </div>
-                          <div style={{ textAlign: 'right' }}>
-                            <div style={{ color: 'var(--color-secondary)', fontWeight: 800, fontSize: '0.9rem' }}>{getMarketLabel(sel.pick)} <span style={{ color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>@ {sel.odds}</span></div>
-                            <div style={{ marginTop: '0.25rem', display: 'flex', justifyContent: 'flex-end' }}>
-                              {sel.result === 'win' ? <CheckCircle2 size={16} color="var(--color-primary)" /> : sel.result === 'lose' ? <XCircle size={16} color="var(--color-danger)" /> : <Clock size={16} color="var(--color-text-muted)" />}
+                          <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                              <div style={{ color: 'var(--color-secondary)', fontWeight: 800, fontSize: '0.9rem' }}>{getMarketLabel(sel.pick)}</div>
+                              <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', fontWeight: 600 }}>@ {sel.odds}</div>
+                            </div>
+                            <div style={{ width: '24px', display: 'flex', justifyContent: 'center' }}>
+                              {sel.result === 'win' ? <CheckCircle2 size={18} color="var(--color-primary)" /> : sel.result === 'lose' ? <XCircle size={18} color="var(--color-danger)" /> : <Clock size={16} opacity={0.4} />}
                             </div>
                           </div>
                         </div>
@@ -215,18 +246,36 @@ export default function Home() {
                     )}
 
                     {ticket.booking_codes && ticket.booking_codes.length > 0 && (
-                      <div style={{ marginTop: '1.5rem' }}>
-                        <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Booking Codes</h4>
+                      <div style={{ marginTop: '2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', paddingLeft: '4px' }}>
+                          <span style={{ width: '12px', height: '1px', background: 'var(--color-primary)' }} />
+                          <h4 style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Booking Codes</h4>
+                        </div>
                         <div className={styles.bookingGrid}>
                           {ticket.booking_codes.map((bc, idx) => (
                             <div key={idx} className={styles.bookingCard}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span style={{ fontWeight: 700, textTransform: 'capitalize' }}>{bc.platform}</span>
-                                {bc.odds && <span style={{ color: 'var(--color-primary)', fontWeight: 700 }}>@ {bc.odds}</span>}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <div className={styles.bookingPlatform}>
+                                  <Image src={`/logos/${bc.platform.toLowerCase()}.png`} alt={bc.platform} width={20} height={20} style={{ borderRadius: '4px' }} />
+                                  {bc.platform}
+                                </div>
+                                {bc.odds && <span style={{ color: 'var(--color-primary)', fontWeight: 900, fontSize: '0.95rem' }}>@ {bc.odds}</span>}
                               </div>
                               <div className={styles.bookingCodeBox}>
                                 <span className={styles.bookingCode}>{bc.code}</span>
-                                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(bc.code); alert('Copied!'); }} className={styles.copyBtn}><Copy size={14} /></button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(bc.code);
+                                    const target = e.currentTarget;
+                                    const originalContent = target.innerHTML;
+                                    target.innerHTML = '<span style="font-size: 10px; font-weight: 800">COPIED</span>';
+                                    setTimeout(() => target.innerHTML = originalContent, 2000);
+                                  }}
+                                  className={styles.copyButton}
+                                >
+                                  <Copy size={16} />
+                                </button>
                               </div>
                             </div>
                           ))}

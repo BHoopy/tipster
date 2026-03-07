@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import styles from '../admin.module.css';
-import { Trophy, CheckCircle2, XCircle, Timer, Trash2, Edit3, PlusCircle } from 'lucide-react';
+import { Trophy, CheckCircle2, XCircle, Timer, Trash2, Edit3, PlusCircle, Settings, Save } from 'lucide-react';
+import { setDoc } from 'firebase/firestore';
 
 interface Prediction {
   id: string;
@@ -25,10 +26,30 @@ const RESULT_STYLES: Record<string, { label: string; bg: string; color: string; 
 export default function Dashboard() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [vipPrice, setVipPrice] = useState(50);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchSettings();
   }, []);
+
+  async function fetchSettings() {
+    try {
+      const snap = await getDocs(query(collection(db, 'settings')));
+      const general = snap.docs.find(d => d.id === 'general');
+      if (general) setVipPrice(general.data().vipPrice || 50);
+    } catch (err) { console.error(err); }
+  }
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      await setDoc(doc(db, 'settings', 'general'), { vipPrice }, { merge: true });
+      alert('Settings saved!');
+    } catch (err) { alert('Failed to save settings'); }
+    finally { setSavingSettings(false); }
+  };
 
   async function fetchData() {
     setLoading(true);
@@ -73,6 +94,23 @@ export default function Dashboard() {
             <div className={styles.statValue}>{winRate}%</div>
           </div>
         </div>
+        <div className={styles.statCard}>
+          <div className={`${styles.statIcon} ${styles.blue}`} style={{ background: 'rgba(247,166,0,0.1)', color: '#f7a600' }}><Settings size={20} /></div>
+          <div className={styles.statInfo}>
+            <div className={styles.statLabel}>VIP Price (GHS)</div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+              <input
+                type="number"
+                value={vipPrice}
+                onChange={(e) => setVipPrice(Number(e.target.value))}
+                style={{ width: '80px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: '#fff', padding: '4px 8px' }}
+              />
+              <button onClick={saveSettings} disabled={savingSettings} className="btn btn-primary btn-sm" style={{ padding: '4px 8px' }}>
+                {savingSettings ? <div className={styles.spinner} style={{ width: '14px', height: '14px' }} /> : <Save size={16} />}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className={styles.dataCard}>
@@ -107,15 +145,15 @@ export default function Dashboard() {
                       <td>{pred.selections?.length || 0}</td>
                       <td>{pred.is_premium ? '⚡ VIP' : 'Free'}</td>
                       <td>
-                        <span style={{ 
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          gap: '6px', 
-                          background: rs.bg, 
-                          color: rs.color, 
-                          padding: '0.25rem 0.5rem', 
-                          borderRadius: '6px', 
-                          fontSize: '0.65rem', 
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: rs.bg,
+                          color: rs.color,
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '6px',
+                          fontSize: '0.65rem',
                           fontWeight: 800,
                           textTransform: 'uppercase'
                         }}>
