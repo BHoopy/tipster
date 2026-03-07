@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
@@ -126,8 +125,7 @@ export default function Home() {
         <div className="container">
           <div className={styles.headerInner}>
             <Link href="/" className={styles.logoWrap}>
-              <Image src="/leeman.png" alt="Leeman" width={34} height={34} className={styles.logoImg} />
-              <span className={styles.logoText}>Leeman Tips</span>
+              <span className={styles.logoText}>Tipster Fhink</span>
             </Link>
             <nav className={styles.nav}>
               {isAdmin && <Link href="/admin" className="btn btn-ghost btn-sm">Admin</Link>}
@@ -256,7 +254,6 @@ export default function Home() {
                             <div key={idx} className={styles.bookingCard}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                 <div className={styles.bookingPlatform}>
-                                  <Image src={`/logos/${bc.platform.toLowerCase()}.png`} alt={bc.platform} width={20} height={20} style={{ borderRadius: '4px' }} />
                                   {bc.platform}
                                 </div>
                                 {bc.odds && <span style={{ color: 'var(--color-primary)', fontWeight: 900, fontSize: '0.95rem' }}>@ {bc.odds}</span>}
@@ -292,8 +289,8 @@ export default function Home() {
 
       <footer className={styles.footer}>
         <div className="container">
-          <div className={styles.footerLogo}><span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>LEEMAN TIPS</span></div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>&copy; {new Date().getFullYear()} Leeman Tips. Play responsibly. 18+</p>
+          <div className={styles.footerLogo}><span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>TIPSTER FHINK</span></div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>&copy; {new Date().getFullYear()} Tipster Fhink. Play responsibly. 18+</p>
           {isAdmin && (
             <div style={{ marginTop: '1rem' }}>
               <Link href="/admin" style={{ color: 'var(--color-primary)', fontSize: '0.8rem', fontWeight: 700 }}>Admin Dashboard</Link>
@@ -301,6 +298,21 @@ export default function Home() {
           )}
         </div>
       </footer>
+
+      <div className={styles.mobileNav}>
+        <button
+          onClick={() => setFilter('free')}
+          className={`${styles.mobileTab} ${filter === 'free' ? styles.activeTab : ''}`}
+        >
+          Free Tickets
+        </button>
+        <button
+          onClick={() => setFilter('vip')}
+          className={`${styles.mobileTab} ${filter === 'vip' ? styles.activeVipTab : ''}`}
+        >
+          <Zap size={16} fill="currentColor" /> VIP Exclusive
+        </button>
+      </div>
     </main>
   );
 }

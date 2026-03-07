@@ -11,7 +11,7 @@ export async function initializeTransaction(email: string, amount: number, metad
             email,
             amount: amount * 100, // Paystack expects amount in pesewas/kobo
             metadata,
-            callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/paystack/callback`,
+            callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/paystack/callback`,
         }),
     });
 

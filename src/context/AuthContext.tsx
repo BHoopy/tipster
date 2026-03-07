@@ -39,8 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (currentUser) {
         const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
         const userData = userDoc.data();
+        let validVip = false;
+        if (userData?.role === 'admin') {
+          validVip = true;
+        } else if (userData?.is_vip && userData?.vip_purchased_at) {
+          const purchasedAt = userData.vip_purchased_at.toDate();
+          validVip = purchasedAt.toDateString() === new Date().toDateString();
+        }
         setIsAdmin(userData?.role === 'admin');
-        setIsVip(userData?.is_vip || userData?.role === 'admin'); // Admins are VIP by default
+        setIsVip(validVip);
       } else {
         setIsAdmin(false);
         setIsVip(false);

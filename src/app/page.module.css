@@ -11,6 +11,10 @@
   background-blend-mode: overlay;
 }
 
+.mobileNav {
+  display: none;
+}
+
 /* ===== HEADER / NAV ===== */
 .header {
   position: sticky;
@@ -302,23 +306,76 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
+  .heroActions {
+    display: none;
+  }
+
+  .mobileNav {
+    display: flex;
+    position: fixed;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    right: 0.5rem;
+    background: rgba(13, 15, 20, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--color-border);
+    border-radius: 16px;
+    z-index: 100;
+    padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.5rem;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .mobileTab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    font-weight: 800;
+    transition: all 0.2s;
+  }
+
+  .activeTab {
+    background: rgba(0, 200, 81, 0.1);
+    color: var(--color-primary);
+  }
+
+  .activeVipTab {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(179, 119, 0, 0.1));
+    color: var(--color-gold);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+  }
+
   .hero {
     padding: 3rem 0;
   }
 
+  .predictionSection {
+    padding-bottom: 7rem;
+  }
+
   .predictionMain {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
   }
 
   .bookingExpand {
-    padding: 0 1.25rem 2rem;
+    padding: 0 1rem 1.5rem;
   }
 
   .matchRow {
-    padding: 1rem;
+    padding: 0.75rem;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    border-radius: 12px;
   }
 
   .matchRow>div:last-child {

@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 import { Providers } from '@/components/Providers';
 
 export const metadata: Metadata = {
-  title: 'Leeman Tips – Expert Sports Betting Predictions',
-  description: 'Daily expert football predictions, booking codes, and betting tips from Leeman. Free & VIP picks updated every day.',
+  title: 'Tipster Fhink – Expert Sports Betting Predictions',
+  description: 'Daily expert football predictions, booking codes, and betting tips from Tipster Fhink. Free & VIP picks updated every day.',
   keywords: 'betting tips, football predictions, booking codes, Betway, SportyBet, sports tips',
   openGraph: {
-    title: 'Leeman Tips – Expert Sports Betting Predictions',
-    description: 'Daily expert football predictions & booking codes from Leeman.',
+    title: 'Tipster Fhink – Expert Sports Betting Predictions',
+    description: 'Daily expert football predictions & booking codes from Tipster Fhink.',
     type: 'website',
   },
 };

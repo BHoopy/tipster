@@ -35,7 +35,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <header className={styles.header}>
         <div className="container">
           <nav className={styles.nav}>
-            <Link href="/" className={styles.logo}>Leeman Tips</Link>
+            <Link href="/" className={styles.logo}>Tipster Fhink</Link>
             <div className={styles.navLinks}>
               <Link href="/category/daily-best">Daily Best</Link>
               <Link href="/category/football">Football</Link>
