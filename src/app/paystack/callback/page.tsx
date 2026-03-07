@@ -50,13 +50,13 @@ export default function PaystackCallback() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#0a0a0a',
-            color: '#fff',
+            background: 'var(--color-bg)',
+            color: 'var(--color-text)',
             padding: '2rem'
         }}>
             <div style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'var(--color-bg-card)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '24px',
                 padding: '3rem',
                 textAlign: 'center',
@@ -65,31 +65,31 @@ export default function PaystackCallback() {
             }}>
                 {status === 'loading' && (
                     <>
-                        <Loader2 size={48} className="animate-spin" style={{ color: '#ffd700', marginBottom: '1.5rem' }} />
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Verifying Payment</h1>
-                        <p style={{ color: '#999', marginTop: '1rem' }}>{message}</p>
+                        <Loader2 size={48} className="animate-spin" style={{ color: 'var(--color-gold)', marginBottom: '1.5rem' }} />
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text)' }}>Verifying Payment</h1>
+                        <p style={{ color: 'var(--color-text-muted)', marginTop: '1rem' }}>{message}</p>
                     </>
                 )}
 
                 {status === 'success' && (
                     <>
-                        <CheckCircle2 size={48} style={{ color: '#00c851', marginBottom: '1.5rem' }} />
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Success!</h1>
-                        <p style={{ color: '#999', marginTop: '1rem' }}>{message}</p>
-                        <p style={{ color: '#555', fontSize: '0.8rem', marginTop: '2rem' }}>Redirecting to home...</p>
+                        <CheckCircle2 size={48} style={{ color: 'var(--color-primary)', marginBottom: '1.5rem' }} />
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text)' }}>Success!</h1>
+                        <p style={{ color: 'var(--color-text-muted)', marginTop: '1rem' }}>{message}</p>
+                        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', marginTop: '2rem' }}>Redirecting to home...</p>
                     </>
                 )}
 
                 {status === 'error' && (
                     <>
-                        <XCircle size={48} style={{ color: '#ff3b30', marginBottom: '1.5rem' }} />
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Payment Failed</h1>
-                        <p style={{ color: '#999', marginTop: '1rem' }}>{message}</p>
+                        <XCircle size={48} style={{ color: 'var(--color-danger)', marginBottom: '1.5rem' }} />
+                        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text)' }}>Payment Failed</h1>
+                        <p style={{ color: 'var(--color-text-muted)', marginTop: '1rem' }}>{message}</p>
                         <button
                             onClick={() => router.push('/')}
                             style={{
                                 marginTop: '2rem',
-                                background: '#ffd700',
+                                background: 'var(--color-gold)',
                                 color: '#000',
                                 border: 'none',
                                 borderRadius: '12px',

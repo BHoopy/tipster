@@ -74,18 +74,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         boxShadow: 'var(--shadow-lg)',
         overflow: 'hidden'
       }} className="fade-in">
-        
+
         {/* Header */}
         <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800 }}>
-              {mode === 'login' ? 'Welcome Back' : 'Join Leeman Tips'}
+              {mode === 'login' ? 'Welcome Back' : 'Join Tipster Fhink'}
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
               {mode === 'login' ? 'Sign in to access premium picks' : 'Create an account for expert predictions'}
             </p>
           </div>
-          <button onClick={onClose} style={{ color: 'var(--color-text-muted)', hover: { color: 'var(--color-text)' } }}>
+          <button onClick={onClose} style={{ color: 'var(--color-text-muted)' }}>
             <X size={20} />
           </button>
         </div>

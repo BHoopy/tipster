@@ -61,10 +61,7 @@ export default function PredictionPage() {
           <nav className={styles.nav}>
             <Link href="/" className={styles.logo}>Leeman Tips</Link>
             <div className={styles.navLinks}>
-              <Link href="/category/daily-best">Daily Best</Link>
-              <Link href="/category/football">Football</Link>
-              <Link href="/category/basketball">Basketball</Link>
-              <Link href="/admin" className="btn btn-primary">Admin</Link>
+              <Link href="/" className="btn btn-primary">Home</Link>
             </div>
           </nav>
         </div>
