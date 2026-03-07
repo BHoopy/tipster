@@ -92,7 +92,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         <div style={{ padding: '1.5rem' }}>
           {error && (
-            <div style={{ background: 'rgba(255,59,48,0.1)', border: '1px solid var(--color-danger)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--color-danger)', color: 'var(--color-danger)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
               {error}
             </div>
           )}
@@ -100,15 +100,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {mode === 'signup' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <label className="label">Full Name</label>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Full Name</label>
                 <div style={{ position: 'relative' }}>
                   <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                   <input
                     type="text"
-                    className="input"
+                    style={{
+                      width: '100%',
+                      padding: '12px 12px 12px 40px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border)',
+                      fontSize: '0.875rem',
+                      background: 'var(--color-bg)'
+                    }}
                     placeholder="John Doe"
                     required
-                    style={{ paddingLeft: '2.5rem' }}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -117,15 +123,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label className="label">Email Address</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Email Address</label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                 <input
                   type="email"
-                  className="input"
+                  style={{
+                    width: '100%',
+                    padding: '12px 12px 12px 40px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                    fontSize: '0.875rem',
+                    background: 'var(--color-bg)'
+                  }}
                   placeholder="name@example.com"
                   required
-                  style={{ paddingLeft: '2.5rem' }}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -133,22 +145,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label className="label">Password</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Password</label>
               <div style={{ position: 'relative' }}>
                 <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                 <input
                   type="password"
-                  className="input"
+                  style={{
+                    width: '100%',
+                    padding: '12px 12px 12px 40px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-border)',
+                    fontSize: '0.875rem',
+                    background: 'var(--color-bg)'
+                  }}
                   placeholder="••••••••"
                   required
-                  style={{ paddingLeft: '2.5rem' }}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '48px', marginTop: '0.5rem' }} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '48px', marginTop: '0.5rem', boxShadow: '0 4px 6px -1px rgba(0, 168, 107, 0.2)' }} disabled={loading}>
               {loading ? 'Processing...' : mode === 'login' ? <><LogIn size={18} /> Login</> : <><UserPlus size={18} /> Create Account</>}
             </button>
           </form>
@@ -159,7 +177,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
           </div>
 
-          <button onClick={handleGoogle} className="btn btn-ghost" style={{ width: '100%', height: '48px', display: 'flex', gap: '0.75rem' }} disabled={loading}>
+          <button onClick={handleGoogle} className="btn-outline" style={{ width: '100%', height: '48px', display: 'flex', gap: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', justifyContent: 'center' }} disabled={loading}>
             <Chrome size={18} /> Google
           </button>
 
