@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Zap, Lock, ArrowRight, CheckCircle, CreditCard, LogIn, Crown, Shield, Target, TrendingUp } from 'lucide-react';
+import { Zap, ArrowRight, CheckCircle, CreditCard, LogIn, Crown, Shield, Target, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';
 import AuthModal from '@/components/AuthModal';
@@ -83,7 +84,14 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 </div>
 
                 <div className={styles.iconCircle}>
-                    <Lock size={32} className={styles.lockIcon} />
+                    <Image 
+                        src="/Vip.png" 
+                        alt="VIP" 
+                        width={48} 
+                        height={48}
+                        className={styles.vipIcon}
+                        unoptimized
+                    />
                 </div>
 
                 <h2 className={styles.title}>Unlock Premium Access</h2>
@@ -93,6 +101,10 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         : 'Sign in and get access to our most accurate daily predictions to maximize your winning potential.'
                     }
                 </p>
+
+                <div className={styles.vipNote}>
+                    Get Access to the Premium Tickets for 1 day
+                </div>
 
                 <div className={styles.perksList}>
                     {perks.map((perk, i) => (
@@ -141,10 +153,15 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 {error && <p className={styles.errorMessage}>{error}</p>}
 
                 {user && (
-                    <div className={styles.secureText}>
-                        <Shield size={12} />
-                        Secure payment via Paystack • Instant access
-                    </div>
+                    <>
+                        <div className={styles.secureText}>
+                            <Shield size={12} />
+                            Secure payment via Paystack • Instant access
+                        </div>
+                        <div className={styles.subscriptionNote}>
+                            All VIP subscriptions are valid until slips are won
+                        </div>
+                    </>
                 )}
             </div>
         </div>

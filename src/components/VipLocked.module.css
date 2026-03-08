@@ -87,6 +87,22 @@
   color: #fbbf24;
 }
 
+.vipIcon {
+  object-fit: contain;
+}
+
+.vipNote {
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  color: #78350f;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
 .title {
   font-size: 1.75rem;
   font-weight: 800;
@@ -192,7 +208,7 @@
 }
 
 .secureText {
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   font-size: 0.7rem;
   color: var(--color-text-muted);
   font-weight: 600;
@@ -200,6 +216,18 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+}
+
+.subscriptionNote {
+  font-size: 0.75rem;
+  color: var(--color-success);
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-sm);
+  display: inline-block;
 }
 
 .spinner {
