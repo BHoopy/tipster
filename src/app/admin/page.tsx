@@ -87,6 +87,28 @@ export default function AdminDashboard() {
         return () => { unsubFree(); unsubVip(); };
     }, [isAdmin]);
 
+    useEffect(() => {
+        if (!isAdmin || view !== 'history') return;
+        
+        const selectedDate = new Date(historyDate);
+        const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+
+        const unsubHistory = onSnapshot(
+            query(
+                collection(db, 'free_tips_history'),
+                where('resolvedAt', '>=', startOfDay),
+                where('resolvedAt', '<=', endOfDay),
+                orderBy('resolvedAt', 'desc')
+            ),
+            (snap) => {
+                setHistoryTips(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
+            }
+        );
+
+        return () => { unsubHistory(); };
+    }, [isAdmin, view, historyDate]);
+
     if (loading) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}>Loading...</div>;
     if (!isAdmin) return <div className="container" style={{ textAlign: 'center', padding: '5rem' }}>Access Denied. Admins Only.</div>;
 
@@ -177,7 +199,19 @@ export default function AdminDashboard() {
     };
 
     const updateMatchStatus = async (col: string, id: string, status: 'win' | 'lose' | 'pending') => {
-        await updateDoc(doc(db, col, id), { status });
+        if (col === 'free_tips' && (status === 'win' || status === 'lose')) {
+            const tip = freeTips.find(t => t.id === id);
+            if (tip) {
+                await addDoc(collection(db, 'free_tips_history'), {
+                    ...tip,
+                    status,
+                    resolvedAt: serverTimestamp()
+                });
+                await deleteDoc(doc(db, col, id));
+            }
+        } else {
+            await updateDoc(doc(db, col, id), { status });
+        }
     };
 
     const deleteItem = async (col: string, id: string) => {
@@ -263,6 +297,13 @@ export default function AdminDashboard() {
                         style={{ width: '100%', justifyContent: 'flex-start', border: view === 'vip' ? 'none' : undefined }}
                     >
                         <Ticket size={20} /> VIP Bundles
+                    </button>
+                    <button
+                        onClick={() => setView('history')}
+                        className={view === 'history' ? 'btn btn-primary' : 'btn btn-outline'}
+                        style={{ width: '100%', justifyContent: 'flex-start', border: view === 'history' ? 'none' : undefined }}
+                    >
+                        <Ticket size={20} /> History
                     </button>
                     
                     <div style={{ 
@@ -502,7 +543,7 @@ export default function AdminDashboard() {
                                 </table>
                             </div>
                         </div>
-                    ) : (
+                    ) : view === 'vip' ? (
                         <div>
                             <h2 style={{ marginBottom: '0.5rem' }}>Manage VIP Bundles</h2>
                             <p style={{ color: 'var(--color-success)', fontWeight: 600, marginBottom: '1.5rem' }}>Guaranteed Win or Refund</p>
@@ -628,7 +669,69 @@ export default function AdminDashboard() {
                                 </div>
                             ))}
                         </div>
-                    )}
+                    ) : view === 'history' ? (
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                <h2 style={{ margin: 0 }}>History</h2>
+                                <input 
+                                    type="date" 
+                                    value={historyDate}
+                                    onChange={(e) => setHistoryDate(e.target.value)}
+                                    className="input"
+                                    style={{ width: 'auto', padding: '0.5rem' }}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+                                {new Date(historyDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </div>
+
+                            {historyTips.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)' }}>
+                                    No history for this date.
+                                </div>
+                            ) : (
+                                <div style={{ display: 'grid', gap: '1rem' }}>
+                                    {historyTips.map(tip => (
+                                        <div key={tip.id} className="glass-card" style={{
+                                            padding: '1rem',
+                                            borderRadius: 'var(--radius-lg)',
+                                            border: '1px solid var(--color-border)',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
+                                            gap: '0.5rem'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{tip.time}</span>
+                                                <span style={{
+                                                    fontSize: '0.7rem',
+                                                    fontWeight: 700,
+                                                    color: 'var(--color-primary)',
+                                                    background: 'var(--color-primary-light)',
+                                                    padding: '0.2rem 0.5rem',
+                                                    borderRadius: '4px'
+                                                }}>{tip.league}</span>
+                                                <span style={{ fontWeight: 600 }}>{tip.teams}</span>
+                                                <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{tip.tips}</span>
+                                            </div>
+                                            <span style={{
+                                                padding: '0.25rem 0.75rem',
+                                                borderRadius: 'var(--radius-sm)',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                background: tip.status === 'win' ? 'var(--color-success)' : 'var(--color-danger)',
+                                                color: 'white'
+                                            }}>
+                                                {tip.status === 'win' ? '✅ Won' : '❌ Lose'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
             </div>
 

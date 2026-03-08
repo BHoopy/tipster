@@ -27,24 +27,25 @@ export function useAutocomplete(type: 'team' | 'tip') {
         debounceRef.current = setTimeout(async () => {
             setIsLoading(true);
             const normalizedQuery = query.toLowerCase().trim();
-            
+
             try {
                 const dbRef = ref(rtdb, `learn/${type}`);
                 const snapshot = await get(dbRef);
-                
+
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     const matches: Suggestion[] = [];
-                    
-                    Object.entries(data).forEach(([key, value]: [string, any]) => {
-                        if (key.toLowerCase().includes(normalizedQuery)) {
+
+                    Object.entries(data).forEach(([key, item]: [string, any]) => {
+                        const displayValue = item.value || key;
+                        if (displayValue.toLowerCase().includes(normalizedQuery)) {
                             matches.push({
-                                value: key,
-                                count: value.count || 0
+                                value: displayValue,
+                                count: item.count || 0
                             });
                         }
                     });
-                    
+
                     matches.sort((a, b) => b.count - a.count);
                     setSuggestions(matches.slice(0, 3));
                 } else {
@@ -61,17 +62,27 @@ export function useAutocomplete(type: 'team' | 'tip') {
 
     const learn = useCallback(async (value: string) => {
         if (!value.trim()) return;
-        
+
         const normalizedValue = value.trim();
-        
+        // Firebase RTDB keys cannot contain ., #, $, [, or ]
+        const safeKey = normalizedValue.toLowerCase().replace(/[.#$[\]]/g, (char) => {
+            return `_esc_${char.charCodeAt(0)}_`;
+        });
+
         try {
-            const dbRef = ref(rtdb, `learn/${type}/${normalizedValue}`);
-            
+            const dbRef = ref(rtdb, `learn/${type}/${safeKey}`);
+
             await runTransaction(dbRef, (current: any) => {
                 if (current === null) {
-                    return { count: 1, lastUsed: Date.now() };
+                    return {
+                        value: normalizedValue,
+                        count: 1,
+                        lastUsed: Date.now()
+                    };
                 }
                 return {
+                    ...current,
+                    value: current.value || normalizedValue,
                     count: (current.count || 0) + 1,
                     lastUsed: Date.now()
                 };
