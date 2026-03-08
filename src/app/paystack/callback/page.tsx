@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
-export default function PaystackCallback() {
+function PaystackCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const reference = searchParams.get('reference');
@@ -104,5 +104,13 @@ export default function PaystackCallback() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function PaystackCallback() {
+    return (
+        <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 className="animate-spin" size={32} /></div>}>
+            <PaystackCallbackContent />
+        </Suspense>
     );
 }

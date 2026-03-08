@@ -37,10 +37,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
 
     const perks = [
         'Daily High-Odds Selections',
-        'Exclusive Booking Codes',
-        '85%+ Win Rate Strategies',
-        'Admin Direct Support',
-        '24/7 Match Analysis'
+        'Exclusive Booking Codes'
     ];
 
     const handlePayment = async () => {

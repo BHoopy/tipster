@@ -212,7 +212,8 @@ export default function AdminDashboard() {
                         </div>
                     ) : (
                         <div>
-                            <h2 style={{ marginBottom: '1.5rem' }}>Manage VIP Bundles</h2>
+                            <h2 style={{ marginBottom: '0.5rem' }}>Manage VIP Bundles</h2>
+                            <p style={{ color: 'var(--color-success)', fontWeight: 600, marginBottom: '1.5rem' }}>Guaranteed Win or Refund</p>
 
                             {/* Add VIP Form */}
                             <div style={{
