@@ -113,6 +113,20 @@ export default function FreeTipsManager({
         return league ? league.color : 'var(--color-primary)';
     };
 
+    const formatTimeToAMPM = (timeStr: string): string => {
+        if (!timeStr) return '';
+        if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+        const parts = timeStr.split(':');
+        if (parts.length < 2) return timeStr;
+
+        let hours = parseInt(parts[0]);
+        const minutes = parts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours}:${minutes} ${ampm}`;
+    };
+
     return (
         <div className="animate-fade-in" style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -298,7 +312,7 @@ export default function FreeTipsManager({
                     <tbody>
                         {freeTips.map(tip => (
                             <tr key={tip.id}>
-                                <td style={{ fontSize: '0.8rem' }}>{tip.time}</td>
+                                <td style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary)' }}>{formatTimeToAMPM(tip.time)}</td>
                                 <td>
                                     <span style={{
                                         fontSize: '0.55rem',

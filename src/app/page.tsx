@@ -52,14 +52,30 @@ const formatDateLabel = (dateStr: string): string => {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (dateStr === formatDate(today)) return 'Today';
-    if (dateStr === formatDate(yesterday)) return 'Yesterday';
-
-    return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
+    const formatted = date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
         year: 'numeric'
     });
+
+    if (dateStr === formatDate(today)) return `Today - ${formatted}`;
+    if (dateStr === formatDate(yesterday)) return `Yesterday - ${formatted}`;
+
+    return formatted;
+};
+
+const formatTimeToAMPM = (timeStr: string): string => {
+    if (!timeStr) return '';
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+
+    let hours = parseInt(parts[0]);
+    const minutes = parts[1];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${hours}:${minutes} ${ampm}`;
 };
 
 const getDateRange = (days: number): string[] => {
@@ -91,8 +107,8 @@ export default function Home() {
     // Get today's date formatted
     const todayStr = formatDate(new Date());
     const todayLabel = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
+        day: 'numeric',
+        month: 'long',
         year: 'numeric'
     });
 
@@ -228,7 +244,7 @@ export default function Home() {
                     borderRadius: '4px',
                     textTransform: 'uppercase'
                 }}>{match.league}</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>{match.time}</span>
+                <span style={{ fontSize: '0.8rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text)' }}>{match.teams}</span>
@@ -307,7 +323,7 @@ export default function Home() {
                             {data.map((match, idx) => (
                                 <tr key={match.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.05}s` }}>
                                     <td style={{ fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{idx + 1}</td>
-                                    <td style={{ fontWeight: 500, fontSize: '0.8rem' }}>{match.time}</td>
+                                    <td style={{ fontSize: '0.8rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
                                     <td>
                                         <span style={{
                                             fontSize: '0.65rem',
@@ -459,7 +475,7 @@ export default function Home() {
                                 <tbody>
                                     {ticket.matches.map((match, mIdx) => (
                                         <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
-                                            <td style={{ fontSize: '0.75rem', fontWeight: 600 }}>{match.time}</td>
+                                            <td style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
                                             <td>
                                                 <span style={{
                                                     fontSize: '0.65rem',
