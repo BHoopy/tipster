@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Zap, Lock, ArrowRight, CheckCircle, CreditCard, LogIn } from 'lucide-react';
+import { Zap, Lock, ArrowRight, CheckCircle, CreditCard, LogIn, Crown, Shield, Target, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';
 import AuthModal from '@/components/AuthModal';
@@ -20,7 +20,6 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     const [vipPrice, setVipPrice] = useState(50);
 
     useEffect(() => {
-        // Fetch dynamic pricing from settings if available
         const fetchSettings = async () => {
             try {
                 const docRef = doc(db, 'settings', 'general');
@@ -36,8 +35,10 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     }, []);
 
     const perks = [
-        'Daily High-Odds Selections',
-        'Exclusive Booking Codes'
+        { icon: Target, text: 'Daily High-Odds Selections' },
+        { icon: Zap, text: 'Exclusive Booking Codes' },
+        { icon: TrendingUp, text: '90%+ Win Rate Guaranteed' },
+        { icon: Shield, text: 'Refund If Ticket Loses' }
     ];
 
     const handlePayment = async () => {
@@ -74,9 +75,11 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
         <div className={styles.container}>
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
             <div className={styles.card}>
+                <div className={styles.glowOrb} />
+                
                 <div className={styles.badge}>
-                    <Zap size={14} fill="currentColor" />
-                    <span>VIP EXCLUSIVE</span>
+                    <Crown size={14} />
+                    <span>VIP Exclusive</span>
                 </div>
 
                 <div className={styles.iconCircle}>
@@ -86,7 +89,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 <h2 className={styles.title}>Unlock Premium Access</h2>
                 <p className={styles.subtitle}>
                     {user
-                        ? 'You need a valid daily pass to view VIP predictions today. Get access to our most accurate daily predictions.'
+                        ? 'Get access to our most accurate daily predictions and start winning big today.'
                         : 'Sign in and get access to our most accurate daily predictions to maximize your winning potential.'
                     }
                 </p>
@@ -94,8 +97,8 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 <div className={styles.perksList}>
                     {perks.map((perk, i) => (
                         <div key={i} className={styles.perkItem}>
-                            <CheckCircle size={18} className={styles.checkIcon} />
-                            <span>{perk}</span>
+                            <perk.icon size={18} className={styles.checkIcon} />
+                            <span>{perk.text}</span>
                         </div>
                     ))}
                 </div>
@@ -104,15 +107,14 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                     <div className={styles.priceContainer}>
                         <span className={styles.currency}>GHS</span>
                         <span className={styles.amount}>{vipPrice}</span>
-                        <span className={styles.period}>/ day</span>
+                        <span className={styles.period}>/day</span>
                     </div>
                 )}
 
                 {!user ? (
-                    <button
+                   <button
                         onClick={() => setIsAuthModalOpen(true)}
                         className={styles.payButton}
-                        style={{ marginTop: '1rem' }}
                     >
                         <LogIn size={20} />
                         <span>Sign In to Access VIP</span>
@@ -129,7 +131,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         ) : (
                             <>
                                 <CreditCard size={20} />
-                                <span>Pay {vipPrice} GHS Now</span>
+                                <span>Pay {vipPrice} GHS to Unlock</span>
                                 <ArrowRight size={18} />
                             </>
                         )}
@@ -139,9 +141,10 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 {error && <p className={styles.errorMessage}>{error}</p>}
 
                 {user && (
-                    <p className={styles.secureText}>
-                        Secure daily payment via Paystack
-                    </p>
+                    <div className={styles.secureText}>
+                        <Shield size={12} />
+                        Secure payment via Paystack • Instant access
+                    </div>
                 )}
             </div>
         </div>

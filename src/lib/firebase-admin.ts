@@ -1,5 +1,7 @@
 import * as admin from 'firebase-admin';
 
+let adminMessaging: admin.messaging.Messaging | null = null;
+
 if (!admin.apps.length) {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
@@ -12,8 +14,10 @@ if (!admin.apps.length) {
 
             admin.initializeApp({
                 credential: admin.credential.cert(credentials),
-                databaseURL: `https://${credentials.project_id}.firebaseio.com`
+                databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || `https://${credentials.project_id}.firebaseio.com`
             });
+            
+            adminMessaging = admin.messaging();
         } catch (error) {
             console.error('Firebase admin initialization error:', error);
         }
@@ -24,4 +28,5 @@ if (!admin.apps.length) {
 
 export const adminDb = admin.firestore();
 export const adminAuth = admin.auth();
+export { adminMessaging };
 export default admin;

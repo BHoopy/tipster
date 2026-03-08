@@ -7,14 +7,16 @@
 }
 
 .card {
-  max-width: 500px;
+  max-width: 480px;
   width: 100%;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 3rem 2rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 0;
   text-align: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-glow), var(--glass-shadow);
   position: relative;
   overflow: hidden;
 }
@@ -24,80 +26,113 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
+  right: 0;
   height: 6px;
-  background: var(--color-primary);
+  background: var(--gradient-gold);
+}
+
+.glowOrb {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  top: -100px;
+  right: -100px;
+  pointer-events: none;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+  color: #78350f;
+  padding: 0.5rem 1.25rem;
   border-radius: 100px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  margin-bottom: 2rem;
+  letter-spacing: 0.1em;
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
 }
 
 .iconCircle {
-  width: 80px;
-  height: 80px;
-  background: var(--color-bg);
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   margin: 0 auto 1.5rem;
+  box-shadow: 0 10px 40px rgba(30, 41, 59, 0.3);
+  position: relative;
+}
+
+.iconCircle::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #fbbf24);
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(10px);
 }
 
 .lockIcon {
-  color: var(--color-primary);
+  color: #fbbf24;
 }
 
 .title {
   font-size: 1.75rem;
   font-weight: 800;
-  margin-bottom: 1rem;
-  color: var(--color-text);
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .subtitle {
   color: var(--color-text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.6;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  padding: 0 1.5rem;
 }
 
 .perksList {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
   text-align: left;
-  margin-bottom: 2.5rem;
-  background: var(--color-bg);
-  padding: 1.5rem;
-  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(248,250,252,0.5) 100%);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .perkItem {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .checkIcon {
-  color: var(--color-primary);
+  color: #F59E0B;
   flex-shrink: 0;
 }
 
 .priceContainer {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   display: flex;
   align-items: baseline;
   justify-content: center;
@@ -105,26 +140,31 @@
 }
 
 .currency {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text-muted);
 }
 
 .amount {
   font-size: 3.5rem;
   font-weight: 800;
-  color: var(--color-primary);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1;
 }
 
 .period {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
+  font-weight: 500;
 }
 
 .payButton {
-  width: 100%;
-  background: var(--color-primary);
+  width: calc(100% - 3rem);
+  margin: 0 1.5rem 1.5rem;
+  background: var(--gradient-premium);
   color: white;
   border: none;
   border-radius: var(--radius-md);
@@ -136,26 +176,30 @@
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 10px 15px -3px rgba(0, 168, 107, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px -5px rgba(30, 41, 59, 0.3);
 }
 
 .payButton:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(0, 168, 107, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 20px 35px -5px rgba(30, 41, 59, 0.4);
 }
 
 .payButton:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .secureText {
-  margin-top: 1.5rem;
-  font-size: 0.75rem;
+  margin-bottom: 2rem;
+  font-size: 0.7rem;
   color: var(--color-text-muted);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .spinner {
@@ -167,12 +211,66 @@
   animation: spin 1s linear infinite;
 }
 
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 1.5rem 1.5rem;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.divider span {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
-
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@media (max-width: 480px) {
+  .card {
+    border-radius: var(--radius-lg);
+    margin: 0 1rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .amount {
+    font-size: 2.75rem;
+  }
+  
+  .iconCircle {
+    width: 70px;
+    height: 70px;
   }
 }

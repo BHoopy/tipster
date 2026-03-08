@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, limit } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, limit, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import VipLocked from '@/components/VipLocked';
-import { Ticket, History, CheckCircle2, XCircle, Timer, ShieldCheck, Trophy, BadgeCheck } from 'lucide-react';
-import Image from 'next/image';
+import NotificationSettings from '@/components/NotificationSettings';
+import { Ticket, History, CheckCircle2, XCircle, Timer, ShieldCheck, Trophy, BadgeCheck, Sparkles, TrendingUp, Star } from 'lucide-react';
 
 type Match = {
     id: string;
@@ -34,10 +34,11 @@ export default function Home() {
     const [freeHistory, setFreeHistory] = useState<Match[]>([]);
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
     const [vipHistory, setVipHistory] = useState<VipTicket[]>([]);
+    const [allFreeTips, setAllFreeTips] = useState<Match[]>([]);
+    const [allVipTickets, setAllVipTickets] = useState<VipTicket[]>([]);
     const { isVip, isAdmin } = useAuth();
 
     useEffect(() => {
-        // 1. Fetch Active Free Tips
         const freeQuery = query(
             collection(db, 'free_tips'),
             where('status', '==', 'pending'),
@@ -47,15 +48,6 @@ export default function Home() {
             setFreeTips(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
         });
 
-        // 2. Fetch Free History (Last 20)
-        const freeHistQuery = query(
-            collection(db, 'free_tips'),
-            where('status', '!=', 'pending'),
-            orderBy('status'), // Necessary combined with status filter
-            orderBy('time', 'desc'),
-            limit(20)
-        );
-        // Actually simpler if we just query with status in ['win', 'lose']
         const unsubFreeHist = onSnapshot(query(
             collection(db, 'free_tips'),
             where('status', 'in', ['win', 'lose']),
@@ -65,7 +57,6 @@ export default function Home() {
             setFreeHistory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
         });
 
-        // 3. Fetch Active VIP Tickets
         const vipQuery = query(
             collection(db, 'vip_tickets'),
             where('status', '==', 'pending'),
@@ -75,16 +66,24 @@ export default function Home() {
             setVipTickets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
         });
 
-        // 4. Fetch VIP History
-        const vipHistQuery = query(
+        const unsubVipHist = onSnapshot(query(
             collection(db, 'vip_tickets'),
             where('status', 'in', ['win', 'lose']),
             orderBy('createdAt', 'desc'),
             limit(20)
-        );
-        const unsubVipHist = onSnapshot(vipHistQuery, (snap) => {
+        ), (snap) => {
             setVipHistory(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
         });
+
+        // Fetch all for stats
+        const fetchAllData = async () => {
+            const allFree = await getDocs(query(collection(db, 'free_tips')));
+            setAllFreeTips(allFree.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
+            
+            const allVip = await getDocs(query(collection(db, 'vip_tickets')));
+            setAllVipTickets(allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
+        };
+        fetchAllData();
 
         return () => {
             unsubFree();
@@ -94,53 +93,133 @@ export default function Home() {
         };
     }, []);
 
+    const stats = useMemo(() => {
+        const freeWins = allFreeTips.filter(t => t.status === 'win').length;
+        const freeTotal = allFreeTips.filter(t => t.status !== 'pending').length;
+        const freeRate = freeTotal > 0 ? Math.round((freeWins / freeTotal) * 100) : 0;
+
+        const vipWins = allVipTickets.filter(t => t.status === 'win').length;
+        const vipTotal = allVipTickets.filter(t => t.status !== 'pending').length;
+        const vipRate = vipTotal > 0 ? Math.round((vipWins / vipTotal) * 100) : 0;
+
+        return {
+            freeWinRate: freeRate,
+            vipWinRate: vipRate,
+            totalWins: freeWins + vipWins,
+            totalTickets: vipTotal
+        };
+    }, [allFreeTips, allVipTickets]);
+
+    const renderFreeTipCard = (match: Match, idx: number) => (
+        <div 
+            key={match.id} 
+            className="glass-card animate-fade-in-up"
+            style={{
+                padding: '1.25rem',
+                marginBottom: '0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    color: 'white',
+                    background: 'var(--color-primary)',
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: '4px'
+                }}>{match.league}</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>{match.time}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{match.teams}</span>
+                <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.95rem' }}>{match.tips}</span>
+            </div>
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-end',
+                paddingTop: '0.5rem',
+                borderTop: '1px solid var(--color-border)'
+            }}>
+                {match.status === 'pending' ? (
+                    <span className="badge badge-pending">Pending</span>
+                ) : match.status === 'win' ? (
+                    <span className="badge badge-win"><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Won</span>
+                ) : (
+                    <span className="badge badge-lose"><XCircle size={12} style={{ marginRight: '4px' }} /> Lost</span>
+                )}
+            </div>
+        </div>
+    );
+
     const renderFreeTips = (data: Match[]) => {
         if (data.length === 0) return <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)' }}>No tips available.</div>;
 
         return (
-            <div className="table-wrapper" style={{ overflowX: 'auto' }}>
-                <table className="tips-table">
-                    <thead>
-                        <tr>
-                            <th style={{ width: '60px' }}>SN</th>
-                            <th style={{ width: '100px' }}>TIME</th>
-                            <th style={{ width: '150px' }}>LEAGUE</th>
-                            <th style={{ minWidth: '200px' }}>TEAMS</th>
-                            <th style={{ width: '120px' }}>TIPS</th>
-                            <th style={{ width: '100px' }}>RESULT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((match, idx) => (
-                            <tr key={match.id}>
-                                <td style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>{idx + 1}</td>
-                                <td style={{ fontWeight: 500, fontSize: '0.85rem' }}>{match.time}</td>
-                                <td>
-                                    <span style={{
-                                        fontSize: '0.75rem',
-                                        fontWeight: 700,
-                                        color: 'var(--color-primary)',
-                                        background: 'var(--color-primary-light)',
-                                        padding: '0.2rem 0.5rem',
-                                        borderRadius: '4px'
-                                    }}>{match.league}</span>
-                                </td>
-                                <td style={{ fontWeight: 700 }}>{match.teams}</td>
-                                <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{match.tips}</td>
-                                <td>
-                                    {match.status === 'pending' ? (
-                                        <span className="badge badge-pending">Pending</span>
-                                    ) : match.status === 'win' ? (
-                                        <span className="badge badge-win"><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Win</span>
-                                    ) : (
-                                        <span className="badge badge-lose"><XCircle size={12} style={{ marginRight: '4px' }} /> Lose</span>
-                                    )}
-                                </td>
+            <>
+                {/* Mobile Card View */}
+                <div className="mobile-cards" style={{ display: 'none' }}>
+                    {data.map((match, idx) => renderFreeTipCard(match, idx))}
+                </div>
+                
+                {/* Desktop Table View */}
+                <div className="desktop-table" style={{ overflowX: 'auto' }}>
+                    <table className="tips-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: '60px' }}>SN</th>
+                                <th style={{ width: '100px' }}>TIME</th>
+                                <th style={{ width: '120px' }}>LEAGUE</th>
+                                <th style={{ minWidth: '180px' }}>TEAMS</th>
+                                <th style={{ width: '120px' }}>TIPS</th>
+                                <th style={{ width: '100px' }}>RESULT</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {data.map((match, idx) => (
+                                <tr key={match.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.05}s` }}>
+                                    <td style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>{idx + 1}</td>
+                                    <td style={{ fontWeight: 500, fontSize: '0.85rem' }}>{match.time}</td>
+                                    <td>
+                                        <span style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            color: 'white',
+                                            background: 'var(--color-primary)',
+                                            padding: '0.2rem 0.5rem',
+                                            borderRadius: '4px'
+                                        }}>{match.league}</span>
+                                    </td>
+                                    <td style={{ fontWeight: 700 }}>{match.teams}</td>
+                                    <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{match.tips}</td>
+                                    <td>
+                                        {match.status === 'pending' ? (
+                                            <span className="badge badge-pending">Pending</span>
+                                        ) : match.status === 'win' ? (
+                                            <span className="badge badge-win"><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Win</span>
+                                        ) : (
+                                            <span className="badge badge-lose"><XCircle size={12} style={{ marginRight: '4px' }} /> Lose</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <style jsx>{`
+                    @media (max-width: 768px) {
+                        .mobile-cards { display: block !important; }
+                        .desktop-table { display: none !important; }
+                    }
+                    @media (min-width: 769px) {
+                        .mobile-cards { display: none !important; }
+                        .desktop-table { display: block !important; }
+                    }
+                `}</style>
+            </>
         );
     };
 
@@ -149,66 +228,90 @@ export default function Home() {
 
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {tickets.map((ticket) => (
-                    <div key={ticket.id} style={{
-                        background: 'white',
-                        borderRadius: 'var(--radius-lg)',
-                        border: '1px solid var(--color-border)',
-                        boxShadow: 'var(--shadow-md)',
-                        overflow: 'hidden'
-                    }}>
+                {tickets.map((ticket, idx) => (
+                    <div 
+                        key={ticket.id} 
+                        className="glass-card animate-fade-in-up"
+                        style={{
+                            borderRadius: 'var(--radius-xl)',
+                            overflow: 'hidden',
+                            boxShadow: 'var(--shadow-glow)'
+                        }}
+                    >
                         <div style={{
-                            background: 'var(--color-primary)',
-                            padding: '1.25rem 2rem',
+                            background: ticket.status === 'win' 
+                                ? 'var(--gradient-premium)' 
+                                : ticket.status === 'lose'
+                                ? 'linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)'
+                                : 'var(--gradient-primary)',
+                            padding: '1.5rem 2rem',
                             color: 'white',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '1rem'
                         }}>
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'white' }}>{ticket.bundle_name || 'Premium Bundle'}</h3>
-                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Expert selection for today</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{
+                                    background: 'rgba(255,255,255,0.2)',
+                                    padding: '0.75rem',
+                                    borderRadius: 'var(--radius-md)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <Sparkles size={24} />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'white', fontWeight: 700 }}>
+                                        {ticket.bundle_name || 'Premium Bundle'}
+                                    </h3>
+                                    <div style={{ fontSize: '0.875rem', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Star size={12} fill="currentColor" /> Expert selection for today
+                                    </div>
+                                </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{ticket.odds} Odds</div>
-                                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Combined</div>
+                                <div style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>{ticket.odds} Odds</div>
+                                <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.8 }}>Combined</div>
                             </div>
                         </div>
 
-                        <div style={{ padding: '0 1rem' }}>
-                            <table className="tips-table" style={{ border: 'none', marginTop: 0 }}>
+                        <div style={{ padding: '1.5rem', background: 'white' }}>
+                            <table className="tips-table" style={{ border: 'none', marginTop: 0, boxShadow: 'none' }}>
                                 <thead>
                                     <tr>
-                                        <th style={{ borderBottom: '1px solid var(--color-border)' }}>TIME</th>
-                                        <th style={{ borderBottom: '1px solid var(--color-border)' }}>LEAGUE</th>
-                                        <th style={{ borderBottom: '1px solid var(--color-border)' }}>TEAMS</th>
-                                        <th style={{ borderBottom: '1px solid var(--color-border)' }}>TIPS</th>
-                                        <th style={{ borderBottom: '1px solid var(--color-border)' }}>RESULT</th>
+                                        <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIME</th>
+                                        <th style={{ borderBottom: '2px solid var(--color-border)' }}>LEAGUE</th>
+                                        <th style={{ borderBottom: '2px solid var(--color-border)' }}>TEAMS</th>
+                                        <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIPS</th>
+                                        <th style={{ borderBottom: '2px solid var(--color-border)' }}>RESULT</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {ticket.matches.map((match, mIdx) => (
-                                        <tr key={mIdx}>
-                                            <td style={{ fontSize: '0.85rem' }}>{match.time}</td>
+                                        <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
+                                            <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{match.time}</td>
                                             <td>
                                                 <span style={{
                                                     fontSize: '0.7rem',
                                                     fontWeight: 700,
-                                                    color: 'var(--color-primary)',
-                                                    background: 'var(--color-primary-light)',
-                                                    padding: '0.15rem 0.4rem',
+                                                    color: 'white',
+                                                    background: 'var(--color-primary)',
+                                                    padding: '0.2rem 0.5rem',
                                                     borderRadius: '4px'
                                                 }}>{match.league}</span>
                                             </td>
-                                            <td style={{ fontWeight: 700 }}>{match.teams}</td>
-                                            <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{match.tips}</td>
+                                            <td style={{ fontWeight: 700, fontSize: '0.9rem' }}>{match.teams}</td>
+                                            <td style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.9rem' }}>{match.tips}</td>
                                             <td>
                                                 {match.status === 'pending' ? (
                                                     <span className="badge badge-pending">PENDING</span>
                                                 ) : match.status === 'win' ? (
-                                                    <span className="badge badge-win">WIN</span>
+                                                    <span className="badge badge-win"><CheckCircle2 size={12} /> WIN</span>
                                                 ) : (
-                                                    <span className="badge badge-lose">CUT</span>
+                                                    <span className="badge badge-lose"><XCircle size={12} /> CUT</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -218,20 +321,25 @@ export default function Home() {
                         </div>
 
                         <div style={{
-                            padding: '1.5rem',
+                            padding: '1.25rem 1.5rem',
                             background: 'var(--color-bg)',
                             borderTop: '1px solid var(--color-border)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '1rem'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)' }}>
-                                {ticket.status === 'pending' ? <Timer size={18} /> : ticket.status === 'win' ? <Trophy size={18} color="gold" /> : <XCircle size={18} color="red" />}
-                                <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>
-                                    TICKET STATUS: {ticket.status}
-                                </span>
+                                {ticket.status === 'pending' ? (
+                                    <><Timer size={18} /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Ticket Pending</span></>
+                                ) : ticket.status === 'win' ? (
+                                    <><Trophy size={18} color="#F59E0B" /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', color: '#065f46' }}>Winning Ticket</span></>
+                                ) : (
+                                    <><XCircle size={18} color="#991b1b" /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', color: '#991b1b' }}>Ticket Lost</span></>
+                                )}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem' }}>
                                 <ShieldCheck size={18} />
                                 <span>Verified Selection</span>
                             </div>
@@ -246,7 +354,9 @@ export default function Home() {
         <div className="container" style={{ maxWidth: '1000px' }}>
             {/* Hero Section */}
             <div style={{ textAlign: 'center', marginBottom: '3rem', marginTop: '1rem' }}>
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Winning Starts Here</h1>
+                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                    Winning Starts Here
+                </h1>
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
                     Get access to the most accurate football predictions and expert-vetted VIP ticket bundles daily.
                 </p>
@@ -259,10 +369,12 @@ export default function Home() {
                 gap: '0.5rem',
                 marginBottom: '2rem',
                 padding: '0.4rem',
-                background: 'rgba(0,168,107,0.05)',
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(12px)',
                 borderRadius: 'var(--radius-md)',
                 maxWidth: 'fit-content',
-                margin: '0 auto 3rem auto'
+                margin: '0 auto 3rem auto',
+                border: '1px solid var(--glass-border)'
             }}>
                 <button
                     onClick={() => { setActiveTab('free'); setShowHistory(false); }}
@@ -285,25 +397,27 @@ export default function Home() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '1.5rem'
+                marginBottom: '1.5rem',
+                flexWrap: 'wrap',
+                gap: '1rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{
-                        background: 'var(--color-primary)',
+                    <div className="glass-card" style={{
                         color: 'white',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        background: 'var(--gradient-primary)'
                     }}>
                         {showHistory ? <History size={20} /> : <Ticket size={20} />}
                     </div>
                     <div>
                         <h2 style={{ fontSize: '1.25rem', lineHeight: 1 }}>{showHistory ? 'History' : 'Predictions'}</h2>
                         <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                            {showHistory ? 'Previous results and win rate' : 'Today\'s expert selections'}
+                            {showHistory ? 'Previous results and win rate' : "Today's expert selections"}
                         </p>
                     </div>
                 </div>
@@ -330,47 +444,94 @@ export default function Home() {
                 )}
             </div>
 
-            {/* Stats Section */}
+            {/* Stats Section - Dynamic */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.5rem',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '1rem',
                 marginTop: '4rem',
                 marginBottom: '2rem'
             }}>
-                <div style={{
-                    background: 'white',
+                <div className="glass-card" style={{
                     padding: '1.5rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-border)',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'var(--gradient-primary)'
+                    }} />
                     <BadgeCheck color="var(--color-primary)" size={32} style={{ marginBottom: '0.75rem' }} />
-                    <h4 style={{ fontSize: '1.5rem' }}>92%</h4>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Win Rate</p>
+                    <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.freeWinRate}%</h4>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Free Tips Win Rate</p>
                 </div>
-                <div style={{
-                    background: 'white',
+                
+                <div className="glass-card" style={{
                     padding: '1.5rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-border)',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
-                    <Trophy color="var(--color-primary)" size={32} style={{ marginBottom: '0.75rem' }} />
-                    <h4 style={{ fontSize: '1.5rem' }}>500+</h4>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Winning Tickets</p>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'var(--gradient-gold)'
+                    }} />
+                    <Trophy color="#F59E0B" size={32} style={{ marginBottom: '0.75rem' }} />
+                    <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.vipWinRate}%</h4>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>VIP Win Rate</p>
                 </div>
-                <div style={{
-                    background: 'white',
+                
+                <div className="glass-card" style={{
                     padding: '1.5rem',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--color-border)',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'var(--gradient-premium)'
+                    }} />
+                    <TrendingUp color="var(--color-primary)" size={32} style={{ marginBottom: '0.75rem' }} />
+                    <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.totalWins}+</h4>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Wins</p>
+                </div>
+                
+                <div className="glass-card" style={{
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '4px',
+                        background: 'var(--gradient-primary)'
+                    }} />
                     <ShieldCheck color="var(--color-primary)" size={32} style={{ marginBottom: '0.75rem' }} />
-                    <h4 style={{ fontSize: '1.5rem' }}>Verified</h4>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Stats Checked</p>
+                    <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.totalTickets}+</h4>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>VIP Tickets</p>
                 </div>
+            </div>
+
+            {/* Notification Settings */}
+            <div style={{ maxWidth: '400px', margin: '3rem auto 2rem' }}>
+                <NotificationSettings />
             </div>
         </div>
     );
