@@ -131,7 +131,7 @@ export default function Home() {
                     padding: '0.2rem 0.5rem',
                     borderRadius: '4px'
                 }}>{match.league}</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>{match.time}</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Time: {match.time}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{match.teams}</span>
@@ -144,11 +144,11 @@ export default function Home() {
                 borderTop: '1px solid var(--color-border)'
             }}>
                 {match.status === 'pending' ? (
-                    <span className="badge badge-pending">Pending</span>
+                    <span className="badge badge-pending">⌛ Pending</span>
                 ) : match.status === 'win' ? (
-                    <span className="badge badge-win"><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Won</span>
+                    <span className="badge badge-win">✅ Won</span>
                 ) : (
-                    <span className="badge badge-lose"><XCircle size={12} style={{ marginRight: '4px' }} /> Lost</span>
+                    <span className="badge badge-lose">❌ Lose</span>
                 )}
             </div>
         </div>
@@ -195,12 +195,12 @@ export default function Home() {
                                     <td style={{ fontWeight: 700 }}>{match.teams}</td>
                                     <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{match.tips}</td>
                                     <td>
-                                        {match.status === 'pending' ? (
-                                            <span className="badge badge-pending">Pending</span>
+{match.status === 'pending' ? (
+                                            <span className="badge badge-pending">⌛ Pending</span>
                                         ) : match.status === 'win' ? (
-                                            <span className="badge badge-win"><CheckCircle2 size={12} style={{ marginRight: '4px' }} /> Win</span>
+                                            <span className="badge badge-win">✅ Won</span>
                                         ) : (
-                                            <span className="badge badge-lose"><XCircle size={12} style={{ marginRight: '4px' }} /> Lose</span>
+                                            <span className="badge badge-lose">❌ Lose</span>
                                         )}
                                     </td>
                                 </tr>

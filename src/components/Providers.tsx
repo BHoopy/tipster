@@ -2,12 +2,15 @@
 
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { AuthModalProvider } from '@/context/AuthModalContext';
 import { ReactNode } from 'react';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthModalProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </AuthModalProvider>
     </ThemeProvider>
   );
 }

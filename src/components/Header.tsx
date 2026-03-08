@@ -5,11 +5,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuthModal } from '@/context/AuthModalContext';
 import { LogOut, Sun, Moon, LogIn, Menu, X, Bell, BellOff } from 'lucide-react';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { openAuthModal } = useAuthModal();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
@@ -125,7 +127,7 @@ export default function Header() {
                             </button>
                         </div>
                     ) : (
-                        <button className="btn btn-primary">
+                        <button className="btn btn-primary" onClick={openAuthModal}>
                             <LogIn size={18} /> Sign In
                         </button>
                     )}
@@ -207,7 +209,7 @@ export default function Header() {
                                 </button>
                             </>
                         ) : (
-                            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={openAuthModal}>
                                 <LogIn size={18} /> Sign In
                             </button>
                         )}

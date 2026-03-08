@@ -40,20 +40,27 @@ const QUICK_LEAGUES = [
     { name: 'Ligue 1', color: '#091c3e' },
     { name: 'UCL', color: '#1c1c1c' },
     { name: 'UEL', color: '#ff6600' },
-    { name: 'PL', color: '#38003c' },
 ];
 
 export default function AdminDashboard() {
     const { user, isAdmin, loading } = useAuth();
-    const [view, setView] = useState<'free' | 'vip'>('free');
+    const [view, setView] = useState<'free' | 'vip' | 'history'>('free');
     const [sendNotification, setSendNotification] = useState(true);
     const [bulkInput, setBulkInput] = useState('');
     const [showBulk, setShowBulk] = useState(false);
 
+    // History State
+    const [historyTips, setHistoryTips] = useState<Match[]>([]);
+    const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
+
     // Free Tips State
     const [freeTips, setFreeTips] = useState<Match[]>([]);
+    const getCurrentTime = () => {
+        const now = new Date();
+        return now.toTimeString().slice(0, 5);
+    };
     const [newFreeTip, setNewFreeTip] = useState<Match>({
-        time: '', league: '', teams: '', tips: '', status: 'pending'
+        time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending'
     });
 
     // VIP Tickets State
@@ -97,7 +104,7 @@ export default function AdminDashboard() {
         }
         tipAutocomplete.learn(newFreeTip.tips);
         
-        setNewFreeTip({ time: '', league: '', teams: '', tips: '', status: 'pending' });
+        setNewFreeTip({ time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending' });
         teamAutocomplete.clearSuggestions();
         tipAutocomplete.clearSuggestions();
         
@@ -181,7 +188,7 @@ export default function AdminDashboard() {
     const addMatchToVipPayload = () => {
         setNewVipTicket({
             ...newVipTicket,
-            matches: [...newVipTicket.matches, { time: '', league: '', teams: '', tips: '', status: 'pending' }]
+            matches: [...newVipTicket.matches, { time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending' }]
         });
     };
 
@@ -462,26 +469,24 @@ export default function AdminDashboard() {
                                                 <td style={{ fontWeight: 600 }}>{tip.teams}</td>
                                                 <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{tip.tips}</td>
                                                 <td>
-                                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                                        <button 
-                                                            onClick={() => updateMatchStatus('free_tips', tip.id!, 'win')} 
-                                                            style={{ 
-                                                                color: tip.status === 'win' ? 'var(--color-success)' : '#ccc',
-                                                                padding: '0.25rem'
-                                                            }}
-                                                        >
-                                                            <CheckCircle2 size={22} />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => updateMatchStatus('free_tips', tip.id!, 'lose')} 
-                                                            style={{ 
-                                                                color: tip.status === 'lose' ? 'var(--color-danger)' : '#ccc',
-                                                                padding: '0.25rem'
-                                                            }}
-                                                        >
-                                                            <XCircle size={22} />
-                                                        </button>
-                                                    </div>
+                                                    <select 
+                                                        value={tip.status}
+                                                        onChange={(e) => updateMatchStatus('free_tips', tip.id!, e.target.value as 'win' | 'lose' | 'pending')}
+                                                        style={{
+                                                            padding: '0.375rem 0.5rem',
+                                                            borderRadius: 'var(--radius-sm)',
+                                                            border: '1px solid var(--color-border)',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 600,
+                                                            cursor: 'pointer',
+                                                            background: tip.status === 'win' ? 'var(--color-success)' : tip.status === 'lose' ? 'var(--color-danger)' : 'var(--color-text-muted)',
+                                                            color: 'white'
+                                                        }}
+                                                    >
+                                                        <option value="pending">Pending</option>
+                                                        <option value="win">Win</option>
+                                                        <option value="lose">Lose</option>
+                                                    </select>
                                                 </td>
                                                 <td>
                                                     <button 
@@ -579,38 +584,47 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
 
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <tbody>
-                                            {ticket.matches.map((m, mIdx) => (
-                                                <tr key={mIdx} style={{ borderTop: '1px solid var(--color-border)' }}>
-                                                    <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.8125rem' }}>
-                                                        <span style={{ fontWeight: 600 }}>{m.time}</span>
-                                                        <span style={{ margin: '0 0.5rem', color: 'var(--color-text-muted)' }}>-</span>
-                                                        {m.teams}
-                                                    </td>
-                                                    <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-primary)' }}>
-                                                        {m.tips}
-                                                    </td>
-                                                    <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>
-                                                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
-                                                            <button 
-                                                                onClick={() => updateVipMatchStatus(ticket.id!, mIdx, 'win')} 
-                                                                style={{ color: m.status === 'win' ? 'var(--color-success)' : '#ccc' }}
-                                                            >
-                                                                <CheckCircle2 size={20} />
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => updateVipMatchStatus(ticket.id!, mIdx, 'lose')} 
-                                                                style={{ color: m.status === 'lose' ? 'var(--color-danger)' : '#ccc' }}
-                                                            >
-                                                                <XCircle size={20} />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                        {ticket.matches.map((m, mIdx) => (
+                                            <div key={mIdx} style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'space-between',
+                                                padding: '0.75rem 0',
+                                                borderTop: '1px solid var(--color-border)',
+                                                gap: '0.5rem',
+                                                flexWrap: 'wrap'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '150px' }}>
+                                                    <span style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{m.time}</span>
+                                                    <span style={{ color: 'var(--color-text-muted)' }}>-</span>
+                                                    <span style={{ fontSize: '0.8125rem', flex: 1 }}>{m.teams}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                    <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.8125rem' }}>{m.tips}</span>
+                                                    <select 
+                                                        value={m.status}
+                                                        onChange={(e) => updateVipMatchStatus(ticket.id!, mIdx, e.target.value as 'win' | 'lose' | 'pending')}
+                                                        style={{
+                                                            padding: '0.375rem 0.5rem',
+                                                            borderRadius: 'var(--radius-sm)',
+                                                            border: '1px solid var(--color-border)',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 600,
+                                                            cursor: 'pointer',
+                                                            background: m.status === 'win' ? 'var(--color-success)' : m.status === 'lose' ? 'var(--color-danger)' : 'var(--color-text-muted)',
+                                                            color: 'white',
+                                                            minWidth: '80px'
+                                                        }}
+                                                    >
+                                                        <option value="pending">Pending</option>
+                                                        <option value="win">Win</option>
+                                                        <option value="lose">Lose</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             ))}
                         </div>

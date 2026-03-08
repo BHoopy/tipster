@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import { Providers } from '@/components/Providers';
 import Header from '@/components/Header';
+import AuthModalWrapper from '@/components/AuthModalWrapper';
 import { ReactNode } from 'react';
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <Providers>
+                    <AuthModalWrapper />
                     <Header />
                     <main style={{ minHeight: 'calc(100vh - 70px - 200px)', padding: '2rem 0' }}>
                         {children}
@@ -55,7 +57,7 @@ export default function RootLayout({
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em'
                                 }}>
-                                    © {new Date().getFullYear()} TF Betting. All Rights Reserved.
+                                    © {new Date().getFullYear()} TF Betting Tips. All Rights Reserved.
                                 </div>
                             </div>
                         </div>

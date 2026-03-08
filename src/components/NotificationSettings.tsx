@@ -14,8 +14,10 @@ export default function NotificationSettings({ onTokenChange }: NotificationSett
     const [fcmToken, setFcmToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        setIsMounted(true);
         if (typeof window !== 'undefined' && 'Notification' in window) {
             setPermission(Notification.permission);
         }
@@ -70,7 +72,7 @@ export default function NotificationSettings({ onTokenChange }: NotificationSett
         setMessage({ type: 'success', text: 'Notifications disabled.' });
     };
 
-    if (typeof window === 'undefined' || !('Notification' in window)) {
+    if (!isMounted) {
         return null;
     }
 
