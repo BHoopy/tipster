@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus, Zap, Copy, ChevronUp, Trash2 } from 'lucide-react';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useTeamAutocomplete, useTipAutocomplete } from '@/hooks/useAutocomplete';
+import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
 import { Match, QUICK_LEAGUES } from './types';
 
@@ -32,6 +32,7 @@ export default function FreeTipsManager({
 
     const teamAutocomplete = useTeamAutocomplete();
     const tipAutocomplete = useTipAutocomplete();
+    const leagueAutocomplete = useLeagueAutocomplete();
 
     const handleAddFreeTip = async () => {
         const errors: { homeTeam?: boolean; awayTeam?: boolean; tips?: boolean } = {};
@@ -57,12 +58,14 @@ export default function FreeTipsManager({
         teamAutocomplete.learn(homeTeam.trim());
         teamAutocomplete.learn(awayTeam.trim());
         tipAutocomplete.learn(newFreeTip.tips);
+        leagueAutocomplete.learn(newFreeTip.league);
 
         setHomeTeam('');
         setAwayTeam('');
         setNewFreeTip({ ...newFreeTip, time: getCurrentTime(), teams: '', tips: '', status: 'pending' });
         teamAutocomplete.clearSuggestions();
         tipAutocomplete.clearSuggestions();
+        leagueAutocomplete.clearSuggestions();
     };
 
     const handleHomeTeamChange = (value: string) => {
@@ -82,6 +85,7 @@ export default function FreeTipsManager({
             const parts = line.split('|').map(s => s.trim());
             if (parts.length >= 4) {
                 const [time, league, teams, tips] = parts;
+                leagueAutocomplete.learn(league);
                 return addDoc(collection(db, 'free_tips'), {
                     time, league, teams, tips,
                     status: 'pending',
@@ -190,7 +194,15 @@ export default function FreeTipsManager({
                         </div>
                         <div>
                             <label style={{ fontSize: '0.65rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase' }}>League</label>
-                            <input className="input" type="text" value={newFreeTip.league} onChange={e => setNewFreeTip({ ...newFreeTip, league: e.target.value })} placeholder="EPL" style={{ height: '32px', fontSize: '0.75rem', padding: '0.25rem' }} />
+                            <AutocompleteInput
+                                value={newFreeTip.league}
+                                onChange={(val) => { setNewFreeTip({ ...newFreeTip, league: val }); leagueAutocomplete.search(val); }}
+                                onSelect={() => { }}
+                                suggestions={leagueAutocomplete.suggestions}
+                                isLoading={leagueAutocomplete.isLoading}
+                                placeholder="EPL"
+                                style={{ height: '32px', fontSize: '0.75rem' }}
+                            />
                         </div>
                         <div style={{ flex: 2 }}>
                             <label style={{ fontSize: '0.65rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase' }}>Tips *</label>
@@ -330,12 +342,21 @@ export default function FreeTipsManager({
                                     <select
                                         value={tip.status}
                                         onChange={(e) => updateMatchStatus('free_tips', tip.id!, e.target.value as any)}
-                                        className={`badge ${tip.status === 'win' ? 'badge-success' : tip.status === 'lose' ? 'badge-danger' : 'badge-muted'}`}
-                                        style={{ border: 'none', cursor: 'pointer', color: 'white', padding: '0.3rem' }}
+                                        className="badge"
+                                        style={{
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: 'white',
+                                            padding: '0.2rem 0.5rem',
+                                            fontSize: '0.65rem',
+                                            fontWeight: 700,
+                                            borderRadius: '20px',
+                                            background: tip.status === 'win' ? '#00a86b' : tip.status === 'lose' ? '#ef4444' : '#64748b'
+                                        }}
                                     >
-                                        <option value="pending">⌛ Pending</option>
-                                        <option value="win">✅ Won</option>
-                                        <option value="lose">❌ Lose</option>
+                                        <option value="pending" style={{ background: '#64748b', color: 'white' }}>⌛ Pending</option>
+                                        <option value="win" style={{ background: '#00a86b', color: 'white' }}>✅ Won</option>
+                                        <option value="lose" style={{ background: '#ef4444', color: 'white' }}>❌ Lose</option>
                                     </select>
                                 </td>
                                 <td>

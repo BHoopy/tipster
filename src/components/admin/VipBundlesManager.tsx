@@ -5,7 +5,7 @@ import { Plus, Save, Trash2, Zap } from 'lucide-react';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Match, VipTicket, QUICK_LEAGUES } from './types';
-import { useTeamAutocomplete, useTipAutocomplete } from '@/hooks/useAutocomplete';
+import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
 
 interface VipBundlesManagerProps {
@@ -26,6 +26,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
 
     const teamAutocomplete = useTeamAutocomplete();
     const tipAutocomplete = useTipAutocomplete();
+    const leagueAutocomplete = useLeagueAutocomplete();
 
     const addMatchToVipPayload = () => {
         setNewVipTicket({
@@ -43,6 +44,8 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             teamAutocomplete.search(value);
         } else if (field === 'tips') {
             tipAutocomplete.search(value);
+        } else if (field === 'league') {
+            leagueAutocomplete.search(value);
         }
     };
 
@@ -81,7 +84,13 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             teamAutocomplete.learn(m.home.trim());
             teamAutocomplete.learn(m.away.trim());
             tipAutocomplete.learn(m.tips.trim());
+            leagueAutocomplete.learn(m.league.trim());
         });
+
+        // Clear all suggestions
+        teamAutocomplete.clearSuggestions();
+        tipAutocomplete.clearSuggestions();
+        leagueAutocomplete.clearSuggestions();
 
         setNewVipTicket({ bundle_name: '', odds: '', matches: [] });
     };
@@ -197,14 +206,17 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                         }}>
                             <input className="input" type="time" value={m.time} onChange={e => handleVipMatchChange(idx, 'time', e.target.value)} style={{ width: '80px', height: '30px', padding: '0.2rem', fontSize: '0.75rem' }} />
 
-                            <select
-                                className="input"
-                                value={m.league}
-                                onChange={e => handleVipMatchChange(idx, 'league', e.target.value)}
-                                style={{ width: '85px', height: '30px', fontSize: '0.7rem', padding: '0 0.1rem', fontWeight: 700 }}
-                            >
-                                {QUICK_LEAGUES.map(l => <option key={l.name} value={l.name}>{l.name}</option>)}
-                            </select>
+                            <div style={{ width: '85px' }}>
+                                <AutocompleteInput
+                                    value={m.league}
+                                    onChange={(val) => handleVipMatchChange(idx, 'league', val)}
+                                    onSelect={() => { }}
+                                    suggestions={leagueAutocomplete.suggestions}
+                                    isLoading={leagueAutocomplete.isLoading}
+                                    placeholder="EPL"
+                                    style={{ height: '30px', fontSize: '0.7rem', padding: '0 0.1rem' }}
+                                />
+                            </div>
 
                             <div style={{ flex: 1, minWidth: '100px' }}>
                                 <AutocompleteInput
