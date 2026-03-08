@@ -20,7 +20,12 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const rtdb = getDatabase(app);
+// RTDB initialization - use the URL explicitly to be safe
+export const rtdb = getDatabase(app, process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL);
+
+if (!process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL) {
+  console.warn('Firebase Database URL is missing in .env.local');
+}
 
 export const initMessaging = async () => {
   try {

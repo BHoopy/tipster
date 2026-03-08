@@ -8,6 +8,8 @@ import VipLocked from '@/components/VipLocked';
 import NotificationSettings from '@/components/NotificationSettings';
 import { Ticket, History, CheckCircle2, XCircle, Timer, ShieldCheck, Trophy, BadgeCheck, Sparkles, TrendingUp, Star, Bell, ChevronDown, ChevronRight } from 'lucide-react';
 
+import { QUICK_LEAGUES } from '@/components/admin/types';
+
 type Match = {
     id: string;
     time: string;
@@ -49,14 +51,14 @@ const formatDateLabel = (dateStr: string): string => {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     if (dateStr === formatDate(today)) return 'Today';
     if (dateStr === formatDate(yesterday)) return 'Yesterday';
-    
-    return date.toLocaleDateString('en-GB', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
     });
 };
 
@@ -71,6 +73,11 @@ const getDateRange = (days: number): string[] => {
     return dates;
 };
 
+const getLeagueColor = (leagueName: string) => {
+    const league = QUICK_LEAGUES.find(l => l.name.toLowerCase() === leagueName.toLowerCase());
+    return league ? league.color : 'var(--color-primary)';
+};
+
 export default function Home() {
     const [activeTab, setActiveTab] = useState<'free' | 'premium'>('free');
     const [showHistory, setShowHistory] = useState(false);
@@ -83,10 +90,10 @@ export default function Home() {
 
     // Get today's date formatted
     const todayStr = formatDate(new Date());
-    const todayLabel = new Date().toLocaleDateString('en-GB', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+    const todayLabel = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
     });
 
     useEffect(() => {
@@ -112,7 +119,7 @@ export default function Home() {
         const fetchAllData = async () => {
             const allFree = await getDocs(query(collection(db, 'free_tips')));
             setAllFreeTips(allFree.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
-            
+
             const allVip = await getDocs(query(collection(db, 'vip_tickets')));
             setAllVipTickets(allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
         };
@@ -128,18 +135,18 @@ export default function Home() {
     const groupTipsByDate = (tips: Match[]): GroupedTips[] => {
         const dateRanges = getDateRange(historyDays);
         const grouped: { [key: string]: Match[] } = {};
-        
+
         dateRanges.forEach(date => {
             grouped[date] = [];
         });
-        
+
         tips.forEach(tip => {
             const tipDate = tip.createdAt ? new Date(tip.createdAt.seconds * 1000).toISOString().split('T')[0] : todayStr;
             if (grouped[tipDate]) {
                 grouped[tipDate].push(tip);
             }
         });
-        
+
         return dateRanges.map(date => ({
             date,
             dateLabel: formatDateLabel(date),
@@ -151,18 +158,18 @@ export default function Home() {
     const groupTicketsByDate = (tickets: VipTicket[]): GroupedTickets[] => {
         const dateRanges = getDateRange(historyDays);
         const grouped: { [key: string]: VipTicket[] } = {};
-        
+
         dateRanges.forEach(date => {
             grouped[date] = [];
         });
-        
+
         tickets.forEach(ticket => {
             const ticketDate = ticket.createdAt ? new Date(ticket.createdAt.seconds * 1000).toISOString().split('T')[0] : todayStr;
             if (grouped[ticketDate]) {
                 grouped[ticketDate].push(ticket);
             }
         });
-        
+
         return dateRanges.map(date => ({
             date,
             dateLabel: formatDateLabel(date),
@@ -199,53 +206,55 @@ export default function Home() {
     }, [allFreeTips, allVipTickets]);
 
     const renderFreeTipCard = (match: Match, idx: number) => (
-        <div 
-            key={match.id} 
+        <div
+            key={match.id}
             className="glass-card animate-fade-in-up"
             style={{
-                padding: '1.25rem',
-                marginBottom: '0.75rem',
+                padding: '1rem',
+                marginBottom: '0.6rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '0.75rem'
+                gap: '0.5rem',
+                border: '1px solid rgba(255,255,255,0.1)'
             }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
                     color: 'white',
-                    background: 'var(--color-primary)',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '4px'
+                    background: getLeagueColor(match.league),
+                    padding: '0.15rem 0.4rem',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase'
                 }}>{match.league}</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Time: {match.time}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>{match.time}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{match.teams}</span>
-                <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.95rem' }}>{match.tips}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text)' }}>{match.teams}</span>
+                <span style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.9rem' }}>{match.tips}</span>
             </div>
-            <div style={{ 
-                display: 'flex', 
+            <div style={{
+                display: 'flex',
                 justifyContent: 'flex-end',
-                paddingTop: '0.5rem',
-                borderTop: '1px solid var(--color-border)'
+                paddingTop: '0.35rem',
+                borderTop: '1px solid rgba(0,0,0,0.03)'
             }}>
                 {match.status === 'pending' ? (
-                    <span className="badge badge-pending">⌛ Pending</span>
+                    <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
                 ) : match.status === 'win' ? (
-                    <span className="badge badge-win">✅ Won</span>
+                    <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
                 ) : (
-                    <span className="badge badge-lose">❌ Lose</span>
+                    <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
                 )}
             </div>
         </div>
     );
 
     const renderNoPicksMessage = () => (
-        <div style={{ 
-            textAlign: 'center', 
-            padding: '3rem 1.5rem', 
+        <div style={{
+            textAlign: 'center',
+            padding: '3rem 1.5rem',
             color: 'var(--color-text-muted)',
             background: 'var(--glass-card)',
             borderRadius: 'var(--radius-lg)',
@@ -254,9 +263,9 @@ export default function Home() {
             <Ticket size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>No Picks available yet</h3>
             <p style={{ fontSize: '0.875rem', marginBottom: '1.5rem' }}>Come Back later</p>
-            <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
+            <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
                 gap: '0.5rem',
                 padding: '0.75rem 1.25rem',
                 background: 'var(--color-primary-light)',
@@ -280,7 +289,7 @@ export default function Home() {
                 <div className="mobile-cards" style={{ display: 'none' }}>
                     {data.map((match, idx) => renderFreeTipCard(match, idx))}
                 </div>
-                
+
                 {/* Desktop Table View */}
                 <div className="desktop-table" style={{ overflowX: 'auto' }}>
                     <table className="tips-table">
@@ -297,27 +306,28 @@ export default function Home() {
                         <tbody>
                             {data.map((match, idx) => (
                                 <tr key={match.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.05}s` }}>
-                                    <td style={{ fontWeight: 600, color: 'var(--color-text-muted)' }}>{idx + 1}</td>
-                                    <td style={{ fontWeight: 500, fontSize: '0.85rem' }}>{match.time}</td>
+                                    <td style={{ fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{idx + 1}</td>
+                                    <td style={{ fontWeight: 500, fontSize: '0.8rem' }}>{match.time}</td>
                                     <td>
                                         <span style={{
-                                            fontSize: '0.75rem',
-                                            fontWeight: 700,
+                                            fontSize: '0.65rem',
+                                            fontWeight: 800,
                                             color: 'white',
-                                            background: 'var(--color-primary)',
-                                            padding: '0.2rem 0.5rem',
-                                            borderRadius: '4px'
+                                            background: getLeagueColor(match.league),
+                                            padding: '0.15rem 0.4rem',
+                                            borderRadius: '4px',
+                                            textTransform: 'uppercase'
                                         }}>{match.league}</span>
                                     </td>
-                                    <td style={{ fontWeight: 700 }}>{match.teams}</td>
-                                    <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{match.tips}</td>
+                                    <td style={{ fontWeight: 700, fontSize: '0.85rem' }}>{match.teams}</td>
+                                    <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
                                     <td>
-{match.status === 'pending' ? (
-                                            <span className="badge badge-pending">⌛ Pending</span>
+                                        {match.status === 'pending' ? (
+                                            <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
                                         ) : match.status === 'win' ? (
-                                            <span className="badge badge-win">✅ Won</span>
+                                            <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
                                         ) : (
-                                            <span className="badge badge-lose">❌ Lose</span>
+                                            <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
                                         )}
                                     </td>
                                 </tr>
@@ -347,9 +357,9 @@ export default function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {freeHistory.map((group) => (
                     <div key={group.date}>
-                        <h3 style={{ 
-                            fontSize: '1rem', 
-                            marginBottom: '0.75rem', 
+                        <h3 style={{
+                            fontSize: '1rem',
+                            marginBottom: '0.75rem',
                             color: 'var(--color-text)',
                             display: 'flex',
                             alignItems: 'center',
@@ -361,12 +371,12 @@ export default function Home() {
                         {renderFreeTips(group.matches)}
                     </div>
                 ))}
-                
+
                 {historyDays < 7 && (
-                    <button 
+                    <button
                         onClick={() => setHistoryDays(Math.min(historyDays + 5, 7))}
                         className="btn btn-outline"
-                        style={{ 
+                        style={{
                             alignSelf: 'center',
                             display: 'flex',
                             alignItems: 'center',
@@ -386,8 +396,8 @@ export default function Home() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {tickets.map((ticket, idx) => (
-                    <div 
-                        key={ticket.id} 
+                    <div
+                        key={ticket.id}
                         className="glass-card animate-fade-in-up"
                         style={{
                             borderRadius: 'var(--radius-xl)',
@@ -396,11 +406,11 @@ export default function Home() {
                         }}
                     >
                         <div style={{
-                            background: ticket.status === 'win' 
-                                ? 'var(--gradient-premium)' 
+                            background: ticket.status === 'win'
+                                ? 'var(--gradient-premium)'
                                 : ticket.status === 'lose'
-                                ? 'linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)'
-                                : 'var(--gradient-primary)',
+                                    ? 'linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%)'
+                                    : 'var(--gradient-primary)',
                             padding: '1.5rem 2rem',
                             color: 'white',
                             display: 'flex',
@@ -449,26 +459,27 @@ export default function Home() {
                                 <tbody>
                                     {ticket.matches.map((match, mIdx) => (
                                         <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
-                                            <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{match.time}</td>
+                                            <td style={{ fontSize: '0.75rem', fontWeight: 600 }}>{match.time}</td>
                                             <td>
                                                 <span style={{
-                                                    fontSize: '0.7rem',
-                                                    fontWeight: 700,
+                                                    fontSize: '0.65rem',
+                                                    fontWeight: 800,
                                                     color: 'white',
-                                                    background: 'var(--color-primary)',
-                                                    padding: '0.2rem 0.5rem',
-                                                    borderRadius: '4px'
+                                                    background: getLeagueColor(match.league),
+                                                    padding: '0.15rem 0.4rem',
+                                                    borderRadius: '4px',
+                                                    textTransform: 'uppercase'
                                                 }}>{match.league}</span>
                                             </td>
-                                            <td style={{ fontWeight: 700, fontSize: '0.9rem' }}>{match.teams}</td>
-                                            <td style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.9rem' }}>{match.tips}</td>
+                                            <td style={{ fontWeight: 700, fontSize: '0.85rem' }}>{match.teams}</td>
+                                            <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
                                             <td>
                                                 {match.status === 'pending' ? (
-                                                    <span className="badge badge-pending">PENDING</span>
+                                                    <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
                                                 ) : match.status === 'win' ? (
-                                                    <span className="badge badge-win"><CheckCircle2 size={12} /> WIN</span>
+                                                    <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
                                                 ) : (
-                                                    <span className="badge badge-lose"><XCircle size={12} /> CUT</span>
+                                                    <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -514,9 +525,9 @@ export default function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {vipHistory.map((group) => (
                     <div key={group.date}>
-                        <h3 style={{ 
-                            fontSize: '1rem', 
-                            marginBottom: '0.75rem', 
+                        <h3 style={{
+                            fontSize: '1rem',
+                            marginBottom: '0.75rem',
                             color: 'var(--color-text)',
                             display: 'flex',
                             alignItems: 'center',
@@ -528,12 +539,12 @@ export default function Home() {
                         {renderVipTickets(group.tickets)}
                     </div>
                 ))}
-                
+
                 {historyDays < 7 && (
-                    <button 
+                    <button
                         onClick={() => setHistoryDays(Math.min(historyDays + 5, 7))}
                         className="btn btn-outline"
-                        style={{ 
+                        style={{
                             alignSelf: 'center',
                             display: 'flex',
                             alignItems: 'center',
@@ -548,14 +559,14 @@ export default function Home() {
     };
 
     return (
-        <div className="container" style={{ maxWidth: '1000px' }}>
+        <div className="container" style={{ maxWidth: '900px', padding: '1rem' }}>
             {/* Hero Section */}
-            <div style={{ textAlign: 'center', marginBottom: '3rem', marginTop: '1rem' }}>
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+            <div style={{ textAlign: 'center', marginBottom: '2rem', marginTop: '0.5rem' }}>
+                <h1 style={{ fontSize: '1.75rem', marginBottom: '0.5rem', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.03em' }}>
                     Winning Starts Here
                 </h1>
-                <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-                    Get access to the most accurate football predictions and expert-vetted VIP ticket bundles daily.
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', maxWidth: '500px', margin: '0 auto', opacity: 0.8 }}>
+                    Most accurate football predictions and expert-vetted VIP ticket bundles daily.
                 </p>
             </div>
 
@@ -563,27 +574,27 @@ export default function Home() {
             <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: '0.5rem',
-                marginBottom: '2rem',
-                padding: '0.4rem',
+                gap: '0.35rem',
+                marginBottom: '1.5rem',
+                padding: '0.3rem',
                 background: 'var(--glass-bg)',
                 backdropFilter: 'blur(12px)',
                 borderRadius: 'var(--radius-md)',
                 maxWidth: 'fit-content',
-                margin: '0 auto 3rem auto',
+                margin: '0 auto 2.5rem auto',
                 border: '1px solid var(--glass-border)'
             }}>
                 <button
                     onClick={() => { setActiveTab('free'); setShowHistory(false); }}
                     className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
-                    style={{ width: '160px', border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
                 >
                     Free Tips
                 </button>
                 <button
                     onClick={() => { setActiveTab('premium'); setShowHistory(false); }}
                     className={activeTab === 'premium' ? 'btn btn-primary' : 'btn btn-outline'}
-                    style={{ width: '160px', border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
                 >
                     Premium Tips
                 </button>
@@ -594,31 +605,31 @@ export default function Home() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '1.5rem',
+                marginBottom: '1rem',
                 flexWrap: 'wrap',
-                gap: '1rem'
+                gap: '0.75rem'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <div className="glass-card" style={{
                         color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'var(--gradient-primary)'
                     }}>
-                        {showHistory ? <History size={20} /> : <Ticket size={20} />}
+                        {showHistory ? <History size={16} /> : <Ticket size={16} />}
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '1.25rem', lineHeight: 1 }}>
+                        <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0 }}>
                             {showHistory ? 'History' : 'Predictions'}
                         </h2>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-                            {showHistory 
-                                ? 'Previous results and win rate' 
-                                : `Today's expert selections - ${todayLabel}`
+                        <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.15rem' }}>
+                            {showHistory
+                                ? 'Previous results and win rate'
+                                : `Today's picks - ${todayLabel}`
                             }
                         </p>
                     </div>
@@ -627,9 +638,9 @@ export default function Home() {
                 <button
                     onClick={() => setShowHistory(!showHistory)}
                     className="btn-outline"
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.75rem', display: 'flex', gap: '0.5rem' }}
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.65rem', display: 'flex', gap: '0.4rem', borderRadius: '6px' }}
                 >
-                    {showHistory ? <><Ticket size={14} /> Back to Live</> : <><History size={14} /> View History</>}
+                    {showHistory ? <><Ticket size={12} /> Back to Live</> : <><History size={12} /> View History</>}
                 </button>
             </div>
 
@@ -672,7 +683,7 @@ export default function Home() {
                     <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.freeWinRate}%</h4>
                     <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Free Tips Win Rate</p>
                 </div>
-                
+
                 <div className="glass-card" style={{
                     padding: '1.5rem',
                     textAlign: 'center',
@@ -691,7 +702,7 @@ export default function Home() {
                     <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.vipWinRate}%</h4>
                     <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>VIP Win Rate</p>
                 </div>
-                
+
                 <div className="glass-card" style={{
                     padding: '1.5rem',
                     textAlign: 'center',
@@ -710,7 +721,7 @@ export default function Home() {
                     <h4 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.25rem' }}>{stats.totalWins}+</h4>
                     <p style={{ fontSize: '0.7rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 600 }}>Total Wins</p>
                 </div>
-                
+
                 <div className="glass-card" style={{
                     padding: '1.5rem',
                     textAlign: 'center',

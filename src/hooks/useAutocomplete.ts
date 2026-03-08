@@ -74,6 +74,8 @@ export function useAutocomplete(type: 'team' | 'tip') {
             return `_esc_${char.charCodeAt(0)}_`;
         });
 
+        console.log(`Learning ${type}: ${normalizedValue} (key: ${safeKey})`);
+
         try {
             const dbRef = ref(rtdb, `learn/${type}/${safeKey}`);
 
@@ -92,8 +94,10 @@ export function useAutocomplete(type: 'team' | 'tip') {
                     lastUsed: Date.now()
                 };
             });
+            console.log(`Successfully learnt: ${normalizedValue}`);
         } catch (error) {
             console.error('Learning error:', error);
+            alert('Database error: check console and RTDB rules');
         }
     }, [type]);
 
