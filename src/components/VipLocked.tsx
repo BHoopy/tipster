@@ -77,33 +77,35 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
             <div className={styles.card}>
                 <div className={styles.glowOrb} />
-                
+
                 <div className={styles.badge}>
                     <Crown size={14} />
                     <span>VIP Exclusive</span>
                 </div>
 
                 <div className={styles.iconCircle}>
-                    <Image 
-                        src="/Vip.png" 
-                        alt="VIP" 
-                        width={48} 
+                    <Image
+                        src="/Vip.png"
+                        alt="VIP"
+                        width={48}
                         height={48}
                         className={styles.vipIcon}
                         unoptimized
                     />
                 </div>
 
-                <h2 className={styles.title}>Unlock Premium Access</h2>
+                <h2 className={styles.title}>
+                    {user ? "Today's VIP Package" : "Unlock Premium Access"}
+                </h2>
                 <p className={styles.subtitle}>
                     {user
-                        ? 'Get access to our most accurate daily predictions and start winning big today.'
-                        : 'Sign in and get access to our most accurate daily predictions to maximize your winning potential.'
+                        ? `Get exclusive access to today's premium ticket bundle for GHS ${vipPrice}. Start winning big with our expert selections.`
+                        : 'Sign in to access our most accurate daily predictions and professional VIP ticket bundles.'
                     }
                 </p>
 
                 <div className={styles.vipNote}>
-                    Get Access to the Premium Tickets for 1 day
+                    {user ? `GHS ${vipPrice} for Full Access` : 'Sign in to see pricing'}
                 </div>
 
                 <div className={styles.perksList}>
@@ -115,16 +117,8 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                     ))}
                 </div>
 
-                {user && (
-                    <div className={styles.priceContainer}>
-                        <span className={styles.currency}>GHS</span>
-                        <span className={styles.amount}>{vipPrice}</span>
-                        <span className={styles.period}>/day</span>
-                    </div>
-                )}
-
                 {!user ? (
-                   <button
+                    <button
                         onClick={() => setIsAuthModalOpen(true)}
                         className={styles.payButton}
                     >
@@ -137,13 +131,14 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         onClick={handlePayment}
                         disabled={loading}
                         className={styles.payButton}
+                        style={{ background: 'var(--gradient-gold)', color: '#78350f' }}
                     >
                         {loading ? (
-                            <div className={styles.spinner}></div>
+                            <div className={styles.spinner} style={{ borderTopColor: '#78350f' }}></div>
                         ) : (
                             <>
                                 <CreditCard size={20} />
-                                <span>Pay {vipPrice} GHS to Unlock</span>
+                                <span>Unlock Package (GHS {vipPrice})</span>
                                 <ArrowRight size={18} />
                             </>
                         )}
@@ -159,7 +154,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                             Secure payment via Paystack • Instant access
                         </div>
                         <div className={styles.subscriptionNote}>
-                            All VIP subscriptions are valid until slips are won
+                            All VIP tickets are valid until slips are won
                         </div>
                     </>
                 )}
