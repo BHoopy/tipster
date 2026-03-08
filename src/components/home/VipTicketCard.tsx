@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Star, Timer, Trophy, XCircle, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Star, Timer, Trophy, XCircle, ShieldCheck, TrendingUp, Copy } from 'lucide-react';
 import { VipTicket } from '@/types/game';
 import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
 
@@ -116,27 +116,60 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
             </div>
 
             <div style={{
-                padding: '1.25rem 1.5rem',
+                padding: '1rem 1.5rem',
                 background: 'var(--color-bg)',
                 borderTop: '1px solid var(--color-border)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 flexWrap: 'wrap',
-                gap: '1rem'
+                gap: '0.75rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)' }}>
                     {ticket.status === 'pending' ? (
-                        <><Timer size={18} /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase' }}>Ticket Pending</span></>
+                        <><Timer size={16} /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>Ticket Pending</span></>
                     ) : ticket.status === 'win' ? (
-                        <><Trophy size={18} color="#F59E0B" /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', color: '#065f46' }}>Winning Ticket</span></>
+                        <><Trophy size={16} color="#F59E0B" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#065f46' }}>Winning Ticket</span></>
                     ) : (
-                        <><XCircle size={18} color="#991b1b" /> <span style={{ fontSize: '0.875rem', fontWeight: 600, textTransform: 'uppercase', color: '#991b1b' }}>Ticket Lost</span></>
+                        <><XCircle size={16} color="#991b1b" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#991b1b' }}>Ticket Lost</span></>
                     )}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.875rem' }}>
-                    <ShieldCheck size={18} />
-                    <span>Verified Selection</span>
+
+                {ticket.booking_code && (
+                    <div
+                        onClick={(e) => {
+                            navigator.clipboard.writeText(ticket.booking_code!);
+                            const target = e.currentTarget as HTMLElement;
+                            if (target) {
+                                const originalContent = target.innerHTML;
+                                target.innerHTML = '<span style="font-size: 0.75rem; font-weight: 800; color: var(--color-primary)">Copied!</span>';
+                                setTimeout(() => { target.innerHTML = originalContent; }, 2000);
+                            }
+                        }}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '8px',
+                            background: 'rgba(0,168,107,0.05)',
+                            border: '1px dashed var(--color-primary)',
+                            minWidth: '100px',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        <span style={{ fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: '0.1rem' }}>Sportybet Code</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <span style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '0.05em' }}>{ticket.booking_code}</span>
+                            <Copy size={12} color="var(--color-primary)" />
+                        </div>
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.75rem' }}>
+                    <ShieldCheck size={16} />
+                    <span>Verified</span>
                 </div>
             </div>
         </div>

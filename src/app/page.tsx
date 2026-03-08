@@ -11,7 +11,6 @@ import { Ticket, History } from 'lucide-react';
 import { Match, VipTicket, GroupedTips, GroupedTickets } from '@/types/game';
 import { formatDate, formatDateLabel, getDateRange } from '@/lib/utils';
 import HomeHeader from '@/components/home/HomeHeader';
-import HomeStats from '@/components/home/HomeStats';
 import NoTipsMessage from '@/components/home/NoTipsMessage';
 import FreeTipsList from '@/components/home/FreeTipsList';
 import VipTicketsList from '@/components/home/VipTicketsList';
@@ -108,23 +107,6 @@ export default function Home() {
     const vipHistory = useMemo(() => {
         return groupTicketsByDate(allVipTickets.filter(t => t.status !== 'pending'));
     }, [allVipTickets, historyDays]);
-
-    const stats = useMemo(() => {
-        const freeWins = allFreeTips.filter(t => t.status === 'win').length;
-        const freeTotal = allFreeTips.filter(t => t.status !== 'pending').length;
-        const freeRate = freeTotal > 0 ? Math.round((freeWins / freeTotal) * 100) : 0;
-
-        const vipWins = allVipTickets.filter(t => t.status === 'win').length;
-        const vipTotal = allVipTickets.filter(t => t.status !== 'pending').length;
-        const vipRate = vipTotal > 0 ? Math.round((vipWins / vipTotal) * 100) : 0;
-
-        return {
-            freeWinRate: freeRate.toString(),
-            vipWinRate: vipRate.toString(),
-            totalWins: (freeWins + vipWins).toString(),
-            totalTickets: vipTotal.toString()
-        };
-    }, [allFreeTips, allVipTickets]);
 
     return (
         <div className="container" style={{ maxWidth: '900px', padding: '1rem' }}>
@@ -231,8 +213,6 @@ export default function Home() {
                     )
                 )}
             </div>
-
-            <HomeStats stats={stats} />
 
             {/* Notification Settings */}
             <div style={{ maxWidth: '400px', margin: '3rem auto 2rem' }}>

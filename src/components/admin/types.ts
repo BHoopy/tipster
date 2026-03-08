@@ -17,6 +17,7 @@ export type VipTicket = {
     odds: string;
     matches: Match[];
     status: 'pending' | 'win' | 'lose';
+    booking_code?: string;
     createdAt?: any;
 };
 

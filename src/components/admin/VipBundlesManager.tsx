@@ -17,9 +17,10 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
     const [newVipTicket, setNewVipTicket] = useState<{
         bundle_name: string;
         odds: string;
+        booking_code: string;
         matches: { time: string; league: string; home: string; away: string; tips: string; status: 'pending' | 'win' | 'lose' }[];
     }>({
-        bundle_name: '', odds: '', matches: []
+        bundle_name: '', odds: '', booking_code: '', matches: []
     });
 
     const [errors, setErrors] = useState<{ bundle_name?: boolean; odds?: boolean; matches?: boolean }>({});
@@ -75,6 +76,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             bundle_name: newVipTicket.bundle_name,
             odds: newVipTicket.odds,
             status: 'pending',
+            booking_code: newVipTicket.booking_code,
             matches: matchesToSave,
             createdAt: serverTimestamp()
         });
@@ -92,7 +94,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
         tipAutocomplete.clearSuggestions();
         leagueAutocomplete.clearSuggestions();
 
-        setNewVipTicket({ bundle_name: '', odds: '', matches: [] });
+        setNewVipTicket({ bundle_name: '', odds: '', booking_code: '', matches: [] });
     };
 
     const updateVipMatchStatus = async (ticketId: string, matchIdx: number, status: 'win' | 'lose' | 'pending') => {
@@ -184,6 +186,20 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                             }}
                         />
                         {errors.odds && <span style={{ color: '#ef4444', fontSize: '0.6rem', marginTop: '0.2rem', display: 'block' }}>Required</span>}
+                    </div>
+                    <div style={{ flex: '1', minWidth: '120px' }}>
+                        <label style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Sportybet Code</label>
+                        <input
+                            className="input"
+                            type="text"
+                            value={newVipTicket.booking_code}
+                            onChange={e => setNewVipTicket({ ...newVipTicket, booking_code: e.target.value })}
+                            placeholder="8F3E2B"
+                            style={{
+                                height: '36px',
+                                fontSize: '0.85rem'
+                            }}
+                        />
                     </div>
                 </div>
 
