@@ -105,7 +105,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 </p>
 
                 <div className={styles.vipNote}>
-                    {user ? `GHS ${vipPrice} for Full Access` : 'Sign in to see pricing'}
+                    GHS {vipPrice} for Full Access
                 </div>
 
                 <div className={styles.perksList}>
