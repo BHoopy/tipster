@@ -62,6 +62,7 @@ export default function AdminDashboard() {
     const [newFreeTip, setNewFreeTip] = useState<Match>({
         time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending'
     });
+    const [tipErrors, setTipErrors] = useState<{ teams?: boolean; tips?: boolean }>({});
 
     // VIP Tickets State
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
@@ -89,7 +90,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         if (!isAdmin || view !== 'history') return;
-        
+
         const selectedDate = new Date(historyDate);
         const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
         const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
@@ -114,9 +115,21 @@ export default function AdminDashboard() {
 
     // --- Free Tips Actions ---
     const handleAddFreeTip = async () => {
-        if (!newFreeTip.teams || !newFreeTip.tips) return;
+        // Validate required fields
+        const errors: { teams?: boolean; tips?: boolean } = {};
+        if (!newFreeTip.teams.trim()) errors.teams = true;
+        if (!newFreeTip.tips.trim()) errors.tips = true;
+
+        if (Object.keys(errors).length > 0) {
+            setTipErrors(errors);
+            return;
+        }
+
+        // Clear errors
+        setTipErrors({});
+
         await addDoc(collection(db, 'free_tips'), { ...newFreeTip, createdAt: serverTimestamp() });
-        
+
         // Learn from the input
         const teamParts = newFreeTip.teams.split(' vs ');
         if (teamParts.length === 2) {
@@ -125,11 +138,11 @@ export default function AdminDashboard() {
             teamAutocomplete.learn(newFreeTip.teams);
         }
         tipAutocomplete.learn(newFreeTip.tips);
-        
+
         setNewFreeTip({ time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending' });
         teamAutocomplete.clearSuggestions();
         tipAutocomplete.clearSuggestions();
-        
+
         if (sendNotification) {
             console.log('Would send notification for new tip');
         }
@@ -151,7 +164,7 @@ export default function AdminDashboard() {
 
     const handleBulkUpload = async () => {
         if (!bulkInput.trim()) return;
-        
+
         const lines = bulkInput.trim().split('\n');
         const promises = lines.map(async (line) => {
             const parts = line.split('|').map(s => s.trim());
@@ -168,7 +181,7 @@ export default function AdminDashboard() {
         await Promise.all(promises.filter(Boolean));
         setBulkInput('');
         setShowBulk(false);
-        
+
         if (sendNotification) {
             console.log('Would send notification for bulk upload');
         }
@@ -190,10 +203,10 @@ export default function AdminDashboard() {
         }
 
         const previousTips = snapshot.docs.map(doc => doc.data() as Match);
-        const bulkText = previousTips.map(t => 
+        const bulkText = previousTips.map(t =>
             `${t.time || '18:00'} | ${t.league} | ${t.teams} | ${t.tips}`
         ).join('\n');
-        
+
         setBulkInput(bulkText);
         setShowBulk(true);
     };
@@ -236,7 +249,7 @@ export default function AdminDashboard() {
         if (!newVipTicket.bundle_name || newVipTicket.matches.length === 0) return;
         await addDoc(collection(db, 'vip_tickets'), { ...newVipTicket, createdAt: serverTimestamp() });
         setNewVipTicket({ bundle_name: '', odds: '', matches: [], status: 'pending' });
-        
+
         if (sendNotification) {
             console.log('Would send notification for new VIP ticket');
         }
@@ -266,16 +279,16 @@ export default function AdminDashboard() {
         <div className="container" style={{ maxWidth: '1200px' }}>
             <div style={{ display: 'flex', gap: '2rem', marginTop: '2rem', flexWrap: 'wrap' }}>
                 {/* Sidebar */}
-                <div style={{ 
-                    width: '250px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                <div style={{
+                    width: '250px',
+                    display: 'flex',
+                    flexDirection: 'column',
                     gap: '0.75rem',
                     flexShrink: 0
                 }}>
-                    <div style={{ 
-                        background: 'var(--gradient-primary)', 
-                        padding: '1.25rem', 
+                    <div style={{
+                        background: 'var(--gradient-primary)',
+                        padding: '1.25rem',
                         borderRadius: 'var(--radius-lg)',
                         color: 'white',
                         marginBottom: '0.5rem'
@@ -283,7 +296,7 @@ export default function AdminDashboard() {
                         <h3 style={{ color: 'white', fontSize: '1.125rem', marginBottom: '0.25rem' }}>Admin Panel</h3>
                         <p style={{ fontSize: '0.75rem', opacity: 0.9 }}>Manage your tips</p>
                     </div>
-                    
+
                     <button
                         onClick={() => setView('free')}
                         className={view === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
@@ -305,22 +318,22 @@ export default function AdminDashboard() {
                     >
                         <Ticket size={20} /> History
                     </button>
-                    
-                    <div style={{ 
-                        borderTop: '1px solid var(--color-border)', 
-                        marginTop: '0.5rem', 
-                        paddingTop: '1rem' 
+
+                    <div style={{
+                        borderTop: '1px solid var(--color-border)',
+                        marginTop: '0.5rem',
+                        paddingTop: '1rem'
                     }}>
-                        <label style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             gap: '0.5rem',
                             fontSize: '0.875rem',
                             color: 'var(--color-text-secondary)',
                             cursor: 'pointer'
                         }}>
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 checked={sendNotification}
                                 onChange={(e) => setSendNotification(e.target.checked)}
                                 style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)' }}
@@ -336,7 +349,7 @@ export default function AdminDashboard() {
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                                 <h2 style={{ margin: 0 }}>Manage Free Tips</h2>
-                                <button 
+                                <button
                                     onClick={() => setShowBulk(!showBulk)}
                                     className="btn btn-outline"
                                     style={{ fontSize: '0.8125rem' }}
@@ -389,43 +402,95 @@ export default function AdminDashboard() {
                                 }}>
                                     <div>
                                         <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Time</label>
-                                        <input 
-                                            className="input" 
-                                            type="time" 
-                                            value={newFreeTip.time} 
-                                            onChange={e => setNewFreeTip({ ...newFreeTip, time: e.target.value })} 
+                                        <input
+                                            className="input"
+                                            type="time"
+                                            value={newFreeTip.time}
+                                            onChange={e => setNewFreeTip({ ...newFreeTip, time: e.target.value })}
                                         />
                                     </div>
                                     <div>
                                         <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>League</label>
-                                        <input 
-                                            className="input" 
-                                            type="text" 
-                                            value={newFreeTip.league} 
-                                            onChange={e => setNewFreeTip({ ...newFreeTip, league: e.target.value })} 
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            value={newFreeTip.league}
+                                            onChange={e => setNewFreeTip({ ...newFreeTip, league: e.target.value })}
                                             placeholder="EPL"
                                         />
                                     </div>
                                     <div style={{ minWidth: '180px' }}>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Teams</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '0.375rem' }}>
+                                            <label style={{ fontSize: '0.75rem', fontWeight: 600 }}>Teams *</label>
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>Top Used:</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                                            {teamAutocomplete.topSuggestions.slice(0, 6).map(s => (
+                                                <button
+                                                    key={s.value}
+                                                    onClick={() => handleTeamsChange(s.value)}
+                                                    className="badge"
+                                                    style={{
+                                                        border: '1px solid var(--color-border)',
+                                                        background: 'white',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.65rem',
+                                                        padding: '0.15rem 0.4rem',
+                                                        textTransform: 'none'
+                                                    }}
+                                                >
+                                                    {s.value}
+                                                </button>
+                                            ))}
+                                        </div>
                                         <AutocompleteInput
                                             value={newFreeTip.teams}
                                             onChange={handleTeamsChange}
-                                            onSelect={() => {}}
+                                            onSelect={() => { }}
                                             suggestions={teamAutocomplete.suggestions}
                                             isLoading={teamAutocomplete.isLoading}
                                             placeholder="Arsenal vs Liverpool"
+                                            style={{
+                                                borderColor: tipErrors.teams ? '#ef4444' : undefined,
+                                                boxShadow: tipErrors.teams ? '0 0 0 2px rgba(239,68,68,0.2)' : undefined
+                                            }}
                                         />
                                     </div>
                                     <div>
-                                        <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Tips</label>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '0.375rem' }}>
+                                            <label style={{ fontSize: '0.75rem', fontWeight: 600 }}>Tips *</label>
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>Top Used:</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '0.5rem' }}>
+                                            {tipAutocomplete.topSuggestions.slice(0, 6).map(s => (
+                                                <button
+                                                    key={s.value}
+                                                    onClick={() => handleTipsChange(s.value)}
+                                                    className="badge"
+                                                    style={{
+                                                        border: '1px solid var(--color-border)',
+                                                        background: 'white',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.65rem',
+                                                        padding: '0.15rem 0.4rem',
+                                                        textTransform: 'none'
+                                                    }}
+                                                >
+                                                    {s.value}
+                                                </button>
+                                            ))}
+                                        </div>
                                         <AutocompleteInput
                                             value={newFreeTip.tips}
                                             onChange={handleTipsChange}
-                                            onSelect={() => {}}
+                                            onSelect={() => { }}
                                             suggestions={tipAutocomplete.suggestions}
                                             isLoading={tipAutocomplete.isLoading}
                                             placeholder="Over 2.5"
+                                            style={{
+                                                borderColor: tipErrors.tips ? '#ef4444' : undefined,
+                                                boxShadow: tipErrors.tips ? '0 0 0 2px rgba(239,68,68,0.2)' : undefined
+                                            }}
                                         />
                                     </div>
                                     <button onClick={handleAddFreeTip} className="btn btn-primary">
@@ -446,7 +511,7 @@ export default function AdminDashboard() {
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                                         <h4 style={{ margin: 0, fontSize: '0.9375rem' }}>Bulk Upload</h4>
-                                        <button 
+                                        <button
                                             onClick={handleCopyPrevious}
                                             className="btn btn-outline"
                                             style={{ fontSize: '0.75rem', padding: '0.375rem 0.75rem' }}
@@ -510,7 +575,7 @@ export default function AdminDashboard() {
                                                 <td style={{ fontWeight: 600 }}>{tip.teams}</td>
                                                 <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{tip.tips}</td>
                                                 <td>
-                                                    <select 
+                                                    <select
                                                         value={tip.status}
                                                         onChange={(e) => updateMatchStatus('free_tips', tip.id!, e.target.value as 'win' | 'lose' | 'pending')}
                                                         style={{
@@ -530,8 +595,8 @@ export default function AdminDashboard() {
                                                     </select>
                                                 </td>
                                                 <td>
-                                                    <button 
-                                                        onClick={() => deleteItem('free_tips', tip.id!)} 
+                                                    <button
+                                                        onClick={() => deleteItem('free_tips', tip.id!)}
                                                         style={{ color: 'var(--color-danger)', padding: '0.25rem' }}
                                                     >
                                                         <Trash2 size={18} />
@@ -559,22 +624,22 @@ export default function AdminDashboard() {
                                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                                     <div style={{ flex: '2', minWidth: '200px' }}>
                                         <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.375rem' }}>Bundle Name</label>
-                                        <input 
-                                            className="input" 
-                                            type="text" 
-                                            value={newVipTicket.bundle_name} 
-                                            onChange={e => setNewVipTicket({ ...newVipTicket, bundle_name: e.target.value })} 
-                                            placeholder="Daily VIP Ticket" 
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            value={newVipTicket.bundle_name}
+                                            onChange={e => setNewVipTicket({ ...newVipTicket, bundle_name: e.target.value })}
+                                            placeholder="Daily VIP Ticket"
                                         />
                                     </div>
                                     <div style={{ flex: '1', minWidth: '120px' }}>
                                         <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.375rem' }}>Total Odds</label>
-                                        <input 
-                                            className="input" 
-                                            type="text" 
-                                            value={newVipTicket.odds} 
-                                            onChange={e => setNewVipTicket({ ...newVipTicket, odds: e.target.value })} 
-                                            placeholder="10.50" 
+                                        <input
+                                            className="input"
+                                            type="text"
+                                            value={newVipTicket.odds}
+                                            onChange={e => setNewVipTicket({ ...newVipTicket, odds: e.target.value })}
+                                            placeholder="10.50"
                                         />
                                     </div>
                                 </div>
@@ -627,9 +692,9 @@ export default function AdminDashboard() {
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                                         {ticket.matches.map((m, mIdx) => (
-                                            <div key={mIdx} style={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
+                                            <div key={mIdx} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 padding: '0.75rem 0',
                                                 borderTop: '1px solid var(--color-border)',
@@ -643,7 +708,7 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                     <span style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.8125rem' }}>{m.tips}</span>
-                                                    <select 
+                                                    <select
                                                         value={m.status}
                                                         onChange={(e) => updateVipMatchStatus(ticket.id!, mIdx, e.target.value as 'win' | 'lose' | 'pending')}
                                                         style={{
@@ -673,8 +738,8 @@ export default function AdminDashboard() {
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                                 <h2 style={{ margin: 0 }}>History</h2>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={historyDate}
                                     onChange={(e) => setHistoryDate(e.target.value)}
                                     className="input"

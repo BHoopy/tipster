@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { rtdb } from '@/lib/firebase';
-import { ref, get, set, runTransaction } from 'firebase/database';
+import { ref, runTransaction, onValue } from 'firebase/database';
 
 type Suggestion = {
     value: string;
@@ -11,54 +11,59 @@ type Suggestion = {
 
 export function useAutocomplete(type: 'team' | 'tip') {
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const [allData, setAllData] = useState<Record<string, any>>({});
+    const [isLoading, setIsLoading] = useState(true);
 
-    const search = useCallback(async (query: string) => {
-        if (query.length < 3) {
+    // Fetch all once and stay in sync - this is "fetch as fast as possible"
+    useEffect(() => {
+        const dbRef = ref(rtdb, `learn/${type}`);
+        const unsubscribe = onValue(dbRef, (snapshot) => {
+            if (snapshot.exists()) {
+                setAllData(snapshot.val());
+            } else {
+                setAllData({});
+            }
+            setIsLoading(false);
+        });
+        return unsubscribe;
+    }, [type]);
+
+    // Top suggestions for "One-click" entry
+    const topSuggestions = useMemo(() => {
+        return Object.entries(allData)
+            .map(([key, item]: [string, any]) => ({
+                value: item.value || key,
+                count: item.count || 0
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+    }, [allData]);
+
+    const search = useCallback((query: string) => {
+        const normalizedQuery = query.toLowerCase().trim();
+
+        if (normalizedQuery.length < 1) {
             setSuggestions([]);
             return;
         }
 
-        if (debounceRef.current) {
-            clearTimeout(debounceRef.current);
-        }
+        const matches: Suggestion[] = [];
 
-        debounceRef.current = setTimeout(async () => {
-            setIsLoading(true);
-            const normalizedQuery = query.toLowerCase().trim();
-
-            try {
-                const dbRef = ref(rtdb, `learn/${type}`);
-                const snapshot = await get(dbRef);
-
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const matches: Suggestion[] = [];
-
-                    Object.entries(data).forEach(([key, item]: [string, any]) => {
-                        const displayValue = item.value || key;
-                        if (displayValue.toLowerCase().includes(normalizedQuery)) {
-                            matches.push({
-                                value: displayValue,
-                                count: item.count || 0
-                            });
-                        }
-                    });
-
-                    matches.sort((a, b) => b.count - a.count);
-                    setSuggestions(matches.slice(0, 3));
-                } else {
-                    setSuggestions([]);
-                }
-            } catch (error) {
-                console.error('Autocomplete error:', error);
-                setSuggestions([]);
-            } finally {
-                setIsLoading(false);
+        // Search against local cache for instant results
+        Object.entries(allData).forEach(([key, item]: [string, any]) => {
+            const displayValue = item.value || key;
+            if (displayValue.toLowerCase().includes(normalizedQuery)) {
+                matches.push({
+                    value: displayValue,
+                    count: item.count || 0
+                });
             }
-        }, 200);
-    }, [type]);
+        });
+
+        // Sort by usage count and limit
+        matches.sort((a, b) => b.count - a.count);
+        setSuggestions(matches.slice(0, 5));
+    }, [allData]);
 
     const learn = useCallback(async (value: string) => {
         if (!value.trim()) return;
@@ -96,7 +101,7 @@ export function useAutocomplete(type: 'team' | 'tip') {
         setSuggestions([]);
     }, []);
 
-    return { suggestions, search, learn, clearSuggestions, isLoading };
+    return { suggestions, search, learn, clearSuggestions, isLoading, topSuggestions };
 }
 
 export function useTeamAutocomplete() {

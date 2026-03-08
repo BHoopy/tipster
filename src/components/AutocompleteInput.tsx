@@ -16,6 +16,7 @@ interface AutocompleteInputProps {
     isLoading: boolean;
     placeholder?: string;
     onBlur?: () => void;
+    style?: React.CSSProperties;
 }
 
 export default function AutocompleteInput({
@@ -25,7 +26,8 @@ export default function AutocompleteInput({
     suggestions,
     isLoading,
     placeholder,
-    onBlur
+    onBlur,
+    style
 }: AutocompleteInputProps) {
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -37,13 +39,13 @@ export default function AutocompleteInput({
                 setIsOpen(false);
             }
         }
-        
+
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     useEffect(() => {
-        setIsOpen(suggestions.length > 0 && value.length >= 3);
+        setIsOpen(suggestions.length > 0 && value.length >= 1);
     }, [suggestions, value]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,14 +67,15 @@ export default function AutocompleteInput({
                     type="text"
                     value={value}
                     onChange={handleInputChange}
-                    onFocus={() => value.length >= 3 && suggestions.length > 0 && setIsOpen(true)}
+                    onFocus={() => value.length >= 1 && suggestions.length > 0 && setIsOpen(true)}
                     onBlur={() => setTimeout(() => setIsOpen(false), 200)}
                     placeholder={placeholder}
                     className="input"
                     autoComplete="off"
                     style={{
                         width: '100%',
-                        paddingRight: isLoading ? '2rem' : '0.5rem'
+                        paddingRight: isLoading ? '2rem' : '0.5rem',
+                        ...style
                     }}
                 />
                 {isLoading && (
@@ -93,7 +96,7 @@ export default function AutocompleteInput({
                     </div>
                 )}
             </div>
-            
+
             {isOpen && suggestions.length > 0 && (
                 <div style={{
                     position: 'absolute',
@@ -126,8 +129,8 @@ export default function AutocompleteInput({
                             onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'var(--color-bg)' : 'white'}
                         >
                             <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>{suggestion.value}</span>
-                            <span style={{ 
-                                fontSize: '0.7rem', 
+                            <span style={{
+                                fontSize: '0.7rem',
                                 color: 'var(--color-text-muted)',
                                 background: 'var(--color-bg)',
                                 padding: '0.125rem 0.375rem',
@@ -139,7 +142,7 @@ export default function AutocompleteInput({
                     ))}
                 </div>
             )}
-            
+
             <style jsx>{`
                 @keyframes fadeInUp {
                     from {
