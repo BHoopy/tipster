@@ -238,11 +238,6 @@ export default function FreeTipsManager({
                     }}>
                         {/* Home Team */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem', marginBottom: '0.2rem' }}>
-                                {teamAutocomplete.topSuggestions.slice(0, 4).map(s => (
-                                    <button key={s.value} onClick={() => handleHomeTeamChange(s.value)} className="badge" style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', cursor: 'pointer', background: 'white', border: '1px solid var(--color-border)', textTransform: 'none' }}>{s.value}</button>
-                                ))}
-                            </div>
                             <AutocompleteInput
                                 value={homeTeam}
                                 onChange={handleHomeTeamChange}
@@ -258,11 +253,6 @@ export default function FreeTipsManager({
 
                         {/* Away Team */}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.15rem', marginBottom: '0.2rem' }}>
-                                {teamAutocomplete.topSuggestions.slice(0, 4).map(s => (
-                                    <button key={s.value} onClick={() => handleAwayTeamChange(s.value)} className="badge" style={{ fontSize: '0.5rem', padding: '0.05rem 0.2rem', cursor: 'pointer', background: 'white', border: '1px solid var(--color-border)', textTransform: 'none' }}>{s.value}</button>
-                                ))}
-                            </div>
                             <AutocompleteInput
                                 value={awayTeam}
                                 onChange={handleAwayTeamChange}
