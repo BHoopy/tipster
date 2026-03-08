@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
@@ -25,6 +25,9 @@ export default function Home() {
     const [allFreeTips, setAllFreeTips] = useState<Match[]>([]);
     const [allVipTickets, setAllVipTickets] = useState<VipTicket[]>([]);
     const { isVip, isAdmin } = useAuth();
+    const [showBottomTabs, setShowBottomTabs] = useState(false);
+    const tabsRef = useRef<HTMLDivElement>(null);
+    const lastScrollY = useRef<number>(0);
 
     // Get today's date formatted
     const todayStr = formatDate(new Date());
@@ -50,7 +53,8 @@ export default function Home() {
             orderBy('createdAt', 'desc')
         );
         const unsubVip = onSnapshot(vipQuery, (snap) => {
-            setVipTickets(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
+            const tickets = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket));
+            setVipTickets(tickets.filter(t => t.isPublished !== false));
         });
 
         const fetchAllData = async () => {
@@ -66,6 +70,20 @@ export default function Home() {
             unsubFree();
             unsubVip();
         };
+    }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!tabsRef.current) return;
+
+            const tabsRect = tabsRef.current.getBoundingClientRect();
+            const isTabsOutOfView = tabsRect.bottom < 0;
+
+            setShowBottomTabs(isTabsOutOfView);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     // Helper: Group tips by date
@@ -113,19 +131,21 @@ export default function Home() {
             <HomeHeader />
 
             {/* Tabs */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                marginBottom: '1.5rem',
-                padding: '0.3rem',
-                background: 'var(--glass-bg)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: 'var(--radius-md)',
-                maxWidth: 'fit-content',
-                margin: '0 auto 2.5rem auto',
-                border: '1px solid var(--glass-border)'
-            }}>
+            <div
+                ref={tabsRef}
+                style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                    marginBottom: '1.5rem',
+                    padding: '0.3rem',
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(12px)',
+                    borderRadius: 'var(--radius-md)',
+                    maxWidth: 'fit-content',
+                    margin: '0 auto 2.5rem auto',
+                    border: '1px solid var(--glass-border)'
+                }}>
                 <button
                     onClick={() => { setActiveTab('free'); setShowHistory(false); }}
                     className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
@@ -218,6 +238,71 @@ export default function Home() {
             <div style={{ maxWidth: '400px', margin: '3rem auto 2rem' }}>
                 <NotificationSettings />
             </div>
+
+            {/* Mobile Bottom Tabs - Appears when scrolling up */}
+            <div
+                className="mobile-bottom-tabs"
+                style={{
+                    position: 'fixed',
+                    bottom: showBottomTabs ? '0' : '-80px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                    padding: '0.6rem 1rem',
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(12px)',
+                    borderRadius: 'var(--radius-md) var(--radius-md) 0 0',
+                    border: '1px solid var(--glass-border)',
+                    borderBottom: 'none',
+                    boxShadow: 'var(--shadow-lg)',
+                    transition: 'bottom 0.3s ease',
+                    zIndex: 99,
+                    maxWidth: 'fit-content'
+                }}
+            >
+                <button
+                    onClick={() => { setActiveTab('free'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{
+                        width: '120px',
+                        fontSize: '0.8rem',
+                        height: '36px',
+                        padding: 0,
+                        borderRadius: '6px',
+                        border: activeTab === 'free' ? 'none' : '1px solid transparent',
+                        background: activeTab === 'free' ? 'var(--color-primary)' : 'transparent',
+                        color: activeTab === 'free' ? 'white' : 'var(--color-text)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    Free Tips
+                </button>
+                <button
+                    onClick={() => { setActiveTab('premium'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{
+                        width: '120px',
+                        fontSize: '0.8rem',
+                        height: '36px',
+                        padding: 0,
+                        borderRadius: '6px',
+                        border: activeTab === 'premium' ? 'none' : '1px solid transparent',
+                        background: activeTab === 'premium' ? 'var(--gradient-premium)' : 'transparent',
+                        color: activeTab === 'premium' ? 'white' : 'var(--color-text)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    Premium Tips
+                </button>
+            </div>
+
+            <style jsx>{`
+                @media (min-width: 769px) {
+                    .mobile-bottom-tabs { display: none !important; }
+                }
+            `}</style>
         </div>
     );
 }

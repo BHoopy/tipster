@@ -1,25 +1,98 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, TouchEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { LogOut, Sun, Moon, LogIn, Menu, X, Bell, BellOff } from 'lucide-react';
+import { LogOut, Sun, Moon, LogIn, Menu, X, Bell, BellOff, Trophy, Star, Home, Zap } from 'lucide-react';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const { openAuthModal } = useAuthModal();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [swipeNavOpen, setSwipeNavOpen] = useState(false);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    const [showBottomNav, setShowBottomNav] = useState(false);
+    const [activeTab, setActiveTab] = useState<'free' | 'vip'>('free');
+    const touchStartX = useRef<number>(0);
+    const touchCurrentX = useRef<number>(0);
+    const swipeNavRef = useRef<HTMLDivElement>(null);
+    const lastScrollY = useRef<number>(0);
 
     useEffect(() => {
         if (typeof window !== 'undefined' && 'Notification' in window) {
             setNotificationPermission(Notification.permission);
         }
     }, []);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            
+            if (currentScrollY > 70) {
+                if (currentScrollY > lastScrollY.current) {
+                    setShowBottomNav(true);
+                } else {
+                    setShowBottomNav(false);
+                }
+            } else {
+                setShowBottomNav(false);
+            }
+            
+            lastScrollY.current = currentScrollY;
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        const handleTouchStart = (e: TouchEvent) => {
+            if (e.touches[0].clientX < 30) {
+                touchStartX.current = e.touches[0].clientX;
+            }
+        };
+
+        const handleTouchMove = (e: TouchEvent) => {
+            if (touchStartX.current > 0) {
+                touchCurrentX.current = e.touches[0].clientX;
+                const diff = touchCurrentX.current - touchStartX.current;
+                if (diff > 10) {
+                    setSwipeNavOpen(true);
+                }
+            }
+        };
+
+        const handleTouchEnd = () => {
+            touchStartX.current = 0;
+            touchCurrentX.current = 0;
+        };
+
+        document.addEventListener('touchstart', handleTouchStart as any, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove as any, { passive: true });
+        document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        return () => {
+            document.removeEventListener('touchstart', handleTouchStart as any);
+            document.removeEventListener('touchmove', handleTouchMove as any);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (swipeNavRef.current && !swipeNavRef.current.contains(e.target as Node)) {
+                setSwipeNavOpen(false);
+            }
+        };
+        if (swipeNavOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [swipeNavOpen]);
 
     const requestNotificationPermission = async () => {
         if (typeof window !== 'undefined' && 'Notification' in window) {

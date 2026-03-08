@@ -16,6 +16,7 @@ export type VipTicket = {
     matches: Match[];
     status: 'pending' | 'win' | 'lose';
     booking_code?: string;
+    isPublished: boolean;
     createdAt: any;
 };
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, Save, Trash2, Zap } from 'lucide-react';
-import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Match, VipTicket, QUICK_LEAGUES } from './types';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
@@ -14,6 +14,7 @@ interface VipBundlesManagerProps {
 }
 
 export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBundlesManagerProps) {
+    const [activeVipTab, setActiveVipTab] = useState<'drafts' | 'published'>('drafts');
     const [newVipTicket, setNewVipTicket] = useState<{
         bundle_name: string;
         odds: string;
@@ -77,6 +78,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             odds: newVipTicket.odds,
             status: 'pending',
             booking_code: newVipTicket.booking_code,
+            isPublished: false, // Default to draft
             matches: matchesToSave,
             createdAt: serverTimestamp()
         });
@@ -95,6 +97,22 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
         leagueAutocomplete.clearSuggestions();
 
         setNewVipTicket({ bundle_name: '', odds: '', booking_code: '', matches: [] });
+    };
+
+    const publishTicket = async (id: string) => {
+        await updateDoc(doc(db, 'vip_tickets', id), { isPublished: true });
+    };
+
+    const publishAllDrafts = async () => {
+        const drafts = vipTickets.filter(t => !t.isPublished);
+        if (drafts.length === 0) return;
+
+        const batch = writeBatch(db);
+        drafts.forEach(t => {
+            const ticketRef = doc(db, 'vip_tickets', t.id!);
+            batch.update(ticketRef, { isPublished: true });
+        });
+        await batch.commit();
     };
 
     const updateVipMatchStatus = async (ticketId: string, matchIdx: number, status: 'win' | 'lose' | 'pending') => {
@@ -285,20 +303,103 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                         <Plus size={14} /> Add Match
                     </button>
                     <button onClick={saveVipTicket} className="btn btn-primary" style={{ marginLeft: 'auto', height: '36px', fontSize: '0.8rem' }}>
-                        <Save size={16} /> Save Bundle
+                        <Save size={16} /> Save as Draft
                     </button>
                 </div>
             </div>
 
+            {/* VIP Tabs & Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{
+                    display: 'flex',
+                    background: 'var(--color-bg)',
+                    padding: '0.25rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--color-border)'
+                }}>
+                    <button
+                        onClick={() => setActiveVipTab('drafts')}
+                        style={{
+                            padding: '0.4rem 1rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: activeVipTab === 'drafts' ? 'white' : 'transparent',
+                            boxShadow: activeVipTab === 'drafts' ? 'var(--shadow-sm)' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Drafts ({vipTickets.filter(t => !t.isPublished).length})
+                    </button>
+                    <button
+                        onClick={() => setActiveVipTab('published')}
+                        style={{
+                            padding: '0.4rem 1rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: activeVipTab === 'published' ? 'white' : 'transparent',
+                            boxShadow: activeVipTab === 'published' ? 'var(--shadow-sm)' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Published ({vipTickets.filter(t => t.isPublished).length})
+                    </button>
+                </div>
+
+                {activeVipTab === 'drafts' && vipTickets.filter(t => !t.isPublished).length > 0 && (
+                    <button
+                        onClick={publishAllDrafts}
+                        className="btn btn-primary"
+                        style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', background: 'var(--gradient-premium)' }}
+                    >
+                        <Zap size={14} /> Publish All Drafts
+                    </button>
+                )}
+            </div>
+
             <div style={{ display: 'grid', gap: '1rem' }}>
-                {vipTickets.map(ticket => (
-                    <div key={ticket.id} className="glass-card" style={{ padding: '1rem', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)' }}>
+                {vipTickets.filter(t => activeVipTab === 'published' ? t.isPublished : !t.isPublished).map(ticket => (
+                    <div key={ticket.id} className="glass-card" style={{
+                        padding: '1rem',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-lg)',
+                        opacity: ticket.isPublished ? 1 : 0.9,
+                        background: ticket.isPublished ? 'white' : 'rgba(0,0,0,0.01)'
+                    }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div className="glass-card" style={{ padding: '0.4rem', borderRadius: '8px', background: 'var(--gradient-primary)', color: 'white' }}><Zap size={14} /></div>
-                                <h3 style={{ fontSize: '0.9rem', margin: 0, fontWeight: 800 }}>{ticket.bundle_name} <span style={{ color: 'var(--color-primary)' }}>({ticket.odds} Odds)</span></h3>
+                                <div className="glass-card" style={{
+                                    padding: '0.4rem',
+                                    borderRadius: '8px',
+                                    background: ticket.isPublished ? 'var(--gradient-primary)' : '#64748b',
+                                    color: 'white'
+                                }}>
+                                    <Zap size={14} />
+                                </div>
+                                <h3 style={{ fontSize: '0.9rem', margin: 0, fontWeight: 800 }}>
+                                    {ticket.bundle_name} <span style={{ color: 'var(--color-primary)' }}>({ticket.odds} Odds)</span>
+                                    {!ticket.isPublished && <span style={{ fontSize: '0.65rem', marginLeft: '0.5rem', color: '#64748b', fontWeight: 600, background: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>DRAFT</span>}
+                                </h3>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                {!ticket.isPublished && (
+                                    <button
+                                        onClick={() => publishTicket(ticket.id!)}
+                                        className="btn btn-primary"
+                                        style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', height: '24px' }}
+                                    >
+                                        Publish
+                                    </button>
+                                )}
                                 <span className={`badge badge-${ticket.status}`} style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{ticket.status === 'win' ? 'Won' : ticket.status}</span>
                                 <button onClick={() => deleteTicket(ticket.id!)} style={{ color: 'var(--color-danger)', background: 'none', border: 'none', padding: '0.25rem' }}><Trash2 size={16} /></button>
                             </div>
