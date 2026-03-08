@@ -159,7 +159,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                             transition: 'all 0.2s'
                         }}
                     >
-                        <span style={{ fontSize: '0.55rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: '0.1rem' }}>Sportybet Code</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#cb1d1dee', marginBottom: '0.1rem' }}>Sportybet Code</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                             <span style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '0.05em' }}>{ticket.booking_code}</span>
                             <Copy size={12} color="var(--color-primary)" />
