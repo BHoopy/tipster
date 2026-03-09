@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus, Save, Trash2, Zap } from 'lucide-react';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Match, VipTicket, QUICK_LEAGUES } from './types';
+import { Match, VipTicket, QUICK_LEAGUES, getLeagueColor } from './types';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
 
@@ -143,11 +143,6 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
         if (confirm('Delete VIP Ticket?')) {
             await deleteDoc(doc(db, 'vip_tickets', id));
         }
-    };
-
-    const getLeagueColor = (leagueName: string) => {
-        const league = QUICK_LEAGUES.find(l => l.name.toLowerCase() === leagueName.toLowerCase());
-        return league ? league.color : 'var(--color-primary)';
     };
 
     const formatTimeToAMPM = (timeStr: string): string => {

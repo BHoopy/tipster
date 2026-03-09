@@ -6,7 +6,7 @@ import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, query, 
 import { db } from '@/lib/firebase';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
-import { Match, QUICK_LEAGUES } from './types';
+import { Match, QUICK_LEAGUES, getLeagueColor } from './types';
 
 interface FreeTipsManagerProps {
     freeTips: Match[];
@@ -112,11 +112,6 @@ export default function FreeTipsManager({
         const bulkText = previousTips.map(t => `${t.time || '18:00'} | ${t.league} | ${t.teams} | ${t.tips}`).join('\n');
         setBulkInput(bulkText);
         setShowBulk(true);
-    };
-
-    const getLeagueColor = (leagueName: string) => {
-        const league = QUICK_LEAGUES.find(l => l.name.toLowerCase() === leagueName.toLowerCase());
-        return league ? league.color : 'var(--color-primary)';
     };
 
     const formatTimeToAMPM = (timeStr: string): string => {

@@ -1,4 +1,6 @@
-import { QUICK_LEAGUES } from '@/components/admin/types';
+import { getLeagueColor as getLeagueColorFn } from '@/components/admin/types';
+
+export { getLeagueColorFn as getLeagueColor };
 
 export const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
@@ -45,9 +47,4 @@ export const getDateRange = (days: number): string[] => {
         dates.push(formatDate(date));
     }
     return dates;
-};
-
-export const getLeagueColor = (leagueName: string) => {
-    const league = QUICK_LEAGUES.find(l => l.name?.toLowerCase() === leagueName?.toLowerCase());
-    return league ? league.color : 'var(--color-primary)';
 };
