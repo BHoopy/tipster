@@ -30,7 +30,8 @@ export default function FreeTipsManager({
     });
     const [tipErrors, setTipErrors] = useState<{ homeTeam?: boolean; awayTeam?: boolean; tips?: boolean }>({});
 
-    const teamAutocomplete = useTeamAutocomplete();
+    const teamAutocompleteHome = useTeamAutocomplete();
+    const teamAutocompleteAway = useTeamAutocomplete();
     const tipAutocomplete = useTipAutocomplete();
     const leagueAutocomplete = useLeagueAutocomplete();
 
@@ -55,27 +56,28 @@ export default function FreeTipsManager({
         });
 
         // Learn individually
-        teamAutocomplete.learn(homeTeam.trim());
-        teamAutocomplete.learn(awayTeam.trim());
+        teamAutocompleteHome.learn(homeTeam.trim());
+        teamAutocompleteAway.learn(awayTeam.trim());
         tipAutocomplete.learn(newFreeTip.tips);
         leagueAutocomplete.learn(newFreeTip.league);
 
         setHomeTeam('');
         setAwayTeam('');
         setNewFreeTip({ ...newFreeTip, time: getCurrentTime(), teams: '', tips: '', status: 'pending' });
-        teamAutocomplete.clearSuggestions();
+        teamAutocompleteHome.clearSuggestions();
+        teamAutocompleteAway.clearSuggestions();
         tipAutocomplete.clearSuggestions();
         leagueAutocomplete.clearSuggestions();
     };
 
     const handleHomeTeamChange = (value: string) => {
         setHomeTeam(value);
-        teamAutocomplete.search(value);
+        teamAutocompleteHome.search(value);
     };
 
     const handleAwayTeamChange = (value: string) => {
         setAwayTeam(value);
-        teamAutocomplete.search(value);
+        teamAutocompleteAway.search(value);
     };
 
     const handleBulkUpload = async () => {
@@ -242,8 +244,8 @@ export default function FreeTipsManager({
                                 value={homeTeam}
                                 onChange={handleHomeTeamChange}
                                 onSelect={() => { }}
-                                suggestions={teamAutocomplete.suggestions}
-                                isLoading={teamAutocomplete.isLoading}
+                                suggestions={teamAutocompleteHome.suggestions}
+                                isLoading={teamAutocompleteHome.isLoading}
                                 placeholder="Home"
                                 style={{ borderColor: tipErrors.homeTeam ? '#ef4444' : undefined, height: '28px', fontSize: '0.7rem' }}
                             />
@@ -257,8 +259,8 @@ export default function FreeTipsManager({
                                 value={awayTeam}
                                 onChange={handleAwayTeamChange}
                                 onSelect={() => { }}
-                                suggestions={teamAutocomplete.suggestions}
-                                isLoading={teamAutocomplete.isLoading}
+                                suggestions={teamAutocompleteAway.suggestions}
+                                isLoading={teamAutocompleteAway.isLoading}
                                 placeholder="Away"
                                 style={{ borderColor: tipErrors.awayTeam ? '#ef4444' : undefined, height: '28px', fontSize: '0.7rem' }}
                             />

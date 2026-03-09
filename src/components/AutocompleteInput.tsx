@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 type Suggestion = {
@@ -17,6 +17,7 @@ interface AutocompleteInputProps {
     placeholder?: string;
     onBlur?: () => void;
     style?: React.CSSProperties;
+    inputId?: string;
 }
 
 export default function AutocompleteInput({
@@ -27,16 +28,21 @@ export default function AutocompleteInput({
     isLoading,
     placeholder,
     onBlur,
-    style
+    style,
+    inputId
 }: AutocompleteInputProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const uniqueId = useId();
+    const inputIdFinal = inputId || uniqueId;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
+                setIsFocused(false);
             }
         }
 
@@ -45,18 +51,49 @@ export default function AutocompleteInput({
     }, []);
 
     useEffect(() => {
-        setIsOpen(suggestions.length > 0 && value.length >= 1);
-    }, [suggestions, value]);
+        if (isFocused && suggestions.length > 0 && value.length >= 1) {
+            setIsOpen(true);
+        } else if (!isFocused) {
+            setIsOpen(false);
+        }
+    }, [suggestions, value, isFocused]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange(e.target.value);
+        setIsFocused(true);
+    };
+
+    const handleFocus = () => {
+        setIsFocused(true);
+        if (value.length >= 1 && suggestions.length > 0) {
+            setIsOpen(true);
+        }
+    };
+
+    const handleBlur = () => {
+        setIsFocused(false);
+        setTimeout(() => {
+            if (!wrapperRef.current?.contains(document.activeElement)) {
+                setIsOpen(false);
+            }
+        }, 150);
+        onBlur?.();
     };
 
     const handleSuggestionClick = (suggestion: Suggestion) => {
         onSelect(suggestion.value);
         onChange(suggestion.value);
         setIsOpen(false);
+        setIsFocused(false);
         inputRef.current?.focus();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+            setIsFocused(false);
+            inputRef.current?.blur();
+        }
     };
 
     return (
@@ -64,14 +101,19 @@ export default function AutocompleteInput({
             <div style={{ position: 'relative' }}>
                 <input
                     ref={inputRef}
+                    id={inputIdFinal}
                     type="text"
                     value={value}
                     onChange={handleInputChange}
-                    onFocus={() => value.length >= 1 && suggestions.length > 0 && setIsOpen(true)}
-                    onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
                     placeholder={placeholder}
                     className="input"
                     autoComplete="off"
+                    aria-expanded={isOpen}
+                    aria-haspopup="listbox"
+                    aria-controls={`${inputIdFinal}-listbox`}
                     style={{
                         width: '100%',
                         paddingRight: isLoading ? '2rem' : '0.5rem',
@@ -98,24 +140,33 @@ export default function AutocompleteInput({
             </div>
 
             {isOpen && suggestions.length > 0 && (
-                <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    background: 'white',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-sm)',
-                    boxShadow: 'var(--shadow-md)',
-                    zIndex: 50,
-                    marginTop: '4px',
-                    overflow: 'hidden',
-                    animation: 'fadeInUp 0.15s ease-out'
-                }}>
+                <div 
+                    id={`${inputIdFinal}-listbox`}
+                    role="listbox"
+                    style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        background: 'white',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        boxShadow: 'var(--shadow-md)',
+                        zIndex: 50,
+                        marginTop: '4px',
+                        overflow: 'hidden',
+                        animation: 'fadeInUp 0.15s ease-out',
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                    }}
+                >
                     {suggestions.map((suggestion, idx) => (
                         <div
                             key={suggestion.value}
+                            role="option"
+                            aria-selected={idx === 0}
                             onClick={() => handleSuggestionClick(suggestion)}
+                            onMouseDown={(e) => e.preventDefault()}
                             style={{
                                 padding: '0.625rem 0.875rem',
                                 cursor: 'pointer',

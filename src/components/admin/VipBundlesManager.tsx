@@ -26,14 +26,15 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
 
     const [errors, setErrors] = useState<{ bundle_name?: boolean; odds?: boolean; matches?: boolean }>({});
 
-    const teamAutocomplete = useTeamAutocomplete();
+    const teamAutocompleteHome = useTeamAutocomplete();
+    const teamAutocompleteAway = useTeamAutocomplete();
     const tipAutocomplete = useTipAutocomplete();
     const leagueAutocomplete = useLeagueAutocomplete();
 
     const addMatchToVipPayload = () => {
         setNewVipTicket({
             ...newVipTicket,
-            matches: [...newVipTicket.matches, { time: getCurrentTime(), league: 'EPL', home: '', away: '', tips: '', status: 'pending' }]
+            matches: [...newVipTicket.matches, { time: getCurrentTime(), league: '', home: '', away: '', tips: '', status: 'pending' }]
         });
     };
 
@@ -42,8 +43,10 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
         (updated[idx] as any)[field] = value;
         setNewVipTicket({ ...newVipTicket, matches: updated });
 
-        if (field === 'home' || field === 'away') {
-            teamAutocomplete.search(value);
+        if (field === 'home') {
+            teamAutocompleteHome.search(value);
+        } else if (field === 'away') {
+            teamAutocompleteAway.search(value);
         } else if (field === 'tips') {
             tipAutocomplete.search(value);
         } else if (field === 'league') {
@@ -85,14 +88,15 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
 
         // Learn all teams and tips
         newVipTicket.matches.forEach(m => {
-            teamAutocomplete.learn(m.home.trim());
-            teamAutocomplete.learn(m.away.trim());
+            teamAutocompleteHome.learn(m.home.trim());
+            teamAutocompleteAway.learn(m.away.trim());
             tipAutocomplete.learn(m.tips.trim());
             leagueAutocomplete.learn(m.league.trim());
         });
 
         // Clear all suggestions
-        teamAutocomplete.clearSuggestions();
+        teamAutocompleteHome.clearSuggestions();
+        teamAutocompleteAway.clearSuggestions();
         tipAutocomplete.clearSuggestions();
         leagueAutocomplete.clearSuggestions();
 
@@ -257,8 +261,8 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                                     value={m.home}
                                     onChange={(val) => handleVipMatchChange(idx, 'home', val)}
                                     onSelect={() => { }}
-                                    suggestions={teamAutocomplete.suggestions}
-                                    isLoading={teamAutocomplete.isLoading}
+                                    suggestions={teamAutocompleteHome.suggestions}
+                                    isLoading={teamAutocompleteHome.isLoading}
                                     placeholder="Home"
                                     style={{ height: '30px', fontSize: '0.75rem' }}
                                 />
@@ -271,8 +275,8 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                                     value={m.away}
                                     onChange={(val) => handleVipMatchChange(idx, 'away', val)}
                                     onSelect={() => { }}
-                                    suggestions={teamAutocomplete.suggestions}
-                                    isLoading={teamAutocomplete.isLoading}
+                                    suggestions={teamAutocompleteAway.suggestions}
+                                    isLoading={teamAutocompleteAway.isLoading}
                                     placeholder="Away"
                                     style={{ height: '30px', fontSize: '0.75rem' }}
                                 />
