@@ -54,7 +54,7 @@ export default function Home() {
         );
         const unsubVip = onSnapshot(vipQuery, (snap) => {
             const tickets = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket));
-            setVipTickets(tickets.filter(t => t.isPublished !== false));
+            setVipTickets(tickets.filter(t => t.isPublished === true));
         });
 
         const fetchAllData = async () => {
@@ -123,7 +123,7 @@ export default function Home() {
     }, [allFreeTips, historyDays]);
 
     const vipHistory = useMemo(() => {
-        return groupTicketsByDate(allVipTickets.filter(t => t.status !== 'pending'));
+        return groupTicketsByDate(allVipTickets.filter(t => t.status !== 'pending' && t.isPublished === true));
     }, [allVipTickets, historyDays]);
 
     return (
