@@ -1,5 +1,5 @@
 # dependencies
-node_modules
+node_modules/
 /.pnp
 .pnp.js
 
@@ -12,23 +12,50 @@ node_modules
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
-# local env files
-.env*.local
+# local env files - NEVER COMMIT SECRETS
 .env
+.env.local
+.env*.local
+.env.development
+.env.production
+.env.test
+
+# Firebase service account keys
+fhink.json
+*service-account*.json
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.vs/
+
+# Project-specific generated files
+file_list.txt
+.modified
+.idx/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Cloudinary cache
+cloudinary_cache/
