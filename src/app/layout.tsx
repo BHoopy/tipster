@@ -5,7 +5,7 @@ import AuthModalWrapper from '@/components/AuthModalWrapper';
 import { ReactNode } from 'react';
 
 export const metadata = {
-    title: 'Tipster Fhink - Expert Football Betting Tips',
+    title: 'Tipster - Expert Football Betting Tips',
     description: 'Pro football betting analysis, free tips and VIP ticket bundles.',
     icons: {
         icon: '/logo.png',
@@ -45,7 +45,7 @@ export default function RootLayout({
                                         fontSize: '1rem',
                                         fontWeight: 700,
                                         color: 'var(--color-primary)'
-                                    }}>Tipster <span style={{ color: 'var(--color-text)' }}>Fhink</span></span>
+                                    }}>Tipster</span>
                                 </div>
                                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '400px' }}>
                                     Premium sports analysis and expert predictions for winning strategies.

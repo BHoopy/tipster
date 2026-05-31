@@ -20,7 +20,7 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || 'Check out the latest football predictions.',
     icon: '/logo.png',
     badge: '/logo.png',
-    tag: 'fhinktips-notification',
+    tag: 'tipster-notification',
     renotify: true,
     data: payload.data
   };

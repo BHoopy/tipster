@@ -127,7 +127,7 @@ export default function Header() {
                         fontWeight: 800,
                         letterSpacing: '-0.025em',
                         color: 'var(--color-primary)'
-                    }}>Tipster <span style={{ color: 'var(--color-text)' }}>Fhink</span></span>
+                    }}>Tipster</span>
                 </Link>
 
                 {/* Desktop Navigation */}

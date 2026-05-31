@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
                         notification: {
                             icon: '/logo.png',
                             badge: '/logo.png',
-                            tag: 'fhinktips-notification',
+                            tag: 'tipster-notification',
                             renotify: true,
                         },
                         fcmOptions: {

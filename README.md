@@ -1,4 +1,4 @@
-# FhinkTips
+# Tipster
 
 A sports betting tips platform built with Next.js 16, TypeScript, Firebase, and Paystack.
 

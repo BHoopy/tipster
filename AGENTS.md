@@ -1,4 +1,4 @@
-# Agent Guidelines for FhinkTips
+# Agent Guidelines for Tipster
 
 This is a Next.js 16 sports betting tips platform with TypeScript, Firebase, and Paystack integration.
 
