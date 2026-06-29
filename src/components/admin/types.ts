@@ -1,5 +1,3 @@
-import { serverTimestamp } from 'firebase/firestore';
-
 export type Match = {
     id?: string;
     time: string;

@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, adminMessaging } from '@/lib/firebase-admin';
+import { adminDb } from '@/lib/firebase-admin';
+import webpush from 'web-push';
+
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+if (vapidPublicKey && vapidPrivateKey) {
+  webpush.setVapidDetails(
+    'mailto:support@tipster.app',
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+}
 
 export async function POST(request: NextRequest) {
     try {
-        if (!adminMessaging) {
-            return NextResponse.json(
-                { error: 'Firebase Admin not initialized' },
-                { status: 500 }
-            );
-        }
-
         const body = await request.json();
-        const { title, body: messageBody, type, data } = body;
+        const { title, body: messageBody, data } = body;
 
         if (!title || !messageBody) {
             return NextResponse.json(
@@ -20,81 +25,52 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get all users who have FCM tokens stored
-        const tokensSnapshot = await adminDb.collection('fcm_tokens').get();
+        const subsSnapshot = await adminDb.collection('push_subscriptions').get();
         
-        if (tokensSnapshot.empty) {
+        if (subsSnapshot.empty) {
             return NextResponse.json(
-                { message: 'No notification tokens found', sent: 0 },
+                { message: 'No push subscriptions found', sent: 0 },
                 { status: 200 }
             );
         }
 
-        const tokens = tokensSnapshot.docs.map(doc => doc.id);
-        
-        // Split tokens into chunks of 500 (Firebase limit)
-        const chunks = [];
-        for (let i = 0; i < tokens.length; i += 500) {
-            chunks.push(tokens.slice(i, i + 500));
-        }
-
         let successCount = 0;
         let failureCount = 0;
+        const invalidIds: string[] = [];
 
-        for (const chunk of chunks) {
+        for (const doc of subsSnapshot.docs) {
             try {
-                const response = await adminMessaging.sendEachForMulticast({
-                    tokens: chunk,
-                    notification: {
-                        title,
-                        body: messageBody,
-                    },
-                    data: {
-                        type: type || 'new_tip',
-                        ...data
-                    },
-                    webpush: {
-                        notification: {
-                            icon: '/logo.png',
-                            badge: '/logo.png',
-                            tag: 'tipster-notification',
-                            renotify: true,
-                        },
-                        fcmOptions: {
-                            link: '/'
-                        }
-                    }
-                });
-
-                successCount += response.successCount;
-                failureCount += response.failureCount;
-
-                // Clean up invalid tokens
-                if (response.failureCount > 0) {
-                    const invalidTokens: string[] = [];
-                    response.responses.forEach((resp, idx) => {
-                        if (!resp.success) {
-                            invalidTokens.push(chunk[idx]);
-                        }
-                    });
-                    
-                    // Remove invalid tokens
-                    const invalidTokenPromises = invalidTokens.map(token => 
-                        adminDb.collection('fcm_tokens').doc(token).delete()
-                    );
-                    await Promise.all(invalidTokenPromises);
+                const subData = doc.data().subscription;
+                await webpush.sendNotification({
+                    endpoint: subData.endpoint,
+                    keys: subData.keys,
+                } as webpush.PushSubscription, JSON.stringify({
+                    title,
+                    body: messageBody,
+                    data: { type: 'new_tip', ...data },
+                }));
+                successCount++;
+            } catch (error: any) {
+                if (error.statusCode === 410 || error.statusCode === 404) {
+                    invalidIds.push(doc.id);
                 }
-            } catch (error) {
-                console.error('Error sending chunk:', error);
-                failureCount += chunk.length;
+                failureCount++;
             }
+        }
+
+        if (invalidIds.length > 0) {
+            const deletePromises = invalidIds.map(id =>
+                adminDb.collection('push_subscriptions').doc(id).delete()
+            );
+            await Promise.all(deletePromises);
         }
 
         return NextResponse.json({
             success: true,
             sent: successCount,
             failed: failureCount,
-            total: tokens.length
+            total: subsSnapshot.size,
+            cleaned: invalidIds.length,
         });
 
     } catch (error: any) {

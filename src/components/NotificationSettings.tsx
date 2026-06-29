@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { initMessaging } from '@/lib/firebase';
-import { getToken, onMessage } from 'firebase/messaging';
+import { useState, useEffect, useCallback } from 'react';
+import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Bell, BellOff, Check, AlertCircle } from 'lucide-react';
 
-type NotificationSettingsProps = {
-    onTokenChange?: (token: string | null) => void;
-};
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return new Uint8Array(rawData.split('').map((c) => c.charCodeAt(0)));
+}
 
-export default function NotificationSettings({ onTokenChange }: NotificationSettingsProps) {
+export default function NotificationSettings() {
     const [permission, setPermission] = useState<NotificationPermission>('default');
-    const [fcmToken, setFcmToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [isMounted, setIsMounted] = useState(false);
@@ -28,34 +30,29 @@ export default function NotificationSettings({ onTokenChange }: NotificationSett
         setMessage(null);
 
         try {
-            const messaging = await initMessaging();
-            
-            if (!messaging) {
-                setMessage({ type: 'error', text: 'Push notifications are not supported in this browser.' });
+            const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+            if (!vapidPublicKey) {
+                setMessage({ type: 'error', text: 'Push notifications are not configured.' });
                 setLoading(false);
                 return;
             }
 
-            const token = await getToken(messaging, {
-                vapidKey: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp2NwhsV7Ew'
+            const swRegistration = await navigator.serviceWorker.register('/sw.js');
+            const subscription = await swRegistration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
             });
-            
-            setFcmToken(token);
+
+            await setDoc(doc(db, 'push_subscriptions', subscription.endpoint), {
+                subscription: subscription.toJSON(),
+                createdAt: serverTimestamp(),
+            });
+
             setPermission('granted');
-            onTokenChange?.(token);
             setMessage({ type: 'success', text: 'Notifications enabled successfully!' });
-            
-            // Handle foreground messages
-            onMessage(messaging, (payload) => {
-                console.log('Foreground message received:', payload);
-                const notification = new Notification(payload.notification?.title || 'New Tip', {
-                    body: payload.notification?.body || 'You have a new prediction!',
-                    icon: '/logo.png'
-                });
-            });
         } catch (error: any) {
-            console.error('Error getting notification permission:', error);
-            if (error.code === 'messaging/permission-blocked') {
+            console.error('Error enabling notifications:', error);
+            if (error.name === 'NotAllowedError') {
                 setMessage({ type: 'error', text: 'Notifications are blocked. Please enable them in your browser settings.' });
             } else {
                 setMessage({ type: 'error', text: 'Failed to enable notifications. Please try again.' });
@@ -65,12 +62,21 @@ export default function NotificationSettings({ onTokenChange }: NotificationSett
         setLoading(false);
     };
 
-    const revokePermission = () => {
+    const revokePermission = useCallback(async () => {
+        try {
+            const swRegistration = await navigator.serviceWorker.ready;
+            const subscription = await swRegistration.pushManager.getSubscription();
+            if (subscription) {
+                await deleteDoc(doc(db, 'push_subscriptions', subscription.endpoint));
+                await subscription.unsubscribe();
+            }
+        } catch (error) {
+            console.error('Error disabling notifications:', error);
+        }
+
         setPermission('denied');
-        setFcmToken(null);
-        onTokenChange?.(null);
         setMessage({ type: 'success', text: 'Notifications disabled.' });
-    };
+    }, []);
 
     if (!isMounted) {
         return null;
