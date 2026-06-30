@@ -207,7 +207,7 @@ button {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--color-primary);
   color: white;
   box-shadow: 0 4px 12px rgba(0, 168, 107, 0.25);
 }

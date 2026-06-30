@@ -131,7 +131,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         onClick={handlePayment}
                         disabled={loading}
                         className={styles.payButton}
-                        style={{ background: 'var(--gradient-gold)', color: '#78350f' }}
+                        style={{ background: '#F59E0B', color: '#78350f' }}
                     >
                         {loading ? (
                             <div className={styles.spinner} style={{ borderTopColor: '#78350f' }}></div>

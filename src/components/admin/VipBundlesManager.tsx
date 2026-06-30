@@ -358,7 +358,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                     <button
                         onClick={publishAllDrafts}
                         className="btn btn-primary"
-                        style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', background: 'var(--gradient-premium)' }}
+                        style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', background: '#1e293b' }}
                     >
                         <Zap size={14} /> Publish All Drafts
                     </button>
