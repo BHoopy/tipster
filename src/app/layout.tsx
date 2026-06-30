@@ -2,6 +2,7 @@ import '@/styles/globals.css';
 import { Providers } from '@/components/Providers';
 import Header from '@/components/Header';
 import AuthModalWrapper from '@/components/AuthModalWrapper';
+import ThemeToggle from '@/components/ThemeToggle';
 import { ReactNode } from 'react';
 
 export const metadata = {
@@ -50,6 +51,7 @@ export default function RootLayout({
                                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '400px' }}>
                                     Premium sports analysis and expert predictions for winning strategies.
                                 </p>
+                                <ThemeToggle />
                                 <div style={{
                                     display: 'flex',
                                     gap: '1rem',
@@ -57,7 +59,9 @@ export default function RootLayout({
                                     fontSize: '0.75rem',
                                     color: 'var(--color-text-muted)',
                                     textTransform: 'uppercase',
-                                    letterSpacing: '0.05em'
+                                    letterSpacing: '0.05em',
+                                    flexWrap: 'wrap',
+                                    justifyContent: 'center'
                                 }}>
                                     <a href="/privacy" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>
                                         Privacy Policy

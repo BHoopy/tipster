@@ -1,40 +1,52 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 
-type Theme = 'light' | 'dark';
+type Theme = 'light' | 'dark' | 'auto';
 
 interface ThemeContextType {
     theme: Theme;
-    toggleTheme: () => void;
+    setTheme: (t: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function applyTheme(theme: Theme) {
+    const root = document.documentElement;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (theme === 'dark' || (theme === 'auto' && prefersDark)) {
+        root.classList.add('dark');
+    } else {
+        root.classList.remove('dark');
+    }
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [theme, setTheme] = useState<Theme>('light');
+    const [theme, setThemeState] = useState<Theme>('auto');
 
     useEffect(() => {
-        const savedTheme = localStorage.getItem('theme') as Theme;
-        if (savedTheme) {
-            setTheme(savedTheme);
-            document.documentElement.classList.add(savedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setTheme('dark');
-            document.documentElement.classList.add('dark');
-        }
+        const saved = localStorage.getItem('theme') as Theme | null;
+        const initial = saved || 'auto';
+        setThemeState(initial);
+        applyTheme(initial);
     }, []);
 
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-        document.documentElement.classList.remove(theme);
-        document.documentElement.classList.add(newTheme);
-    };
+    useEffect(() => {
+        if (theme !== 'auto') return;
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = () => applyTheme('auto');
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, [theme]);
+
+    const setTheme = useCallback((t: Theme) => {
+        setThemeState(t);
+        localStorage.setItem('theme', t);
+        applyTheme(t);
+    }, []);
 
     return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, setTheme }}>
             {children}
         </ThemeContext.Provider>
     );
