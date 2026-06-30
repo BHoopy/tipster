@@ -28,8 +28,8 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 if (docSnap.exists()) {
                     setVipPrice(docSnap.data().vipPrice || 50);
                 }
-            } catch (error) {
-                console.error('Error fetching settings:', error);
+            } catch {
+                setVipPrice(50);
             }
         };
         fetchSettings();

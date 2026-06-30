@@ -99,11 +99,37 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           )}
 
+          <button onClick={handleGoogle} style={{ 
+            width: '100%', 
+            height: '48px', 
+            display: 'flex', 
+            gap: '0.75rem', 
+            borderRadius: 'var(--radius-sm)', 
+            border: '1px solid #e0e0e0', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            background: 'white',
+            cursor: 'pointer',
+            fontSize: '0.9375rem',
+            fontWeight: 500,
+            color: '#3c4043',
+            transition: 'all 0.2s ease'
+          }} disabled={loading}>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/60px-Google_%22G%22_logo.svg.png?_=20230822192911" alt="Google Logo" width="20" height="20" />
+            Continue with Google
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0', gap: '1rem' }}>
+            <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with email</span>
+            <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
+          </div>
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Email Address</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text)' }}>Email Address</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
                 <input
                   type="email"
                   style={{
@@ -112,7 +138,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-border)',
                     fontSize: '0.875rem',
-                    background: 'var(--color-bg)'
+                    background: 'var(--color-bg)',
+                    color: 'var(--color-text)'
                   }}
                   placeholder="name@example.com"
                   required
@@ -123,9 +150,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-secondary)' }}>Password</label>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text)' }}>Password</label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-secondary)' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   style={{
@@ -134,7 +161,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-border)',
                     fontSize: '0.875rem',
-                    background: 'var(--color-bg)'
+                    background: 'var(--color-bg)',
+                    color: 'var(--color-text)'
                   }}
                   placeholder="••••••••"
                   required
@@ -149,7 +177,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     right: '12px',
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    color: 'var(--color-text-muted)',
+                    color: 'var(--color-text-secondary)',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -168,37 +196,6 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {loading ? 'Processing...' : mode === 'login' ? <><LogIn size={18} /> Login</> : <><UserPlus size={18} /> Create Account</>}
             </button>
           </form>
-
-          <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0', gap: '1rem' }}>
-            <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Or continue with</span>
-            <div style={{ flex: 1, height: '1px', background: 'var(--color-border)' }} />
-          </div>
-
-          <button onClick={handleGoogle} style={{ 
-            width: '100%', 
-            height: '48px', 
-            display: 'flex', 
-            gap: '0.75rem', 
-            borderRadius: 'var(--radius-sm)', 
-            border: '1px solid #e0e0e0', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            background: 'white',
-            cursor: 'pointer',
-            fontSize: '0.9375rem',
-            fontWeight: 500,
-            color: '#3c4043',
-            transition: 'all 0.2s ease'
-          }} disabled={loading}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19.8055 10.2275C19.8055 9.51805 19.7444 8.83527 19.6305 8.17273H10.2V12.0609H15.6016C15.3661 13.3005 14.6577 14.3519 13.6055 15.0609V17.5609H16.8277C18.7166 15.8191 19.8055 13.2525 19.8055 10.2275Z" fill="#4285F4"/>
-              <path d="M10.2 20C12.9 20 15.1677 19.1041 16.8277 17.5609L13.6055 15.0609C12.7088 15.6686 11.5622 16.0219 10.2 16.0219C7.32277 16.0219 4.95555 14.263 4.17777 11.5369H1.05555V14.0784C2.43333 17.0941 5.48888 19.3222 8.8 19.3222C11.0333 19.3222 12.9694 18.4984 14.2333 17.3691L10.2 20Z" fill="#34A853"/>
-              <path d="M4.17778 11.5369C3.83333 10.5341 3.83333 9.4305 4.17778 8.42772V5.88616H1.05556C0.277778 7.61227 0.277778 9.35233 1.05556 11.0784L4.17778 11.5369Z" fill="#FBBC05"/>
-              <path d="M10.2 3.94364C11.5444 3.94364 12.8344 4.48127 13.8589 5.47272L16.8889 2.44272C15.1611 0.990275 12.9 0.200275 10.2 0.200275C7.86667 0.200275 5.98333 1.08972 4.44444 2.39716L7.51111 5.31083C8.80556 3.94305 10.2 3.94364 10.2 3.94364Z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </button>
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
             {mode === 'login' ? (

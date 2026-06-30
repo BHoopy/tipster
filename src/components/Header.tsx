@@ -177,16 +177,6 @@ export default function Header() {
                         </button>
                     )}
 
-                    <button onClick={toggleTheme} className="btn-outline" style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '99px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
 
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -265,10 +255,6 @@ export default function Header() {
                             </div>
                         )}
 
-                        <button onClick={toggleTheme} className="btn btn-outline" style={{ width: '100%', justifyContent: 'flex-start', gap: '0.75rem' }}>
-                            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />} 
-                            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                        </button>
 
                         {user ? (
                             <>
