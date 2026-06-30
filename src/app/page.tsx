@@ -6,7 +6,7 @@ import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase
 import { useAuth } from '@/context/AuthContext';
 import VipLocked from '@/components/VipLocked';
 import NotificationSettings from '@/components/NotificationSettings';
-import { Ticket, History } from 'lucide-react';
+import { LuTicket as Ticket, LuHistory as History } from 'react-icons/lu';
 
 import { Match, VipTicket, GroupedTips, GroupedTickets } from '@/types/game';
 import { formatDate, formatDateLabel, getDateRange } from '@/lib/utils';
@@ -92,7 +92,16 @@ export default function Home() {
         const grouped: { [key: string]: Match[] } = {};
         dateRanges.forEach(date => grouped[date] = []);
         tips.forEach(tip => {
-            const tipDate = tip.createdAt ? new Date(tip.createdAt.seconds * 1000).toISOString().split('T')[0] : todayStr;
+            let tipDate = todayStr;
+            if (tip.createdAt) {
+                if (tip.createdAt.seconds) {
+                    tipDate = new Date(tip.createdAt.seconds * 1000).toISOString().split('T')[0];
+                } else if (typeof tip.createdAt === 'string') {
+                    tipDate = tip.createdAt.split('T')[0];
+                } else if (tip.createdAt instanceof Date) {
+                    tipDate = tip.createdAt.toISOString().split('T')[0];
+                }
+            }
             if (grouped[tipDate]) grouped[tipDate].push(tip);
         });
         return dateRanges.map(date => ({
@@ -108,7 +117,16 @@ export default function Home() {
         const grouped: { [key: string]: VipTicket[] } = {};
         dateRanges.forEach(date => grouped[date] = []);
         tickets.forEach(ticket => {
-            const ticketDate = ticket.createdAt ? new Date(ticket.createdAt.seconds * 1000).toISOString().split('T')[0] : todayStr;
+            let ticketDate = todayStr;
+            if (ticket.createdAt) {
+                if (ticket.createdAt.seconds) {
+                    ticketDate = new Date(ticket.createdAt.seconds * 1000).toISOString().split('T')[0];
+                } else if (typeof ticket.createdAt === 'string') {
+                    ticketDate = ticket.createdAt.split('T')[0];
+                } else if (ticket.createdAt instanceof Date) {
+                    ticketDate = ticket.createdAt.toISOString().split('T')[0];
+                }
+            }
             if (grouped[ticketDate]) grouped[ticketDate].push(ticket);
         });
         return dateRanges.map(date => ({

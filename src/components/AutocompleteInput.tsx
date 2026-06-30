@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useId } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { LuChevronDown as ChevronDown } from 'react-icons/lu';
 
 type Suggestion = {
     value: string;

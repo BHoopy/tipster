@@ -6,7 +6,7 @@ import {
     collection, addDoc, doc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc
 } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
-import { Bell } from 'lucide-react';
+import { LuBell as Bell } from 'react-icons/lu';
 
 // Sub-components
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
     };
 
     if (loading) return <div className="container center-content">Loading...</div>;
-    if (!isAdmin) return <div className="container center-content">Access Denied. Admins Only.</div>;
+    if (!isAdmin) return <div className="container center-content">you are lost</div>;
 
     return (
         <div className="container admin-container">

@@ -1,4 +1,4 @@
-import { BadgeCheck, Trophy, TrendingUp, ShieldCheck } from 'lucide-react';
+import { LuBadgeCheck as BadgeCheck, LuTrophy as Trophy, LuTrendingUp as TrendingUp, LuShieldCheck as ShieldCheck } from 'react-icons/lu';
 
 interface HomeStatsProps {
     stats: {

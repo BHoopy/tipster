@@ -1,4 +1,4 @@
-import { History, ChevronDown } from 'lucide-react';
+import { LuHistory as History, LuChevronDown as ChevronDown } from 'react-icons/lu';
 import { GroupedTips, GroupedTickets } from '@/types/game';
 import NoTipsMessage from './NoTipsMessage';
 import FreeTipsList from './FreeTipsList';

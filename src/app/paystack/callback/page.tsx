@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { LuLoader as Loader2, LuCircleCheckBig as CheckCircle2, LuCircleX as XCircle } from 'react-icons/lu';
 
 function PaystackCallbackContent() {
     const router = useRouter();

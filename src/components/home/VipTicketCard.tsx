@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Star, Timer, Trophy, XCircle, ShieldCheck, TrendingUp, Copy } from 'lucide-react';
+import { LuStar as Star, LuTimer as Timer, LuTrophy as Trophy, LuCircleX as XCircle, LuShieldCheck as ShieldCheck, LuTrendingUp as TrendingUp, LuCopy as Copy } from 'react-icons/lu';
 import { VipTicket } from '@/types/game';
 import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
 

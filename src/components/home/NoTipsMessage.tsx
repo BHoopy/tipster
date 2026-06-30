@@ -1,4 +1,4 @@
-import { Sparkles, Bell } from 'lucide-react';
+import { LuSparkles as Sparkles, LuBell as Bell } from 'react-icons/lu';
 
 export default function NoTipsMessage() {
     return (

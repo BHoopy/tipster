@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Save, Trash2, Zap } from 'lucide-react';
+import { LuPlus as Plus, LuSave as Save, LuTrash2 as Trash2, LuZap as Zap } from 'react-icons/lu';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Match, VipTicket, QUICK_LEAGUES, getLeagueColor } from './types';

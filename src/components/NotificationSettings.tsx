@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Bell, BellOff, Check, AlertCircle } from 'lucide-react';
+import { LuBell as Bell, LuBellOff as BellOff, LuCheck as Check, LuCircleAlert as AlertCircle } from 'react-icons/lu';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);

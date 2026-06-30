@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Zap, Copy, ChevronUp, Trash2 } from 'lucide-react';
+import { LuPlus as Plus, LuZap as Zap, LuCopy as Copy, LuChevronUp as ChevronUp, LuTrash2 as Trash2 } from 'react-icons/lu';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';

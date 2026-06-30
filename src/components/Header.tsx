@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { LogOut, Sun, Moon, LogIn, Menu, X, Bell, BellOff, Trophy, Star, Home, Zap } from 'lucide-react';
+import { LuLogOut as LogOut, LuSun as Sun, LuMoon as Moon, LuLogIn as LogIn, LuMenu as Menu, LuX as X, LuBell as Bell, LuBellOff as BellOff, LuTrophy as Trophy, LuStar as Star, LuHome as Home, LuZap as Zap } from 'react-icons/lu';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();

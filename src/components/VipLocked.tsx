@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Zap, ArrowRight, CheckCircle, CreditCard, LogIn, Crown, Shield, Target, TrendingUp } from 'lucide-react';
+import { LuZap as Zap, LuArrowRight as ArrowRight, LuCircleCheck as CheckCircle, LuCreditCard as CreditCard, LuLogIn as LogIn, LuCrown as Crown, LuShield as Shield, LuTarget as Target, LuTrendingUp as TrendingUp } from 'react-icons/lu';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';

@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, Ticket, Zap } from 'lucide-react';
+import { LuLayoutDashboard as LayoutDashboard, LuTicket as Ticket, LuZap as Zap } from 'react-icons/lu';
 
 interface SidebarProps {
     view: 'free' | 'vip' | 'history';
