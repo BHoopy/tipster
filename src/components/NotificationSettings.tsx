@@ -40,7 +40,7 @@ export default function NotificationSettings() {
             const swRegistration = await navigator.serviceWorker.register('/sw.js');
             const subscription = await swRegistration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as unknown as string,
             });
 
             await setDoc(doc(db, 'push_subscriptions', subscription.endpoint), {

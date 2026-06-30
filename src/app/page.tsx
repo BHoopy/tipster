@@ -6,7 +6,6 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import VipLocked from '@/components/VipLocked';
-import NotificationSettings from '@/components/NotificationSettings';
 import { LuTicket as Ticket, LuHistory as History } from 'react-icons/lu';
 
 import { Match, VipTicket, GroupedTips, GroupedTickets } from '@/types/game';
@@ -252,11 +251,6 @@ export default function Home() {
                         )
                     )
                 )}
-            </div>
-
-            {/* Notification Settings */}
-            <div style={{ maxWidth: '400px', margin: '3rem auto 2rem' }}>
-                <NotificationSettings />
             </div>
 
             {/* Mobile Bottom Tabs - Appears when scrolling up */}

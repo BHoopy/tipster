@@ -1,7 +1,24 @@
+'use client';
+
+import { useState } from 'react';
 import { LuBell as Bell } from 'react-icons/lu';
 import Image from 'next/image';
 
 export default function NoTipsMessage() {
+    const [loading, setLoading] = useState(false);
+
+    const requestPermission = async () => {
+        setLoading(true);
+        try {
+            if (typeof window !== 'undefined' && 'Notification' in window) {
+                await Notification.requestPermission();
+            }
+        } catch (error) {
+            console.error('Error requesting notification permission:', error);
+        }
+        setLoading(false);
+    };
+
     return (
         <div className="glass-card" style={{
             textAlign: 'center',
@@ -31,20 +48,27 @@ export default function NoTipsMessage() {
             <p style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', maxWidth: '280px', margin: '0 auto 1.5rem' }}>
                 We're currently analyzing today's matches to find the best value picks. Check back in a few minutes!
             </p>
-            <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.6rem 1rem',
-                background: 'var(--color-primary)',
-                borderRadius: '100px',
-                color: 'white',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(0,168,107,0.2)'
-            }}>
-                <Bell size={14} /> Get Notified
-            </div>
+            <button
+                onClick={requestPermission}
+                disabled={loading}
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.6rem 1rem',
+                    background: 'var(--color-primary)',
+                    borderRadius: '100px',
+                    color: 'white',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    opacity: loading ? 0.7 : 1,
+                    boxShadow: '0 4px 12px rgba(0,168,107,0.2)'
+                }}
+            >
+                {loading ? 'Please wait...' : <><Bell size={14} /> Get Notified</>}
+            </button>
         </div>
     );
 }

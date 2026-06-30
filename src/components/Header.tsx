@@ -4,29 +4,20 @@ import { useState, useEffect, useRef, TouchEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useAuthModal } from '@/context/AuthModalContext';
-import { LuLogOut as LogOut, LuSun as Sun, LuMoon as Moon, LuLogIn as LogIn, LuMenu as Menu, LuX as X, LuBell as Bell, LuBellOff as BellOff, LuTrophy as Trophy, LuStar as Star, LuHome as Home, LuZap as Zap } from 'react-icons/lu';
+import { LuLogOut as LogOut, LuLogIn as LogIn, LuMenu as Menu, LuX as X } from 'react-icons/lu';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();
-    const { theme, toggleTheme } = useTheme();
     const { openAuthModal } = useAuthModal();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [swipeNavOpen, setSwipeNavOpen] = useState(false);
-    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
     const [showBottomNav, setShowBottomNav] = useState(false);
     const [activeTab, setActiveTab] = useState<'free' | 'vip'>('free');
     const touchStartX = useRef<number>(0);
     const touchCurrentX = useRef<number>(0);
     const swipeNavRef = useRef<HTMLDivElement>(null);
     const lastScrollY = useRef<number>(0);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-            setNotificationPermission(Notification.permission);
-        }
-    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -94,13 +85,6 @@ export default function Header() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [swipeNavOpen]);
 
-    const requestNotificationPermission = async () => {
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-            const permission = await Notification.requestPermission();
-            setNotificationPermission(permission);
-        }
-    };
-
     return (
         <header style={{
             background: 'var(--color-primary)',
@@ -130,56 +114,6 @@ export default function Header() {
 
                 {/* Desktop Navigation */}
                 <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="desktop-nav">
-                    {/* Notification Bell */}
-                    {notificationPermission !== 'granted' ? (
-                        <button 
-                            onClick={requestNotificationPermission}
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '99px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                position: 'relative',
-                                background: 'rgba(255,255,255,0.15)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: 'white'
-                            }}
-                            title="Enable notifications"
-                        >
-                            <BellOff size={20} />
-                        </button>
-                    ) : (
-                        <button 
-                            style={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '99px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                position: 'relative',
-                                background: 'rgba(255,255,255,0.15)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: 'white'
-                            }}
-                            title="Notifications enabled"
-                        >
-                            <Bell size={20} />
-                            <span style={{
-                                position: 'absolute',
-                                top: '8px',
-                                right: '8px',
-                                width: '8px',
-                                height: '8px',
-                                background: 'white',
-                                borderRadius: '50%'
-                            }} />
-                        </button>
-                    )}
-
-
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             {isAdmin && (
@@ -257,33 +191,7 @@ export default function Header() {
                         gap: '0.75rem',
                         boxShadow: 'var(--shadow-lg)',
                         zIndex: 99
-                    }}>
-                        {/* Notification Bell Mobile */}
-                        {notificationPermission !== 'granted' ? (
-                            <button 
-                                onClick={requestNotificationPermission}
-                                className="btn btn-outline"
-                                style={{ width: '100%', justifyContent: 'flex-start', gap: '0.75rem' }}
-                            >
-                                <BellOff size={20} /> Enable Notifications
-                            </button>
-                        ) : (
-                            <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.75rem', 
-                                padding: '0.75rem',
-                                background: 'var(--color-primary-light)',
-                                borderRadius: 'var(--radius-sm)',
-                                color: 'var(--color-primary)',
-                                fontSize: '0.875rem',
-                                fontWeight: 600
-                            }}>
-                                <Bell size={20} /> Notifications Enabled
-                            </div>
-                        )}
-
-
+                    }}                    >
                         {user ? (
                             <>
                                 {isAdmin && (
