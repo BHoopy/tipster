@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -15,7 +15,7 @@ import FreeTipsList from '@/components/home/FreeTipsList';
 import VipTicketsList from '@/components/home/VipTicketsList';
 import HistorySection from '@/components/home/HistorySection';
 
-export default function Home() {
+function HomeContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
@@ -333,5 +333,13 @@ export default function Home() {
                 }
             `}</style>
         </div>
+    );
+}
+
+export default function Home() {
+    return (
+        <Suspense fallback={<div className="container" style={{ padding: '2rem 1rem' }}>Loading...</div>}>
+            <HomeContent />
+        </Suspense>
     );
 }
