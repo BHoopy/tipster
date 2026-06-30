@@ -190,31 +190,9 @@ export default function Home() {
                 gap: '0.75rem'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <div className="glass-card" style={{
-                        color: 'white',
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'var(--gradient-primary)'
-                    }}>
-                        {showHistory
-                            ? <History size={16} />
-                            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10"/>
-                                <circle cx="12" cy="12" r="4"/>
-                                <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                                <line x1="2" y1="12" x2="7" y2="12"/>
-                                <line x1="17" y1="12" x2="22" y2="12"/>
-                                <line x1="12" y1="2" x2="12" y2="7"/>
-                                <line x1="12" y1="17" x2="12" y2="22"/>
-                              </svg>}
-                    </div>
                     <div>
                         <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
-                            {showHistory ? 'History' : 'Predictions'}
+                            {showHistory ? '📋 History' : '🎯 Predictions'}
                         </h2>
                         <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.15rem', fontWeight: 200, letterSpacing: '0.05em' }}>
                             {showHistory ? 'Previous results and win rate' : `Today's picks - ${todayLabel}`}
