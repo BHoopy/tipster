@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
@@ -16,7 +16,7 @@ import VipBundlesManager from '@/components/admin/VipBundlesManager';
 import HistoryManager from '@/components/admin/HistoryManager';
 import { Match, VipTicket } from '@/components/admin/types';
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { isAdmin, loading } = useAuth();
@@ -199,5 +199,13 @@ export default function AdminDashboard() {
                 }
             `}</style>
         </div>
+    );
+}
+
+export default function AdminDashboard() {
+    return (
+        <Suspense fallback={<div className="container center-content">Loading...</div>}>
+            <AdminDashboardContent />
+        </Suspense>
     );
 }
