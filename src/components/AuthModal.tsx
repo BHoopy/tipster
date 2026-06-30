@@ -105,14 +105,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             display: 'flex', 
             gap: '0.75rem', 
             borderRadius: 'var(--radius-sm)', 
-            border: '1px solid #e0e0e0', 
+            border: '1px solid var(--color-border)', 
             justifyContent: 'center', 
             alignItems: 'center',
-            background: 'white',
+            background: 'var(--color-bg-card)',
             cursor: 'pointer',
             fontSize: '0.9375rem',
             fontWeight: 500,
-            color: '#3c4043',
+            color: 'var(--color-text)',
             transition: 'all 0.2s ease'
           }} disabled={loading}>
             <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/60px-Google_%22G%22_logo.svg.png?_=20230822192911" alt="Google Logo" width="20" height="20" />

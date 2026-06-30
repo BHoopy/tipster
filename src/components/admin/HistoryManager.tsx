@@ -1,6 +1,6 @@
 'use client';
 
-import { Match, getLeagueColor } from './types';
+import { Match, getLeagueColor, getContrastText } from './types';
 import { LuEye as Eye, LuEyeOff as EyeOff } from 'react-icons/lu';
 
 interface HistoryManagerProps {
@@ -98,12 +98,13 @@ export default function HistoryManager({ historyTips, historyDate, setHistoryDat
                                 <span style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.8rem' }}>{formatTimeToAMPM(tip.time)}</span>
                                 <span style={{
                                     fontSize: '0.5rem',
-                                    fontWeight: 800,
-                                    color: 'white',
+                                    fontWeight: 600,
+                                    color: getContrastText(getLeagueColor(tip.league || '')),
                                     background: getLeagueColor(tip.league || ''),
-                                    padding: '0.1rem 0.35rem',
+                                    padding: '0.1rem 0.5rem',
                                     borderRadius: '3px',
-                                    textTransform: 'uppercase'
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em'
                                 }}>{tip.league}</span>
                                 <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{tip.teams}</span>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>

@@ -323,12 +323,13 @@ export default function FreeTipsManager({
                                 <td>
                                     <span style={{
                                         fontSize: '0.55rem',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         color: getContrastText(getLeagueColor(tip.league)),
                                         background: getLeagueColor(tip.league),
-                                        padding: '0.1rem 0.35rem',
+                                        padding: '0.1rem 0.5rem',
                                         borderRadius: '3px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.04em'
                                     }}>{tip.league}</span>
                                 </td>
                                 <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{tip.teams}</td>

@@ -19,12 +19,14 @@ function HomeContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
-    const [activeTab, setActiveTab] = useState<'free' | 'premium'>(tabParam === 'premium' ? 'premium' : 'free');
-    const setTab = useCallback((tab: 'free' | 'premium') => {
+    const [activeTab, setActiveTab] = useState<'free' | 'premium' | 'history'>(tabParam === 'premium' ? 'premium' : tabParam === 'history' ? 'history' : 'free');
+    const setTab = useCallback((tab: 'free' | 'premium' | 'history') => {
         setActiveTab(tab);
         const params = new URLSearchParams(searchParams.toString());
         if (tab === 'premium') {
             params.set('tab', 'premium');
+        } else if (tab === 'history') {
+            params.set('tab', 'history');
         } else {
             params.delete('tab');
         }
@@ -208,64 +210,79 @@ function HomeContent() {
                 >
                     Premium Tips
                 </button>
+                <button
+                    onClick={() => setTab('history')}
+                    className={activeTab === 'history' ? 'btn btn-primary' : 'btn btn-outline'}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'history' ? 'none' : '1px solid transparent' }}
+                >
+                    History
+                </button>
             </div>
 
             {/* Today's Picks */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '1rem'
-            }}>
-                <div>
-                    <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
-                        🎯 Predictions
-                    </h2>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text)', marginTop: '0.2rem', fontWeight: 600, letterSpacing: '0.02em' }}>
-                        Today, {todayLabel}
-                    </p>
+            {activeTab !== 'history' && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '1rem'
+                }}>
+                    <div>
+                        <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
+                            🎯 Predictions
+                        </h2>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text)', marginTop: '0.2rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+                            Today, {todayLabel}
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Current Tips */}
-            <div style={{ marginBottom: '2.5rem' }}>
-                {activeTab === 'free' ? (
-                    <FreeTipsList data={freeTips} />
-                ) : (
-                    isVip || isAdmin ? (
-                        <VipTicketsList tickets={vipTickets} />
-                    ) : (
-                        vipTickets.length === 0 ? <NoTipsMessage /> : (
-                            <VipLocked onSuccess={() => window.location.reload()} />
-                        )
-                    )
-                )}
-            </div>
-
-            {/* History Section */}
-            {activeTab === 'free' ? (
-                (() => {
-                    const visible = freeHistory.filter(g => publicDates[g.date] === true);
-                    return visible.length > 0 && (
-                        <HistorySection
-                            type="free"
-                            data={visible}
-                            historyDays={historyDays}
-                            onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
-                        />
-                    );
-                })()
+            {/* Content by Tab */}
+            {activeTab === 'history' ? (
+                <div style={{ marginBottom: '2.5rem' }}>
+                    {(() => {
+                        const visibleFree = freeHistory.filter(g => publicDates[g.date] === true);
+                        const visibleVip = vipHistory.filter(g => publicDates[g.date] === true);
+                        const hasAny = visibleFree.length > 0 || visibleVip.length > 0;
+                        if (!hasAny) {
+                            return <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '2rem 0' }}>No history available.</p>;
+                        }
+                        return (
+                            <>
+                                {visibleFree.length > 0 && (
+                                    <HistorySection
+                                        type="free"
+                                        data={visibleFree}
+                                        historyDays={historyDays}
+                                        onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
+                                    />
+                                )}
+                                {visibleVip.length > 0 && (
+                                    <HistorySection
+                                        type="vip"
+                                        data={visibleVip}
+                                        historyDays={historyDays}
+                                        onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
+                                    />
+                                )}
+                            </>
+                        );
+                    })()}
+                </div>
             ) : (
-                (() => {
-                    const visible = vipHistory.filter(g => publicDates[g.date] === true);
-                    return visible.length > 0 && (
-                        <HistorySection
-                            type="vip"
-                            data={visible}
-                            historyDays={historyDays}
-                            onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
-                        />
-                    );
-                })()
+                <div style={{ marginBottom: '2.5rem' }}>
+                    {activeTab === 'free' ? (
+                        <FreeTipsList data={freeTips} />
+                    ) : (
+                        isVip || isAdmin ? (
+                            <VipTicketsList tickets={vipTickets} />
+                        ) : (
+                            vipTickets.length === 0 ? <NoTipsMessage /> : (
+                                <VipLocked onSuccess={() => window.location.reload()} />
+                            )
+                        )
+                    )}
+                </div>
             )}
 
             {/* Mobile Bottom Tabs - Appears when scrolling up */}
@@ -324,6 +341,23 @@ function HomeContent() {
                     }}
                 >
                     Premium Tips
+                </button>
+                <button
+                    onClick={() => { setTab('history'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{
+                        width: '120px',
+                        fontSize: '0.8rem',
+                        height: '36px',
+                        padding: 0,
+                        borderRadius: '6px',
+                        border: activeTab === 'history' ? 'none' : '1px solid transparent',
+                        background: activeTab === 'history' ? 'var(--color-primary)' : 'transparent',
+                        color: activeTab === 'history' ? 'white' : 'var(--color-text)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    History
                 </button>
             </div>
 

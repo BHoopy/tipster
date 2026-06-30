@@ -182,12 +182,13 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                     <td>
                                         <span style={{
                                             fontSize: '0.65rem',
-                                            fontWeight: 800,
+                                            fontWeight: 600,
                                             color: getContrastText(getLeagueColor(match.league)),
                                             background: getLeagueColor(match.league),
-                                            padding: '0.15rem 0.4rem',
+                                            padding: '0.15rem 0.5rem',
                                             borderRadius: '4px',
-                                            textTransform: 'uppercase'
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.04em'
                                         }}>{match.league}</span>
                                     </td>
                                     <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
@@ -233,7 +234,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                     ) : ticket.status === 'win' ? (
                         <><Trophy size={16} color="#F59E0B" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-success)' }}>Winning Ticket</span></>
                     ) : (
-                        <><XCircle size={16} color="#991b1b" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-error)' }}>Ticket Lost</span></>
+                        <><XCircle size={16} color="var(--color-error)" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-error)' }}>Ticket Lost</span></>
                     )}
                 </div>
 
@@ -261,7 +262,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                             transition: 'all 0.2s'
                         }}
                     >
-                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: '#cb1d1dee', marginBottom: '0.1rem' }}>Sportybet Code</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '0.1rem' }}>Sportybet Code</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                             <span style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--color-primary)', letterSpacing: '0.05em' }}>{ticket.booking_code}</span>
                             <Copy size={12} color="var(--color-primary)" />

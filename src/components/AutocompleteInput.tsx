@@ -148,7 +148,7 @@ export default function AutocompleteInput({
                         top: '100%',
                         left: 0,
                         right: 0,
-                        background: 'white',
+                        background: 'var(--color-bg-card)',
                         border: '1px solid var(--color-border)',
                         borderRadius: 'var(--radius-sm)',
                         boxShadow: 'var(--shadow-md)',

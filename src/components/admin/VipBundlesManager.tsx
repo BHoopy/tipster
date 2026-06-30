@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { LuPlus as Plus, LuSave as Save, LuTrash2 as Trash2, LuZap as Zap } from 'react-icons/lu';
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Match, VipTicket, QUICK_LEAGUES, getLeagueColor } from './types';
+import { Match, VipTicket, QUICK_LEAGUES, getLeagueColor, getContrastText } from './types';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete, useBundleAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
 
@@ -431,12 +431,13 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                                     <span style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(m.time)}</span>
                                     <span style={{
                                         fontSize: '0.5rem',
-                                        fontWeight: 800,
-                                        color: 'white',
+                                        fontWeight: 600,
+                                        color: getContrastText(getLeagueColor(m.league)),
                                         background: getLeagueColor(m.league),
-                                        padding: '0.1rem 0.35rem',
+                                        padding: '0.1rem 0.5rem',
                                         borderRadius: '3px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.04em'
                                     }}>{m.league}</span>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{m.teams}</span>
                                 </div>

@@ -87,7 +87,7 @@ export default function Header() {
 
     return (
         <header style={{
-            background: 'var(--color-primary)',
+            background: '#075E54',
             borderBottom: '1px solid rgba(255,255,255,0.15)',
             height: '70px',
             position: 'sticky',
@@ -183,7 +183,7 @@ export default function Header() {
                         top: '70px',
                         left: 0,
                         right: 0,
-                        background: 'white',
+                        background: 'var(--color-bg-card)',
                         borderBottom: '1px solid var(--color-border)',
                         padding: '1rem',
                         display: 'flex',
@@ -211,7 +211,7 @@ export default function Header() {
                                 fontWeight: 600,
                                 fontSize: '0.875rem',
                                 borderRadius: 'var(--radius-sm)',
-                                background: 'var(--color-primary)',
+                                background: '#075E54',
                                 color: 'white',
                                 display: 'flex',
                                 alignItems: 'center',

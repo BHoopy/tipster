@@ -41,6 +41,8 @@
 }
 
 .dark {
+  --color-primary: #25D366;
+  --color-primary-dark: #1ebe5a;
   --color-bg: #121212;
   --color-bg-card: #1e1e1e;
   --color-border: #333333;
@@ -168,9 +170,14 @@ button {
   background-color: rgba(7, 94, 84, 0.06);
 }
 
+.dark .btn-primary {
+  background: #075E54;
+}
+
 .dark .badge-primary {
   background: rgba(7, 94, 84, 0.25);
-  border-color: var(--color-primary);
+  border-color: #075E54;
+  color: #25D366;
 }
 
 .dark .btn-outline {

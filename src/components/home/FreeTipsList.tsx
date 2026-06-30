@@ -41,12 +41,13 @@ export default function FreeTipsList({ data }: FreeTipsListProps) {
                                 <td>
                                     <span style={{
                                         fontSize: '0.65rem',
-                                        fontWeight: 800,
+                                        fontWeight: 600,
                                         color: getContrastText(getLeagueColor(match.league)),
                                         background: getLeagueColor(match.league),
-                                        padding: '0.15rem 0.4rem',
+                                        padding: '0.15rem 0.5rem',
                                         borderRadius: '4px',
-                                        textTransform: 'uppercase'
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.04em'
                                     }}>{match.league}</span>
                                 </td>
                                 <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>

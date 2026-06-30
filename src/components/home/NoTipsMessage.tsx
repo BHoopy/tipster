@@ -56,7 +56,7 @@ export default function NoTipsMessage() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     padding: '0.6rem 1rem',
-                    background: 'var(--color-primary)',
+                    background: '#075E54',
                     borderRadius: '100px',
                     color: 'white',
                     fontSize: '0.8rem',

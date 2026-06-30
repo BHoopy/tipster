@@ -159,7 +159,7 @@ export default function AnalyticsManager() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <div style={{
                                                 width: '28px', height: '28px', borderRadius: '50%',
-                                                background: 'var(--color-primary)', color: 'white',
+                                                background: '#075E54', color: 'white',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 fontSize: '0.7rem', fontWeight: 800
                                             }}>
