@@ -1,6 +1,7 @@
 import { Match } from '@/types/game';
 import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
 import { QUICK_LEAGUES } from '@/components/admin/types';
+import TeamsWithVs from '@/components/TeamsWithVs';
 
 interface FreeTipCardProps {
     match: Match;
@@ -46,7 +47,7 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
             }} />
 
             {/* Teams - Main content */}
-            <div style={{ flex: 1, minWidth: 0, padding: '0 0.25rem' }}>
+            <div style={{ flex: 1, minWidth: 0, padding: '0 0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                 <div style={{
                     fontSize: '0.78rem',
                     fontWeight: 600,
@@ -54,11 +55,9 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.3rem',
-                    lineHeight: 1.3
+                    justifyContent: 'center'
                 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {match.teams.replace(/ vs /gi, ' • ')}
-                    </span>
+                    <TeamsWithVs teams={match.teams} vertical />
                     {match.status !== 'pending' && (
                         <span style={{
                             fontSize: '0.65rem',
@@ -71,11 +70,12 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
                 </div>
                 {/* League Name */}
                 <span style={{
-                    fontSize: '0.6rem',
+                    fontSize: '0.55rem',
                     fontWeight: 500,
                     color: 'var(--color-text-secondary)',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.02em'
+                    letterSpacing: '0.02em',
+                    textAlign: 'center'
                 }}>
                     {match.league}
                 </span>

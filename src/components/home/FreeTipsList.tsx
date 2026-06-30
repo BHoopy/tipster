@@ -2,6 +2,7 @@ import { Match } from '@/types/game';
 import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
 import NoTipsMessage from './NoTipsMessage';
 import FreeTipCard from './FreeTipCard';
+import TeamsWithVs from '@/components/TeamsWithVs';
 
 interface FreeTipsListProps {
     data: Match[];
@@ -48,7 +49,7 @@ export default function FreeTipsList({ data }: FreeTipsListProps) {
                                         textTransform: 'uppercase'
                                     }}>{match.league}</span>
                                 </td>
-                                <td style={{ fontWeight: 700, fontSize: '0.85rem' }}>{match.teams}</td>
+                                <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
                                 <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
                                 <td>
                                     {match.status === 'pending' ? (

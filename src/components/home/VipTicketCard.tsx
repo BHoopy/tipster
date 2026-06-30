@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { LuStar as Star, LuTimer as Timer, LuTrophy as Trophy, LuCircleX as XCircle, LuShieldCheck as ShieldCheck, LuTrendingUp as TrendingUp, LuCopy as Copy } from 'react-icons/lu';
 import { VipTicket } from '@/types/game';
 import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
+import TeamsWithVs from '@/components/TeamsWithVs';
 
 interface VipTicketCardProps {
     ticket: VipTicket;
@@ -98,7 +99,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                         textTransform: 'uppercase'
                                     }}>{match.league}</span>
                                 </td>
-                                <td style={{ fontWeight: 700, fontSize: '0.85rem' }}>{match.teams}</td>
+                                <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
                                 <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
                                 <td>
                                     {match.status === 'pending' ? (
