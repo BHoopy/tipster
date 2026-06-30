@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyTransaction } from '@/lib/paystack';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
             const { userId } = data.metadata;
 
             if (userId) {
-                await adminDb.collection('users').doc(userId).update({
+                await getAdminDb().collection('users').doc(userId).update({
                     is_vip: true,
                     vip_purchased_at: new Date(),
                     last_transaction_ref: reference

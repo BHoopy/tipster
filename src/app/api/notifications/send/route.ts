@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import webpush from 'web-push';
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const subsSnapshot = await adminDb.collection('push_subscriptions').get();
+        const subsSnapshot = await getAdminDb().collection('push_subscriptions').get();
         
         if (subsSnapshot.empty) {
             return NextResponse.json(
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
         if (invalidIds.length > 0) {
             const deletePromises = invalidIds.map(id =>
-                adminDb.collection('push_subscriptions').doc(id).delete()
+                getAdminDb().collection('push_subscriptions').doc(id).delete()
             );
             await Promise.all(deletePromises);
         }

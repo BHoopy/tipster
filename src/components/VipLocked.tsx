@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';
 import AuthModal from '@/components/AuthModal';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
 interface VipLockedProps {
     onSuccess: () => void;
@@ -18,7 +18,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [vipPrice, setVipPrice] = useState(30);
-    const [todayOdds, setTodayOdds] = useState<string | null>(null);
+    const [todayOdds, setTodayOdds] = useState<{ name: string; odds: string }[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -33,12 +33,14 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                     collection(db, 'vip_tickets'),
                     where('isPublished', '==', true),
                     where('status', '==', 'pending'),
-                    orderBy('createdAt', 'desc'),
-                    limit(1)
+                    orderBy('createdAt', 'desc')
                 );
                 const vipSnap = await getDocs(vipQuery);
                 if (!vipSnap.empty) {
-                    setTodayOdds(vipSnap.docs[0].data().odds || null);
+                    const oddsList = vipSnap.docs
+                        .map(d => ({ name: d.data().bundle_name || 'Ticket', odds: d.data().odds || '' }))
+                        .filter(o => o.odds);
+                    setTodayOdds(oddsList);
                 }
             } catch {
                 setVipPrice(50);
@@ -98,9 +100,17 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 <h2 className={styles.title}>
                     {user ? "Today's VIP Package" : "Unlock Premium Access"}
                 </h2>
-                {todayOdds && (
-                    <div className={styles.oddsBadge}>
-                        Today's Total Odds: {todayOdds}
+                {todayOdds.length > 0 && (
+                    <div className={styles.oddsSection}>
+                        <p className={styles.oddsTitle}>Today&apos;s VIP Total Odds</p>
+                        <div className={styles.oddsList}>
+                            {todayOdds.map((item, i) => (
+                                <div key={i} className={styles.oddsItem}>
+                                    <span className={styles.oddsNumber}>{i + 1}.</span>
+                                    <span className={styles.oddsValue}>{item.odds} odds</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
                 <p className={styles.subtitle}>

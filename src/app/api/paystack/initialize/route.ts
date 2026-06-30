@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { initializeTransaction } from '@/lib/paystack';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: Request) {
     try {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         }
 
         // Get VIP price from settings, default to 50
-        const settingsDoc = await adminDb.collection('settings').doc('general').get();
+        const settingsDoc = await getAdminDb().collection('settings').doc('general').get();
         const vipPrice = settingsDoc.exists ? (settingsDoc.data()?.vipPrice || 50) : 50;
 
         const transaction = await initializeTransaction(email, vipPrice, {
