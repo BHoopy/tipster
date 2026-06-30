@@ -17,7 +17,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [vipPrice, setVipPrice] = useState(50);
+    const [vipPrice, setVipPrice] = useState(30);
     const [todayOdds, setTodayOdds] = useState<string | null>(null);
 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                 const docRef = doc(db, 'settings', 'general');
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setVipPrice(docSnap.data().vipPrice || 50);
+                    setVipPrice(docSnap.data().vipPrice || 30);
                 }
 
                 const vipQuery = query(

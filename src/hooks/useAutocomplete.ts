@@ -9,7 +9,7 @@ type Suggestion = {
     count: number;
 };
 
-export function useAutocomplete(type: 'team' | 'tip' | 'league') {
+export function useAutocomplete(type: 'team' | 'tip' | 'league' | 'bundle') {
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [allData, setAllData] = useState<Record<string, any>>({});
     const [isLoading, setIsLoading] = useState(true);

@@ -102,6 +102,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
         teamAutocompleteAway.clearSuggestions();
         tipAutocomplete.clearSuggestions();
         leagueAutocomplete.clearSuggestions();
+        bundleAutocomplete.clearSuggestions();
 
         setNewVipTicket({ bundle_name: '', odds: '', booking_code: '', matches: [] });
     };
