@@ -74,34 +74,77 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
             </div>
 
             <div style={{ padding: '1.5rem', background: 'white' }}>
-                <table className="tips-table" style={{ border: 'none', marginTop: 0, boxShadow: 'none' }}>
-                    <thead>
-                        <tr>
-                            <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIME</th>
-                            <th style={{ borderBottom: '2px solid var(--color-border)' }}>LEAGUE</th>
-                            <th style={{ borderBottom: '2px solid var(--color-border)' }}>TEAMS</th>
-                            <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIPS</th>
-                            <th style={{ borderBottom: '2px solid var(--color-border)' }}>RESULT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {ticket.matches.map((match, mIdx) => (
-                            <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
-                                <td style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
-                                <td>
+                {/* Mobile Card View */}
+                <div className="vip-mobile-cards">
+                    {ticket.matches.map((match, mIdx) => {
+                        const leagueColor = getLeagueColor(match.league);
+                        return (
+                            <div key={mIdx} className="glass-card animate-fade-in-up" style={{
+                                animationDelay: `${mIdx * 0.05}s`,
+                                padding: '0.6rem 0.75rem',
+                                marginBottom: '0.5rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--color-border)',
+                                background: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.6rem',
+                                minHeight: '52px'
+                            }}>
+                                <div style={{
+                                    minWidth: '50px',
+                                    textAlign: 'center',
+                                    borderRight: '1px solid var(--color-border)',
+                                    paddingRight: '0.5rem',
+                                    marginRight: '0.25rem'
+                                }}>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 400, color: '#000000', lineHeight: 1.2 }}>
+                                        {formatTimeToAMPM(match.time)}
+                                    </span>
+                                </div>
+                                <div style={{
+                                    width: '4px',
+                                    height: '28px',
+                                    borderRadius: '2px',
+                                    backgroundColor: leagueColor,
+                                    flexShrink: 0
+                                }} />
+                                <div style={{ flex: 1, minWidth: 0, padding: '0 0.25rem', display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                                    <div style={{
+                                        fontSize: '0.78rem',
+                                        fontWeight: 600,
+                                        color: 'var(--color-text)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.3rem',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <TeamsWithVs teams={match.teams} vertical />
+                                    </div>
                                     <span style={{
-                                        fontSize: '0.65rem',
-                                        fontWeight: 800,
-                                        color: 'white',
-                                        background: getLeagueColor(match.league),
-                                        padding: '0.15rem 0.4rem',
-                                        borderRadius: '4px',
-                                        textTransform: 'uppercase'
-                                    }}>{match.league}</span>
-                                </td>
-                                <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
-                                <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
-                                <td>
+                                        fontSize: '0.55rem',
+                                        fontWeight: 500,
+                                        color: 'var(--color-text-secondary)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.02em',
+                                        textAlign: 'center'
+                                    }}>
+                                        {match.league}
+                                    </span>
+                                </div>
+                                <div style={{
+                                    background: 'rgba(0,168,107,0.08)',
+                                    padding: '0.35rem 0.6rem',
+                                    borderRadius: '6px',
+                                    minWidth: '65px',
+                                    textAlign: 'center',
+                                    border: '1px solid rgba(0,168,107,0.15)'
+                                }}>
+                                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-0.01em' }}>
+                                        {match.tips}
+                                    </div>
+                                </div>
+                                <div style={{ minWidth: '60px', textAlign: 'center' }}>
                                     {match.status === 'pending' ? (
                                         <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
                                     ) : match.status === 'win' ? (
@@ -109,11 +152,64 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                     ) : (
                                         <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
                                     )}
-                                </td>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="vip-desktop-table">
+                    <table className="tips-table" style={{ border: 'none', marginTop: 0, boxShadow: 'none' }}>
+                        <thead>
+                            <tr>
+                                <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIME</th>
+                                <th style={{ borderBottom: '2px solid var(--color-border)' }}>LEAGUE</th>
+                                <th style={{ borderBottom: '2px solid var(--color-border)' }}>TEAMS</th>
+                                <th style={{ borderBottom: '2px solid var(--color-border)' }}>TIPS</th>
+                                <th style={{ borderBottom: '2px solid var(--color-border)' }}>RESULT</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {ticket.matches.map((match, mIdx) => (
+                                <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
+                                    <td style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
+                                    <td>
+                                        <span style={{
+                                            fontSize: '0.65rem',
+                                            fontWeight: 800,
+                                            color: 'white',
+                                            background: getLeagueColor(match.league),
+                                            padding: '0.15rem 0.4rem',
+                                            borderRadius: '4px',
+                                            textTransform: 'uppercase'
+                                        }}>{match.league}</span>
+                                    </td>
+                                    <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
+                                    <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
+                                    <td>
+                                        {match.status === 'pending' ? (
+                                            <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
+                                        ) : match.status === 'win' ? (
+                                            <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
+                                        ) : (
+                                            <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <style jsx>{`
+                    .vip-mobile-cards { display: none; }
+                    .vip-desktop-table { display: block; }
+                    @media (max-width: 768px) {
+                        .vip-mobile-cards { display: grid !important; grid-template-columns: 1fr; gap: 1rem; }
+                        .vip-desktop-table { display: none !important; }
+                    }
+                `}</style>
             </div>
 
             <div style={{
