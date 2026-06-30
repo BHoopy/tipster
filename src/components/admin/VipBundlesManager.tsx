@@ -5,7 +5,7 @@ import { LuPlus as Plus, LuSave as Save, LuTrash2 as Trash2, LuZap as Zap } from
 import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Match, VipTicket, QUICK_LEAGUES, getLeagueColor } from './types';
-import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
+import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete, useBundleAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
 
 interface VipBundlesManagerProps {
@@ -30,6 +30,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
     const teamAutocompleteAway = useTeamAutocomplete();
     const tipAutocomplete = useTipAutocomplete();
     const leagueAutocomplete = useLeagueAutocomplete();
+    const bundleAutocomplete = useBundleAutocomplete();
 
     const addMatchToVipPayload = () => {
         setNewVipTicket({
@@ -87,7 +88,8 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             createdAt: serverTimestamp()
         });
 
-        // Learn all teams and tips
+        // Learn all teams, tips, and bundle names
+        bundleAutocomplete.learn(newVipTicket.bundle_name.trim());
         newVipTicket.matches.forEach(m => {
             teamAutocompleteHome.learn(m.home.trim());
             teamAutocompleteAway.learn(m.away.trim());
@@ -184,11 +186,15 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                 <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                     <div style={{ flex: '2', minWidth: '180px' }}>
                         <label style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Bundle Name</label>
-                        <input
-                            className="input"
-                            type="text"
+                        <AutocompleteInput
                             value={newVipTicket.bundle_name}
-                            onChange={e => setNewVipTicket({ ...newVipTicket, bundle_name: e.target.value })}
+                            onChange={(val) => {
+                                setNewVipTicket({ ...newVipTicket, bundle_name: val });
+                                bundleAutocomplete.search(val);
+                            }}
+                            onSelect={() => {}}
+                            suggestions={bundleAutocomplete.suggestions}
+                            isLoading={bundleAutocomplete.isLoading}
                             placeholder="Daily VIP"
                             style={{
                                 borderColor: errors.bundle_name ? '#ef4444' : undefined,

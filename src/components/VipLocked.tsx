@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { LuZap as Zap, LuArrowRight as ArrowRight, LuCircleCheck as CheckCircle, LuCreditCard as CreditCard, LuLogIn as LogIn, LuCrown as Crown, LuShield as Shield, LuTarget as Target, LuTrendingUp as TrendingUp } from 'react-icons/lu';
-import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';
 import AuthModal from '@/components/AuthModal';
 import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
 interface VipLockedProps {
     onSuccess: () => void;
@@ -19,24 +18,37 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [vipPrice, setVipPrice] = useState(50);
+    const [todayOdds, setTodayOdds] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchSettings = async () => {
+        const fetchData = async () => {
             try {
                 const docRef = doc(db, 'settings', 'general');
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     setVipPrice(docSnap.data().vipPrice || 50);
                 }
+
+                const vipQuery = query(
+                    collection(db, 'vip_tickets'),
+                    where('isPublished', '==', true),
+                    where('status', '==', 'pending'),
+                    orderBy('createdAt', 'desc'),
+                    limit(1)
+                );
+                const vipSnap = await getDocs(vipQuery);
+                if (!vipSnap.empty) {
+                    setTodayOdds(vipSnap.docs[0].data().odds || null);
+                }
             } catch {
                 setVipPrice(50);
             }
         };
-        fetchSettings();
+        fetchData();
     }, []);
 
     const perks = [
-        { icon: Target, text: 'Daily High-Odds Selections' },
+        { icon: Target, text: 'Daily High-Odds Accumulator' },
         { icon: Zap, text: 'Exclusive Booking Codes' },
         { icon: TrendingUp, text: '90%+ Win Rate Guaranteed' },
         { icon: Shield, text: 'Refund If Ticket Loses' }
@@ -83,20 +95,14 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                     <span>VIP Exclusive</span>
                 </div>
 
-                <div className={styles.iconCircle}>
-                    <Image
-                        src="/Vip.png"
-                        alt="VIP"
-                        width={48}
-                        height={48}
-                        className={styles.vipIcon}
-                        unoptimized
-                    />
-                </div>
-
                 <h2 className={styles.title}>
                     {user ? "Today's VIP Package" : "Unlock Premium Access"}
                 </h2>
+                {todayOdds && (
+                    <div className={styles.oddsBadge}>
+                        Today's Total Odds: {todayOdds}
+                    </div>
+                )}
                 <p className={styles.subtitle}>
                     {user
                         ? `Get exclusive access to today's premium ticket bundle for GHS ${vipPrice}. Start winning big with our expert selections.`

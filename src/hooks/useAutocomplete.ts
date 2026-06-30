@@ -119,3 +119,7 @@ export function useTipAutocomplete() {
 export function useLeagueAutocomplete() {
     return useAutocomplete('league');
 }
+
+export function useBundleAutocomplete() {
+    return useAutocomplete('bundle');
+}
