@@ -3,10 +3,9 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import VipLocked from '@/components/VipLocked';
-import { LuTicket as Ticket, LuHistory as History } from 'react-icons/lu';
 
 import { Match, VipTicket, GroupedTips, GroupedTickets } from '@/types/game';
 import { formatDate, formatDateLabel, getDateRange } from '@/lib/utils';
@@ -31,7 +30,6 @@ export default function Home() {
         }
         router.replace(`?${params.toString()}`, { scroll: false });
     }, [router, searchParams]);
-    const [showHistory, setShowHistory] = useState(false);
     const [historyDays, setHistoryDays] = useState(2);
     const [freeTips, setFreeTips] = useState<Match[]>([]);
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
@@ -39,6 +37,7 @@ export default function Home() {
     const [allVipTickets, setAllVipTickets] = useState<VipTicket[]>([]);
     const { isVip, isAdmin } = useAuth();
     const [showBottomTabs, setShowBottomTabs] = useState(false);
+    const [historyPublic, setHistoryPublic] = useState(true);
     const tabsRef = useRef<HTMLDivElement>(null);
     const lastScrollY = useRef<number>(0);
 
@@ -83,6 +82,16 @@ export default function Home() {
             unsubFree();
             unsubVip();
         };
+    }, []);
+
+    useEffect(() => {
+        const fetchVisibility = async () => {
+            const snap = await getDoc(doc(db, 'settings', 'history_public'));
+            if (snap.exists()) {
+                setHistoryPublic(snap.data().visible === true);
+            }
+        };
+        fetchVisibility();
     }, []);
 
     useEffect(() => {
@@ -178,14 +187,14 @@ export default function Home() {
                     border: '1px solid var(--glass-border)'
                 }}>
                 <button
-                    onClick={() => { setTab('free'); setShowHistory(false); }}
+                    onClick={() => setTab('free')}
                     className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
                     style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
                 >
                     Free Tips
                 </button>
                 <button
-                    onClick={() => { setTab('premium'); setShowHistory(false); }}
+                    onClick={() => setTab('premium')}
                     className={activeTab === 'premium' ? 'btn btn-primary' : 'btn btn-outline'}
                     style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
                 >
@@ -193,65 +202,59 @@ export default function Home() {
                 </button>
             </div>
 
-            {/* Content Header */}
+            {/* Today's Picks */}
             <div style={{
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '1rem',
-                flexWrap: 'wrap',
-                gap: '0.75rem'
+                marginBottom: '1rem'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <div>
-                        <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
-                            {showHistory ? '📋 History' : '🎯 Predictions'}
-                        </h2>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.15rem', fontWeight: 200, letterSpacing: '0.05em' }}>
-                            {showHistory ? 'Previous results and win rate' : `Today's picks - ${todayLabel}`}
-                        </p>
-                    </div>
+                <div>
+                    <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
+                        🎯 Predictions
+                    </h2>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '0.15rem', fontWeight: 200, letterSpacing: '0.05em' }}>
+                        Today's picks - {todayLabel}
+                    </p>
                 </div>
-
-                <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="btn-outline"
-                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.65rem', display: 'flex', gap: '0.4rem', borderRadius: '6px' }}
-                >
-                    {showHistory ? <><Ticket size={12} /> Back to Live</> : <><History size={12} /> View History</>}
-                </button>
             </div>
 
-            {/* Main Content Area */}
-            <div>
+            {/* Current Tips */}
+            <div style={{ marginBottom: '2.5rem' }}>
                 {activeTab === 'free' ? (
-                    showHistory ? (
+                    <FreeTipsList data={freeTips} />
+                ) : (
+                    isVip || isAdmin ? (
+                        <VipTicketsList tickets={vipTickets} />
+                    ) : (
+                        vipTickets.length === 0 ? <NoTipsMessage /> : (
+                            <VipLocked onSuccess={() => window.location.reload()} />
+                        )
+                    )
+                )}
+            </div>
+
+            {/* History Section */}
+            {historyPublic && (
+                activeTab === 'free' ? (
+                    freeHistory.length > 0 && (
                         <HistorySection
                             type="free"
                             data={freeHistory}
                             historyDays={historyDays}
                             onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
                         />
-                    ) : <FreeTipsList data={freeTips} />
+                    )
                 ) : (
-                    showHistory ? (
+                    vipHistory.length > 0 && (
                         <HistorySection
                             type="vip"
                             data={vipHistory}
                             historyDays={historyDays}
                             onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
                         />
-                    ) : (
-                        isVip || isAdmin ? (
-                            <VipTicketsList tickets={vipTickets} />
-                        ) : (
-                            vipTickets.length === 0 ? <NoTipsMessage /> : (
-                                <VipLocked onSuccess={() => window.location.reload()} />
-                            )
-                        )
                     )
-                )}
-            </div>
+                )
+            )}
 
             {/* Mobile Bottom Tabs - Appears when scrolling up */}
             <div
@@ -277,7 +280,7 @@ export default function Home() {
                 }}
             >
                 <button
-                    onClick={() => { setTab('free'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setTab('free'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',
@@ -294,7 +297,7 @@ export default function Home() {
                     Free Tips
                 </button>
                 <button
-                    onClick={() => { setTab('premium'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setTab('premium'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',

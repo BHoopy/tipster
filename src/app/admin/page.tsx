@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import {
-    collection, addDoc, doc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc
+    collection, addDoc, doc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp, updateDoc, getDoc, setDoc
 } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
 import { LuBell as Bell } from 'react-icons/lu';
@@ -16,8 +17,23 @@ import HistoryManager from '@/components/admin/HistoryManager';
 import { Match, VipTicket } from '@/components/admin/types';
 
 export default function AdminDashboard() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { isAdmin, loading } = useAuth();
-    const [view, setView] = useState<'free' | 'vip' | 'history'>('free');
+    const viewParam = searchParams.get('view');
+    const [view, setView] = useState<'free' | 'vip' | 'history'>(
+        viewParam === 'vip' ? 'vip' : viewParam === 'history' ? 'history' : 'free'
+    );
+    const updateView = useCallback((v: 'free' | 'vip' | 'history') => {
+        setView(v);
+        const params = new URLSearchParams(searchParams.toString());
+        if (v === 'free') {
+            params.delete('view');
+        } else {
+            params.set('view', v);
+        }
+        router.replace(`/admin?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
     const [sendNotification, setSendNotification] = useState(true);
 
     // Data State
@@ -25,6 +41,14 @@ export default function AdminDashboard() {
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
     const [historyTips, setHistoryTips] = useState<Match[]>([]);
     const [historyDate, setHistoryDate] = useState(new Date().toISOString().split('T')[0]);
+    const [publicDates, setPublicDates] = useState<Record<string, boolean>>({});
+
+    const toggleDatePublic = async (date: string) => {
+        const newVal = !publicDates[date];
+        const updated = { ...publicDates, [date]: newVal };
+        setPublicDates(updated);
+        await setDoc(doc(db, 'settings', 'history_visibility'), { dates: updated });
+    };
 
     const getCurrentTime = () => new Date().toTimeString().slice(0, 5);
 
@@ -41,6 +65,17 @@ export default function AdminDashboard() {
         });
 
         return () => { unsubFree(); unsubVip(); };
+    }, [isAdmin]);
+
+    useEffect(() => {
+        if (!isAdmin) return;
+        const fetchSetting = async () => {
+            const snap = await getDoc(doc(db, 'settings', 'history_visibility'));
+            if (snap.exists()) {
+                setPublicDates(snap.data().dates || {});
+            }
+        };
+        fetchSetting();
     }, [isAdmin]);
 
     // Sync History
@@ -90,7 +125,7 @@ export default function AdminDashboard() {
             <div className="admin-layout">
                 {/* Sidebar & Global Actions */}
                 <div className="admin-aside">
-                    <AdminSidebar view={view} setView={setView} />
+                    <AdminSidebar view={view} setView={updateView} />
 
                     <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--color-bg)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600 }}>
@@ -128,6 +163,8 @@ export default function AdminDashboard() {
                             historyTips={historyTips}
                             historyDate={historyDate}
                             setHistoryDate={setHistoryDate}
+                            isDatePublic={publicDates[historyDate] === true}
+                            onTogglePublic={() => toggleDatePublic(historyDate)}
                         />
                     )}
                 </div>

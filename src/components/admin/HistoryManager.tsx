@@ -1,14 +1,17 @@
 'use client';
 
 import { Match } from './types';
+import { LuEye as Eye, LuEyeOff as EyeOff } from 'react-icons/lu';
 
 interface HistoryManagerProps {
     historyTips: Match[];
     historyDate: string;
     setHistoryDate: (date: string) => void;
+    isDatePublic: boolean;
+    onTogglePublic: () => void;
 }
 
-export default function HistoryManager({ historyTips, historyDate, setHistoryDate }: HistoryManagerProps) {
+export default function HistoryManager({ historyTips, historyDate, setHistoryDate, isDatePublic, onTogglePublic }: HistoryManagerProps) {
     const formatTimeToAMPM = (timeStr: string): string => {
         if (!timeStr) return '';
         if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
@@ -28,6 +31,24 @@ export default function HistoryManager({ historyTips, historyDate, setHistoryDat
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <h2 style={{ margin: 0 }}>History</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <button
+                        onClick={onTogglePublic}
+                        className="btn-outline"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.4rem 0.75rem',
+                            fontSize: '0.75rem',
+                            borderRadius: '6px',
+                            background: isDatePublic ? 'var(--color-primary-light)' : undefined,
+                            borderColor: isDatePublic ? 'var(--color-primary)' : undefined,
+                            color: isDatePublic ? 'var(--color-primary)' : undefined
+                        }}
+                    >
+                        {isDatePublic ? <Eye size={16} /> : <EyeOff size={16} />}
+                        {isDatePublic ? 'Visible to Public' : 'Hidden from Public'}
+                    </button>
                     <label style={{ fontSize: '0.75rem', fontWeight: 600 }}>Select Date:</label>
                     <input
                         type="date"
