@@ -280,7 +280,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                                 />
                             </div>
 
-                            <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--color-primary)' }}>VS</span>
+                            <img src="/vs.svg" alt="VS" style={{ height: '20px', width: 'auto' }} />
 
                             <div style={{ flex: 1, minWidth: '100px' }}>
                                 <AutocompleteInput

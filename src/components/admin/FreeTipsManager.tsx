@@ -246,7 +246,7 @@ export default function FreeTipsManager({
                             />
                         </div>
 
-                        <div style={{ fontWeight: 900, color: 'var(--color-primary)', fontSize: '0.6rem', padding: '0 0.1rem', opacity: 0.7 }}>VS</div>
+                        <img src="/vs.svg" alt="VS" style={{ height: '20px', width: 'auto' }} />
 
                         {/* Away Team */}
                         <div style={{ flex: 1, minWidth: 0 }}>
