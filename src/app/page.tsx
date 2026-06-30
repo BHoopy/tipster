@@ -220,8 +220,8 @@ export default function Home() {
                     <h2 style={{ fontSize: '1rem', lineHeight: 1, margin: 0, fontWeight: 200, letterSpacing: '0.08em', color: 'var(--color-primary)' }}>
                         🎯 Predictions
                     </h2>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.2rem', fontWeight: 400, letterSpacing: '0.02em' }}>
-                        {todayLabel}
+                    <p style={{ fontSize: '0.8rem', color: 'var(--color-text)', marginTop: '0.2rem', fontWeight: 600, letterSpacing: '0.02em' }}>
+                        Today, {todayLabel}
                     </p>
                 </div>
             </div>

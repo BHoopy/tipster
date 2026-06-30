@@ -133,14 +133,14 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                     </span>
                                 </div>
                                 <div style={{
-                                    background: 'rgba(0,168,107,0.08)',
+                                    background: match.status === 'pending' ? 'rgba(234,179,8,0.1)' : 'rgba(0,168,107,0.08)',
                                     padding: '0.35rem 0.6rem',
                                     borderRadius: '6px',
                                     minWidth: '65px',
                                     textAlign: 'center',
-                                    border: '1px solid rgba(0,168,107,0.15)'
+                                    border: match.status === 'pending' ? '1px solid rgba(234,179,8,0.25)' : '1px solid rgba(0,168,107,0.15)'
                                 }}>
-                                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-primary)', letterSpacing: '-0.01em' }}>
+                                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: match.status === 'pending' ? '#b8860b' : 'var(--color-primary)', letterSpacing: '-0.01em' }}>
                                         {match.tips}
                                     </div>
                                 </div>
