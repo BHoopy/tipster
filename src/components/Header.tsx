@@ -103,10 +103,8 @@ export default function Header() {
 
     return (
         <header style={{
-            background: 'var(--glass-bg)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            borderBottom: '1px solid var(--color-border)',
+            background: 'var(--color-primary)',
+            borderBottom: '1px solid rgba(255,255,255,0.15)',
             height: '70px',
             position: 'sticky',
             top: 0,
@@ -126,7 +124,7 @@ export default function Header() {
                         fontSize: '1.25rem',
                         fontWeight: 800,
                         letterSpacing: '-0.025em',
-                        color: 'var(--color-primary)'
+                        color: 'white'
                     }}>Tipster</span>
                 </Link>
 
@@ -136,7 +134,6 @@ export default function Header() {
                     {notificationPermission !== 'granted' ? (
                         <button 
                             onClick={requestNotificationPermission}
-                            className="btn-outline"
                             style={{
                                 width: '40px',
                                 height: '40px',
@@ -144,7 +141,10 @@ export default function Header() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                position: 'relative'
+                                position: 'relative',
+                                background: 'rgba(255,255,255,0.15)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white'
                             }}
                             title="Enable notifications"
                         >
@@ -152,7 +152,6 @@ export default function Header() {
                         </button>
                     ) : (
                         <button 
-                            className="btn-outline"
                             style={{
                                 width: '40px',
                                 height: '40px',
@@ -160,7 +159,10 @@ export default function Header() {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                position: 'relative'
+                                position: 'relative',
+                                background: 'rgba(255,255,255,0.15)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white'
                             }}
                             title="Notifications enabled"
                         >
@@ -171,7 +173,7 @@ export default function Header() {
                                 right: '8px',
                                 width: '8px',
                                 height: '8px',
-                                background: 'var(--color-success)',
+                                background: 'white',
                                 borderRadius: '50%'
                             }} />
                         </button>
@@ -181,16 +183,41 @@ export default function Header() {
                     {user ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             {isAdmin && (
-                                <Link href="/admin" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8125rem' }}>
+                                <Link href="/admin" style={{
+                                    padding: '0.5rem 1rem',
+                                    fontSize: '0.8125rem',
+                                    fontWeight: 600,
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: 'rgba(255,255,255,0.2)',
+                                    color: 'white'
+                                }}>
                                     Admin
                                 </Link>
                             )}
-                            <button onClick={logout} className="btn-outline" style={{ padding: '0.5rem' }}>
+                            <button onClick={logout} style={{
+                                padding: '0.5rem',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'rgba(255,255,255,0.15)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center'
+                            }}>
                                 <LogOut size={18} />
                             </button>
                         </div>
                     ) : (
-                        <button className="btn btn-primary" onClick={openAuthModal}>
+                        <button onClick={openAuthModal} style={{
+                            padding: '0.5rem 1.25rem',
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                            borderRadius: 'var(--radius-sm)',
+                            background: 'white',
+                            color: 'var(--color-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                        }}>
                             <LogIn size={18} /> Sign In
                         </button>
                     )}
@@ -207,8 +234,9 @@ export default function Header() {
                         borderRadius: '8px',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'var(--color-bg)',
-                        border: '1px solid var(--color-border)'
+                        background: 'rgba(255,255,255,0.15)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        color: 'white'
                     }}
                 >
                     {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -268,7 +296,19 @@ export default function Header() {
                                 </button>
                             </>
                         ) : (
-                            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={openAuthModal}>
+                            <button style={{
+                                width: '100%',
+                                justifyContent: 'center',
+                                padding: '0.625rem 1.25rem',
+                                fontWeight: 600,
+                                fontSize: '0.875rem',
+                                borderRadius: 'var(--radius-sm)',
+                                background: 'var(--color-primary)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
+                            }} onClick={openAuthModal}>
                                 <LogIn size={18} /> Sign In
                             </button>
                         )}

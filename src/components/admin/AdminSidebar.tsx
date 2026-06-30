@@ -16,17 +16,6 @@ export default function AdminSidebar({ view, setView }: SidebarProps) {
             gap: '0.75rem',
             flexShrink: 0
         }}>
-            <div style={{
-                background: 'var(--gradient-primary)',
-                padding: '1.25rem',
-                borderRadius: 'var(--radius-lg)',
-                color: 'white',
-                marginBottom: '0.5rem'
-            }}>
-                <h3 style={{ color: 'white', fontSize: '1.125rem', marginBottom: '0.25rem' }}>Admin Panel</h3>
-                <p style={{ fontSize: '0.75rem', opacity: 0.9 }}>Manage your tips</p>
-            </div>
-
             <button
                 onClick={() => setView('free')}
                 className={view === 'free' ? 'btn btn-primary' : 'btn btn-outline'}

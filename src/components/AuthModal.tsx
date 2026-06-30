@@ -192,7 +192,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '48px', marginTop: '0.5rem', boxShadow: '0 4px 6px -1px rgba(0, 168, 107, 0.2)' }} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', height: '48px', marginTop: '0.5rem', boxShadow: '0 4px 6px -1px rgba(7, 94, 84, 0.25)' }} disabled={loading}>
               {loading ? 'Processing...' : mode === 'login' ? <><LogIn size={18} /> Login</> : <><UserPlus size={18} /> Create Account</>}
             </button>
           </form>

@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --color-primary: #00A86B;
-  --color-primary-dark: #008f5a;
-  --color-primary-light: #e6f7f0;
+  --color-primary: #075E54;
+  --color-primary-dark: #054d44;
+  --color-primary-light: #e8f5e9;
 
   --color-bg: #f8fafc;
   --color-bg-card: #ffffff;
@@ -17,14 +17,14 @@
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
 
-  --gradient-primary: linear-gradient(135deg, #00A86B 0%, #00D4AA 100%);
+  --gradient-primary: linear-gradient(135deg, #075E54 0%, #25D366 100%);
   --gradient-premium: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
   --gradient-gold: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #FCD34D 100%);
   --gradient-card: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px rgba(0, 168, 107, 0.12);
+  --glass-shadow: 0 8px 32px rgba(7, 94, 84, 0.15);
 
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Outfit', sans-serif;
@@ -37,7 +37,7 @@
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 40px rgba(0, 168, 107, 0.2);
+  --shadow-glow: 0 0 40px rgba(7, 94, 84, 0.25);
 }
 
 * {
@@ -144,7 +144,7 @@ button {
 }
 
 .tips-table tr:hover {
-  background-color: rgba(0, 168, 107, 0.05);
+  background-color: rgba(7, 94, 84, 0.06);
 }
 
 /* Status Badges */
@@ -209,12 +209,12 @@ button {
 .btn-primary {
   background: var(--color-primary);
   color: white;
-  box-shadow: 0 4px 12px rgba(0, 168, 107, 0.25);
+  box-shadow: 0 4px 12px rgba(7, 94, 84, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 168, 107, 0.3);
+  box-shadow: 0 6px 16px rgba(7, 94, 84, 0.35);
 }
 
 .btn-outline {
@@ -242,7 +242,7 @@ button {
 .input:focus {
   border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.1);
+  box-shadow: 0 0 0 3px rgba(7, 94, 84, 0.15);
 }
 
 /* Animations */

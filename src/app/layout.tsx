@@ -57,7 +57,7 @@ export default function RootLayout({
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em'
                                 }}>
-                                    © {new Date().getFullYear()} TF Betting Tips. All Rights Reserved.
+                                    © {new Date().getFullYear()} PLAY CHAMP TIPS TF Betting. All Rights Reserved.
                                 </div>
                             </div>
                         </div>

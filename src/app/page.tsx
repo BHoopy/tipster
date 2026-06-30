@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +18,20 @@ import VipTicketsList from '@/components/home/VipTicketsList';
 import HistorySection from '@/components/home/HistorySection';
 
 export default function Home() {
-    const [activeTab, setActiveTab] = useState<'free' | 'premium'>('free');
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const tabParam = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState<'free' | 'premium'>(tabParam === 'premium' ? 'premium' : 'free');
+    const setTab = useCallback((tab: 'free' | 'premium') => {
+        setActiveTab(tab);
+        const params = new URLSearchParams(searchParams.toString());
+        if (tab === 'premium') {
+            params.set('tab', 'premium');
+        } else {
+            params.delete('tab');
+        }
+        router.replace(`?${params.toString()}`, { scroll: false });
+    }, [router, searchParams]);
     const [showHistory, setShowHistory] = useState(false);
     const [historyDays, setHistoryDays] = useState(2);
     const [freeTips, setFreeTips] = useState<Match[]>([]);
@@ -165,14 +179,14 @@ export default function Home() {
                     border: '1px solid var(--glass-border)'
                 }}>
                 <button
-                    onClick={() => { setActiveTab('free'); setShowHistory(false); }}
+                    onClick={() => { setTab('free'); setShowHistory(false); }}
                     className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
                     style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
                 >
                     Free Tips
                 </button>
                 <button
-                    onClick={() => { setActiveTab('premium'); setShowHistory(false); }}
+                    onClick={() => { setTab('premium'); setShowHistory(false); }}
                     className={activeTab === 'premium' ? 'btn btn-primary' : 'btn btn-outline'}
                     style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
                 >
@@ -269,7 +283,7 @@ export default function Home() {
                 }}
             >
                 <button
-                    onClick={() => { setActiveTab('free'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setTab('free'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',
@@ -286,7 +300,7 @@ export default function Home() {
                     Free Tips
                 </button>
                 <button
-                    onClick={() => { setActiveTab('premium'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { setTab('premium'); setShowHistory(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',
