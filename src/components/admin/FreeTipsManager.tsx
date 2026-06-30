@@ -6,7 +6,7 @@ import { addDoc, collection, serverTimestamp, deleteDoc, doc, updateDoc, query, 
 import { db } from '@/lib/firebase';
 import { useTeamAutocomplete, useTipAutocomplete, useLeagueAutocomplete } from '@/hooks/useAutocomplete';
 import AutocompleteInput from '@/components/AutocompleteInput';
-import { Match, QUICK_LEAGUES, getLeagueColor } from './types';
+import { Match, QUICK_LEAGUES, getLeagueColor, getContrastText } from './types';
 
 interface FreeTipsManagerProps {
     freeTips: Match[];
@@ -324,7 +324,7 @@ export default function FreeTipsManager({
                                     <span style={{
                                         fontSize: '0.55rem',
                                         fontWeight: 800,
-                                        color: 'white',
+                                        color: getContrastText(getLeagueColor(tip.league)),
                                         background: getLeagueColor(tip.league),
                                         padding: '0.1rem 0.35rem',
                                         borderRadius: '3px',

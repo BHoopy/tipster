@@ -2,6 +2,15 @@ import { getLeagueColor as getLeagueColorFn } from '@/components/admin/types';
 
 export { getLeagueColorFn as getLeagueColor };
 
+export const getContrastText = (hexColor: string): string => {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 150 ? '#000000' : '#ffffff';
+};
+
 export const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
 };

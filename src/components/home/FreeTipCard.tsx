@@ -18,7 +18,7 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
             marginBottom: '0.5rem',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--color-border)',
-            background: 'white',
+            background: 'var(--color-bg-card)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.6rem',
@@ -28,11 +28,9 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
             <div style={{ 
                 minWidth: '50px', 
                 textAlign: 'center',
-                borderRight: '1px solid var(--color-border)', 
-                paddingRight: '0.5rem',
-                marginRight: '0.25rem'
+                paddingRight: '0.25rem'
             }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 400, color: '#000000', lineHeight: 1.2 }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--color-text)', lineHeight: 1.2 }}>
                     {formatTimeToAMPM(match.time)}
                 </span>
             </div>
@@ -61,7 +59,7 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
                     {match.status !== 'pending' && (
                         <span style={{
                             fontSize: '0.65rem',
-                            color: match.status === 'win' ? '#059669' : '#dc2626',
+                            color: match.status === 'win' ? 'var(--color-success)' : 'var(--color-error)',
                             fontWeight: 900
                         }}>
                             {match.status === 'win' ? '✓' : '✗'}
@@ -93,7 +91,7 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
                 <div style={{
                     fontSize: '0.78rem',
                     fontWeight: 800,
-                    color: match.status === 'pending' ? '#b8860b' : 'var(--color-primary)',
+                    color: match.status === 'pending' ? 'var(--color-warning)' : 'var(--color-primary)',
                     letterSpacing: '-0.01em'
                 }}>
                     {match.tips}

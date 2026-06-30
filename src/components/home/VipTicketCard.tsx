@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { LuStar as Star, LuTimer as Timer, LuTrophy as Trophy, LuCircleX as XCircle, LuShieldCheck as ShieldCheck, LuTrendingUp as TrendingUp, LuCopy as Copy } from 'react-icons/lu';
 import { VipTicket } from '@/types/game';
-import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
+import { formatTimeToAMPM, getLeagueColor, getContrastText } from '@/lib/utils';
 import TeamsWithVs from '@/components/TeamsWithVs';
 
 interface VipTicketCardProps {
@@ -73,7 +73,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                 </div>
             </div>
 
-            <div style={{ padding: '1.5rem', background: 'white' }}>
+            <div style={{ padding: '1.5rem', background: 'var(--color-bg-card)' }}>
                 {/* Mobile Card View */}
                 <div className="vip-mobile-cards">
                     {ticket.matches.map((match, mIdx) => {
@@ -85,7 +85,7 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                 marginBottom: '0.5rem',
                                 borderRadius: 'var(--radius-sm)',
                                 border: '1px solid var(--color-border)',
-                                background: 'white',
+                                background: 'var(--color-bg-card)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.6rem',
@@ -94,11 +94,9 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                 <div style={{
                                     minWidth: '50px',
                                     textAlign: 'center',
-                                    borderRight: '1px solid var(--color-border)',
-                                    paddingRight: '0.5rem',
-                                    marginRight: '0.25rem'
+                                    paddingRight: '0.25rem'
                                 }}>
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 400, color: '#000000', lineHeight: 1.2 }}>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--color-text)', lineHeight: 1.2 }}>
                                         {formatTimeToAMPM(match.time)}
                                     </span>
                                 </div>
@@ -133,25 +131,32 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                     </span>
                                 </div>
                                 <div style={{
-                                    background: match.status === 'pending' ? 'rgba(234,179,8,0.1)' : 'rgba(0,168,107,0.08)',
-                                    padding: '0.35rem 0.6rem',
-                                    borderRadius: '6px',
-                                    minWidth: '65px',
-                                    textAlign: 'center',
-                                    border: match.status === 'pending' ? '1px solid rgba(234,179,8,0.25)' : '1px solid rgba(0,168,107,0.15)'
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '0.25rem'
                                 }}>
-                                    <div style={{ fontSize: '0.78rem', fontWeight: 800, color: match.status === 'pending' ? '#b8860b' : 'var(--color-primary)', letterSpacing: '-0.01em' }}>
-                                        {match.tips}
+                                    <div style={{
+                                        background: match.status === 'pending' ? 'rgba(234,179,8,0.1)' : 'rgba(0,168,107,0.08)',
+                                        padding: '0.35rem 0.6rem',
+                                        borderRadius: '6px',
+                                        minWidth: '65px',
+                                        textAlign: 'center',
+                                        border: match.status === 'pending' ? '1px solid rgba(234,179,8,0.25)' : '1px solid rgba(0,168,107,0.15)'
+                                    }}>
+                                        <div style={{ fontSize: '0.78rem', fontWeight: 800, color: match.status === 'pending' ? 'var(--color-warning)' : 'var(--color-primary)', letterSpacing: '-0.01em' }}>
+                                            {match.tips}
+                                        </div>
                                     </div>
-                                </div>
-                                <div style={{ minWidth: '60px', textAlign: 'center' }}>
-                                    {match.status === 'pending' ? (
-                                        <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
-                                    ) : match.status === 'win' ? (
-                                        <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
-                                    ) : (
-                                        <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
-                                    )}
+                                    <div style={{ minWidth: '60px', textAlign: 'center' }}>
+                                        {match.status === 'pending' ? (
+                                            <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>
+                                        ) : match.status === 'win' ? (
+                                            <span className="badge badge-win" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>✅ Won</span>
+                                        ) : (
+                                            <span className="badge badge-lose" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>❌ Lose</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -173,12 +178,12 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                         <tbody>
                             {ticket.matches.map((match, mIdx) => (
                                 <tr key={mIdx} style={{ animationDelay: `${mIdx * 0.1}s` }}>
-                                    <td style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
+                                    <td style={{ fontSize: '0.75rem', color: 'var(--color-text)', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
                                     <td>
                                         <span style={{
                                             fontSize: '0.65rem',
                                             fontWeight: 800,
-                                            color: 'white',
+                                            color: getContrastText(getLeagueColor(match.league)),
                                             background: getLeagueColor(match.league),
                                             padding: '0.15rem 0.4rem',
                                             borderRadius: '4px',
@@ -226,9 +231,9 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                     {ticket.status === 'pending' ? (
                         <><Timer size={16} /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>Ticket Pending</span></>
                     ) : ticket.status === 'win' ? (
-                        <><Trophy size={16} color="#F59E0B" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#065f46' }}>Winning Ticket</span></>
+                        <><Trophy size={16} color="#F59E0B" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-success)' }}>Winning Ticket</span></>
                     ) : (
-                        <><XCircle size={16} color="#991b1b" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: '#991b1b' }}>Ticket Lost</span></>
+                        <><XCircle size={16} color="#991b1b" /> <span style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--color-error)' }}>Ticket Lost</span></>
                     )}
                 </div>
 

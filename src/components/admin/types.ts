@@ -43,6 +43,15 @@ export const getLeagueColor = (leagueName: string): string => {
     return LEAGUE_COLORS[index];
 };
 
+export const getContrastText = (hexColor: string): string => {
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 150 ? '#000000' : '#ffffff';
+};
+
 export const QUICK_LEAGUES = [
     { name: 'EPL', color: '#3d195b' },
     { name: 'La Liga', color: '#ee8707' },

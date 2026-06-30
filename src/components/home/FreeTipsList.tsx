@@ -1,5 +1,5 @@
 import { Match } from '@/types/game';
-import { formatTimeToAMPM, getLeagueColor } from '@/lib/utils';
+import { formatTimeToAMPM, getLeagueColor, getContrastText } from '@/lib/utils';
 import NoTipsMessage from './NoTipsMessage';
 import FreeTipCard from './FreeTipCard';
 import TeamsWithVs from '@/components/TeamsWithVs';
@@ -37,12 +37,12 @@ export default function FreeTipsList({ data }: FreeTipsListProps) {
                         {data.map((match, idx) => (
                             <tr key={match.id} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.05}s` }}>
                                 <td style={{ fontWeight: 600, color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>{idx + 1}</td>
-                                <td style={{ fontSize: '0.8rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
+                                <td style={{ fontSize: '0.8rem', color: 'var(--color-text)', fontWeight: 400 }}>{formatTimeToAMPM(match.time)}</td>
                                 <td>
                                     <span style={{
                                         fontSize: '0.65rem',
                                         fontWeight: 800,
-                                        color: 'white',
+                                        color: getContrastText(getLeagueColor(match.league)),
                                         background: getLeagueColor(match.league),
                                         padding: '0.15rem 0.4rem',
                                         borderRadius: '4px',
