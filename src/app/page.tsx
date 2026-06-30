@@ -32,7 +32,7 @@ function HomeContent() {
         }
         router.replace(`?${params.toString()}`, { scroll: false });
     }, [router, searchParams]);
-    const [historyDays, setHistoryDays] = useState(2);
+    const [historyDays, setHistoryDays] = useState(7);
     const [freeTips, setFreeTips] = useState<Match[]>([]);
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
     const [allFreeTips, setAllFreeTips] = useState<Match[]>([]);
@@ -74,17 +74,23 @@ function HomeContent() {
         const fetchAllData = async () => {
             const allFree = await getDocs(query(collection(db, 'free_tips')));
             const allFreeHistory = await getDocs(query(collection(db, 'free_tips_history')));
-            setAllFreeTips([
-                ...allFree.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)),
-                ...allFreeHistory.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match))
-            ]);
+            const freeMap = new Map<string, Match>();
+            allFree.docs.forEach(doc => freeMap.set(doc.id, { id: doc.id, ...doc.data() } as Match));
+            allFreeHistory.docs.forEach(doc => {
+                const { id: _id, ...data } = doc.data();
+                freeMap.set(doc.id, { id: doc.id, ...data } as Match);
+            });
+            setAllFreeTips(Array.from(freeMap.values()));
 
             const allVip = await getDocs(query(collection(db, 'vip_tickets')));
             const allVipHistory = await getDocs(query(collection(db, 'vip_tickets_history')));
-            setAllVipTickets([
-                ...allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)),
-                ...allVipHistory.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket))
-            ]);
+            const vipMap = new Map<string, VipTicket>();
+            allVip.docs.forEach(doc => vipMap.set(doc.id, { id: doc.id, ...doc.data() } as VipTicket));
+            allVipHistory.docs.forEach(doc => {
+                const { id: _id, ...data } = doc.data();
+                vipMap.set(doc.id, { id: doc.id, ...data } as VipTicket);
+            });
+            setAllVipTickets(Array.from(vipMap.values()));
         };
         fetchAllData();
 
@@ -240,6 +246,30 @@ function HomeContent() {
             {/* Content by Tab */}
             {activeTab === 'history' ? (
                 <div style={{ marginBottom: '2.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <select
+                            value={historyDays}
+                            onChange={(e) => setHistoryDays(Number(e.target.value))}
+                            style={{
+                                padding: '0.4rem 0.75rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid var(--color-border)',
+                                background: 'var(--color-bg-card)',
+                                color: 'var(--color-text)',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value={2}>Last 2 days</option>
+                            <option value={7}>Last 7 days</option>
+                            <option value={14}>Last 14 days</option>
+                            <option value={30}>Last 30 days</option>
+                        </select>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                            Showing {historyDays} days
+                        </span>
+                    </div>
                     {(() => {
                         const visibleFree = freeHistory.filter(g => publicDates[g.date] === true);
                         const visibleVip = vipHistory.filter(g => publicDates[g.date] === true);
@@ -250,20 +280,29 @@ function HomeContent() {
                         return (
                             <>
                                 {visibleFree.length > 0 && (
-                                    <HistorySection
-                                        type="free"
-                                        data={visibleFree}
-                                        historyDays={historyDays}
-                                        onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
-                                    />
+                                    <div>
+                                        <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                                            Free Tips History
+                                        </h3>
+                                        <HistorySection
+                                            type="free"
+                                            data={visibleFree}
+                                        />
+                                    </div>
+                                )}
+                                {visibleFree.length > 0 && visibleVip.length > 0 && (
+                                    <div style={{ height: '2.5rem' }} />
                                 )}
                                 {visibleVip.length > 0 && (
-                                    <HistorySection
-                                        type="vip"
-                                        data={visibleVip}
-                                        historyDays={historyDays}
-                                        onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
-                                    />
+                                    <div>
+                                        <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                                            VIP History
+                                        </h3>
+                                        <HistorySection
+                                            type="vip"
+                                            data={visibleVip}
+                                        />
+                                    </div>
                                 )}
                             </>
                         );

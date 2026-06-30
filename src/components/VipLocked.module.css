@@ -344,3 +344,33 @@
     height: 70px;
   }
 }
+
+:global(.dark) .title {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:global(.dark) .perksList {
+  background: rgba(30, 30, 30, 0.6);
+  border-color: var(--color-border);
+}
+
+:global(.dark) .payButton {
+  background: #075E54;
+  box-shadow: 0 10px 25px -5px rgba(7, 94, 84, 0.3);
+}
+
+:global(.dark) .payButton:hover {
+  box-shadow: 0 20px 35px -5px rgba(7, 94, 84, 0.4);
+}
+
+:global(.dark) .oddsItem {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+:global(.dark) .subscriptionNote {
+  background: rgba(16, 185, 129, 0.15);
+}

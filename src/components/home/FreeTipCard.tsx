@@ -81,12 +81,12 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
 
             {/* Tip - Distinct Action-like area */}
             <div style={{
-                background: match.status === 'pending' ? 'rgba(234,179,8,0.1)' : 'rgba(0,168,107,0.08)',
+                background: match.status === 'pending' ? 'rgba(245,158,11,0.15)' : 'rgba(0,168,107,0.12)',
                 padding: '0.35rem 0.6rem',
                 borderRadius: '6px',
                 minWidth: '65px',
                 textAlign: 'center',
-                border: match.status === 'pending' ? '1px solid rgba(234,179,8,0.25)' : '1px solid rgba(0,168,107,0.15)'
+                border: match.status === 'pending' ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(0,168,107,0.2)'
             }}>
                 <div style={{
                     fontSize: '0.78rem',

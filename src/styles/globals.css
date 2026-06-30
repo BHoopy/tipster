@@ -144,7 +144,7 @@ button {
 
 .tips-table th {
   background: var(--color-bg);
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
@@ -153,7 +153,7 @@ button {
 }
 
 .tips-table td {
-  padding: 1rem;
+  padding: 1.25rem 1.5rem;
   font-size: 0.9375rem;
   border-bottom: 1px solid var(--color-border);
 }

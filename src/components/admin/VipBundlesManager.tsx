@@ -142,8 +142,9 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
         }
 
         if (newTicketStatus !== 'pending' && ticket.status === 'pending') {
+            const { id: _id, ...ticketData } = ticket;
             await addDoc(collection(db, 'vip_tickets_history'), {
-                ...ticket,
+                ...ticketData,
                 matches: updatedMatches,
                 status: newTicketStatus,
                 resolvedAt: serverTimestamp()
@@ -345,8 +346,9 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                             fontWeight: 700,
                             borderRadius: '6px',
                             border: 'none',
-                            background: activeVipTab === 'drafts' ? 'white' : 'transparent',
+                            background: activeVipTab === 'drafts' ? 'var(--color-bg-card)' : 'transparent',
                             boxShadow: activeVipTab === 'drafts' ? 'var(--shadow-sm)' : 'none',
+                            color: activeVipTab === 'drafts' ? 'var(--color-primary)' : 'var(--color-text)',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.4rem',
@@ -363,8 +365,9 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                             fontWeight: 700,
                             borderRadius: '6px',
                             border: 'none',
-                            background: activeVipTab === 'published' ? 'white' : 'transparent',
+                            background: activeVipTab === 'published' ? 'var(--color-bg-card)' : 'transparent',
                             boxShadow: activeVipTab === 'published' ? 'var(--shadow-sm)' : 'none',
+                            color: activeVipTab === 'published' ? 'var(--color-primary)' : 'var(--color-text)',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.4rem',
@@ -393,7 +396,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                         border: '1px solid var(--color-border)',
                         borderRadius: 'var(--radius-lg)',
                         opacity: ticket.isPublished ? 1 : 0.9,
-                        background: ticket.isPublished ? 'white' : 'rgba(0,0,0,0.01)'
+                        background: ticket.isPublished ? 'var(--color-bg-card)' : 'var(--color-bg)'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -407,7 +410,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                                 </div>
                                 <h3 style={{ fontSize: '0.9rem', margin: 0, fontWeight: 800 }}>
                                     {ticket.bundle_name} <span style={{ color: 'var(--color-primary)' }}>({ticket.odds} Odds)</span>
-                                    {!ticket.isPublished && <span style={{ fontSize: '0.65rem', marginLeft: '0.5rem', color: '#64748b', fontWeight: 600, background: '#f1f5f9', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>DRAFT</span>}
+                                    {!ticket.isPublished && <span style={{ fontSize: '0.65rem', marginLeft: '0.5rem', color: 'var(--color-warning)', fontWeight: 600, background: 'rgba(245,158,11,0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>DRAFT</span>}
                                 </h3>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -426,9 +429,9 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid
                         </div>
 
                         {ticket.matches.map((m, mIdx) => (
-                            <div key={mIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderTop: '1px solid rgba(0,0,0,0.03)', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div key={mIdx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0', borderTop: '1px solid var(--color-border)', flexWrap: 'wrap', gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1, minWidth: '150px' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'black', fontWeight: 400 }}>{formatTimeToAMPM(m.time)}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text)', fontWeight: 400 }}>{formatTimeToAMPM(m.time)}</span>
                                     <span style={{
                                         fontSize: '0.5rem',
                                         fontWeight: 600,
