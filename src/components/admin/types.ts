@@ -7,6 +7,8 @@ export type Match = {
     status: 'pending' | 'win' | 'lose';
     createdAt?: any;
     resolvedAt?: any;
+    createdBy?: string;
+    createdByEmail?: string;
 };
 
 export type VipTicket = {
@@ -18,6 +20,8 @@ export type VipTicket = {
     booking_code?: string;
     isPublished: boolean;
     createdAt?: any;
+    createdBy?: string;
+    createdByEmail?: string;
 };
 
 export const LEAGUE_COLORS = [

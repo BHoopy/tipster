@@ -11,9 +11,11 @@ import AutocompleteInput from '@/components/AutocompleteInput';
 interface VipBundlesManagerProps {
     vipTickets: VipTicket[];
     getCurrentTime: () => string;
+    adminUid?: string;
+    adminEmail?: string | null;
 }
 
-export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBundlesManagerProps) {
+export default function VipBundlesManager({ vipTickets, getCurrentTime, adminUid, adminEmail }: VipBundlesManagerProps) {
     const [activeVipTab, setActiveVipTab] = useState<'drafts' | 'published'>('drafts');
     const [newVipTicket, setNewVipTicket] = useState<{
         bundle_name: string;
@@ -82,10 +84,12 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             bundle_name: newVipTicket.bundle_name,
             odds: newVipTicket.odds,
             status: 'pending',
-            booking_code: newVipTicket.booking_code,
-            isPublished: false, // Default to draft
+            booking_code: newVipTicket.booking_code || '',
+            isPublished: false,
             matches: matchesToSave,
-            createdAt: serverTimestamp()
+            createdAt: serverTimestamp(),
+            createdBy: adminUid || null,
+            createdByEmail: adminEmail || null
         });
 
         // Learn all teams, tips, and bundle names

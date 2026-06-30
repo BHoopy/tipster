@@ -16,6 +16,7 @@ export async function POST(request: Request) {
 
         const transaction = await initializeTransaction(email, vipPrice, {
             userId,
+            email,
             paymentType: 'vip_subscription'
         });
 

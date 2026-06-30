@@ -13,13 +13,17 @@ interface FreeTipsManagerProps {
     updateMatchStatus: (col: string, id: string, status: 'win' | 'lose' | 'pending') => Promise<void>;
     sendNotification: boolean;
     getCurrentTime: () => string;
+    adminUid?: string;
+    adminEmail?: string | null;
 }
 
 export default function FreeTipsManager({
     freeTips,
     updateMatchStatus,
     sendNotification,
-    getCurrentTime
+    getCurrentTime,
+    adminUid,
+    adminEmail
 }: FreeTipsManagerProps) {
     const [showBulk, setShowBulk] = useState(false);
     const [bulkInput, setBulkInput] = useState('');
@@ -52,7 +56,9 @@ export default function FreeTipsManager({
         await addDoc(collection(db, 'free_tips'), {
             ...newFreeTip,
             teams: combinedTeams,
-            createdAt: serverTimestamp()
+            createdAt: serverTimestamp(),
+            createdBy: adminUid || null,
+            createdByEmail: adminEmail || null
         });
 
         // Learn individually
@@ -91,7 +97,9 @@ export default function FreeTipsManager({
                 return addDoc(collection(db, 'free_tips'), {
                     time, league, teams, tips,
                     status: 'pending',
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    createdBy: adminUid || null,
+                    createdByEmail: adminEmail || null
                 });
             }
         });

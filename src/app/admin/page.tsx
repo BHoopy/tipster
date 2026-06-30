@@ -14,17 +14,18 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import FreeTipsManager from '@/components/admin/FreeTipsManager';
 import VipBundlesManager from '@/components/admin/VipBundlesManager';
 import HistoryManager from '@/components/admin/HistoryManager';
+import AnalyticsManager from '@/components/admin/AnalyticsManager';
 import { Match, VipTicket } from '@/components/admin/types';
 
 function AdminDashboardContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { isAdmin, loading } = useAuth();
+    const { user, isAdmin, loading } = useAuth();
     const viewParam = searchParams.get('view');
-    const [view, setView] = useState<'free' | 'vip' | 'history'>(
-        viewParam === 'vip' ? 'vip' : viewParam === 'history' ? 'history' : 'free'
+    const [view, setView] = useState<'free' | 'vip' | 'history' | 'analytics'>(
+        viewParam === 'vip' ? 'vip' : viewParam === 'history' ? 'history' : viewParam === 'analytics' ? 'analytics' : 'free'
     );
-    const updateView = useCallback((v: 'free' | 'vip' | 'history') => {
+    const updateView = useCallback((v: 'free' | 'vip' | 'history' | 'analytics') => {
         setView(v);
         const params = new URLSearchParams(searchParams.toString());
         if (v === 'free') {
@@ -148,6 +149,8 @@ function AdminDashboardContent() {
                             updateMatchStatus={updateMatchStatus}
                             sendNotification={sendNotification}
                             getCurrentTime={getCurrentTime}
+                            adminUid={user?.uid}
+                            adminEmail={user?.email}
                         />
                     )}
 
@@ -155,6 +158,8 @@ function AdminDashboardContent() {
                         <VipBundlesManager
                             vipTickets={vipTickets}
                             getCurrentTime={getCurrentTime}
+                            adminUid={user?.uid}
+                            adminEmail={user?.email}
                         />
                     )}
 
@@ -166,6 +171,10 @@ function AdminDashboardContent() {
                             isDatePublic={publicDates[historyDate] === true}
                             onTogglePublic={() => toggleDatePublic(historyDate)}
                         />
+                    )}
+
+                    {view === 'analytics' && (
+                        <AnalyticsManager />
                     )}
                 </div>
             </div>

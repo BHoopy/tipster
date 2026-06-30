@@ -14,13 +14,23 @@ export async function GET(request: Request) {
         const data = await verifyTransaction(reference);
 
         if (data.status === 'success') {
-            const { userId } = data.metadata;
+            const { userId, email } = data.metadata;
+            const amount = data.amount ? data.amount / 100 : 0;
 
             if (userId) {
                 await getAdminDb().collection('users').doc(userId).update({
                     is_vip: true,
                     vip_purchased_at: new Date(),
                     last_transaction_ref: reference
+                });
+
+                await getAdminDb().collection('transactions').add({
+                    userId,
+                    email: email || '',
+                    amount,
+                    reference,
+                    status: 'success',
+                    createdAt: new Date()
                 });
 
                 return NextResponse.json({ success: true, message: 'VIP status updated' });

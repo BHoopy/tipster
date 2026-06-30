@@ -1,10 +1,10 @@
 'use client';
 
-import { LuLayoutDashboard as LayoutDashboard, LuTicket as Ticket, LuZap as Zap } from 'react-icons/lu';
+import { LuLayoutDashboard as LayoutDashboard, LuTicket as Ticket, LuZap as Zap, LuChartBarIncreasing as BarChart } from 'react-icons/lu';
 
 interface SidebarProps {
-    view: 'free' | 'vip' | 'history';
-    setView: (view: 'free' | 'vip' | 'history') => void;
+    view: 'free' | 'vip' | 'history' | 'analytics';
+    setView: (view: 'free' | 'vip' | 'history' | 'analytics') => void;
 }
 
 export default function AdminSidebar({ view, setView }: SidebarProps) {
@@ -36,6 +36,13 @@ export default function AdminSidebar({ view, setView }: SidebarProps) {
                 style={{ width: '100%', justifyContent: 'flex-start', border: view === 'history' ? 'none' : undefined }}
             >
                 <Ticket size={20} /> History
+            </button>
+            <button
+                onClick={() => setView('analytics')}
+                className={view === 'analytics' ? 'btn btn-primary' : 'btn btn-outline'}
+                style={{ width: '100%', justifyContent: 'flex-start', border: view === 'analytics' ? 'none' : undefined }}
+            >
+                <BarChart size={20} /> Analytics
             </button>
         </div>
     );

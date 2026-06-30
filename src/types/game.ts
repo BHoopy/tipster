@@ -7,6 +7,8 @@ export type Match = {
     result?: string;
     status: 'pending' | 'win' | 'lose';
     createdAt?: any;
+    createdBy?: string;
+    createdByEmail?: string;
 };
 
 export type VipTicket = {
@@ -18,6 +20,8 @@ export type VipTicket = {
     booking_code?: string;
     isPublished: boolean;
     createdAt: any;
+    createdBy?: string;
+    createdByEmail?: string;
 };
 
 export type GroupedTips = {

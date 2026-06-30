@@ -25,14 +25,24 @@ export async function POST(request: Request) {
         const event = JSON.parse(body);
 
         if (event.event === 'charge.success') {
-            const { metadata, reference } = event.data;
+            const { metadata, reference, amount } = event.data;
             const userId = metadata?.userId;
+            const email = metadata?.email || event.data.customer?.email || '';
 
             if (userId) {
                 await getAdminDb().collection('users').doc(userId).update({
                     is_vip: true,
                     vip_purchased_at: new Date(),
                     last_transaction_ref: reference,
+                });
+
+                await getAdminDb().collection('transactions').add({
+                    userId,
+                    email,
+                    amount: amount ? amount / 100 : 0,
+                    reference,
+                    status: 'success',
+                    createdAt: new Date()
                 });
             }
         }

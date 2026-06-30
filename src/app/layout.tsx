@@ -51,13 +51,19 @@ export default function RootLayout({
                                     Premium sports analysis and expert predictions for winning strategies.
                                 </p>
                                 <div style={{
-                                    marginTop: '1.5rem',
+                                    display: 'flex',
+                                    gap: '1rem',
+                                    alignItems: 'center',
                                     fontSize: '0.75rem',
                                     color: 'var(--color-text-muted)',
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.05em'
                                 }}>
-                                    © {new Date().getFullYear()} PLAY CHAMP TIPS TF Betting. All Rights Reserved.
+                                    <a href="/privacy" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>
+                                        Privacy Policy
+                                    </a>
+                                    <span>•</span>
+                                    <span>© {new Date().getFullYear()} PLAY CHAMP TIPS TF Betting. All Rights Reserved.</span>
                                 </div>
                             </div>
                         </div>
