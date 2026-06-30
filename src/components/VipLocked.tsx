@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './VipLocked.module.css';
 import AuthModal from '@/components/AuthModal';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 
 interface VipLockedProps {
     onSuccess: () => void;
@@ -17,18 +17,12 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [vipPrice, setVipPrice] = useState(30);
+    const vipPrice = Number(process.env.NEXT_PUBLIC_VIP_PRICE) || 30;
     const [todayOdds, setTodayOdds] = useState<{ name: string; odds: string }[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const docRef = doc(db, 'settings', 'general');
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setVipPrice(docSnap.data().vipPrice || 30);
-                }
-
                 const vipQuery = query(
                     collection(db, 'vip_tickets'),
                     where('isPublished', '==', true),
@@ -42,8 +36,8 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         .filter(o => o.odds);
                     setTodayOdds(oddsList);
                 }
-            } catch {
-                setVipPrice(50);
+            } catch (error) {
+                console.error('Error fetching VIP tickets:', error);
             }
         };
         fetchData();
@@ -97,9 +91,9 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                     <span>VIP Exclusive</span>
                 </div>
 
-                <h2 className={styles.title}>
-                    {user ? "Today's VIP Package" : "Unlock Premium Access"}
-                </h2>
+                {!user && (
+                    <h2 className={styles.title}>Unlock Premium Access</h2>
+                )}
                 {todayOdds.length > 0 && (
                     <div className={styles.oddsSection}>
                         <p className={styles.oddsTitle}>Today&apos;s VIP Total Odds</p>
