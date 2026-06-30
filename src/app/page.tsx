@@ -78,7 +78,11 @@ export default function Home() {
             ]);
 
             const allVip = await getDocs(query(collection(db, 'vip_tickets')));
-            setAllVipTickets(allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
+            const allVipHistory = await getDocs(query(collection(db, 'vip_tickets_history')));
+            setAllVipTickets([
+                ...allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)),
+                ...allVipHistory.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket))
+            ]);
         };
         fetchAllData();
 

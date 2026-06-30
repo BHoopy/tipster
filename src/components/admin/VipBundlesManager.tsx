@@ -57,7 +57,8 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
     const saveVipTicket = async () => {
         const newErrors: { bundle_name?: boolean; odds?: boolean; matches?: boolean } = {};
         if (!newVipTicket.bundle_name.trim()) newErrors.bundle_name = true;
-        if (!newVipTicket.odds.trim()) newErrors.odds = true;
+        const oddsNum = parseFloat(newVipTicket.odds);
+        if (!newVipTicket.odds.trim() || isNaN(oddsNum) || oddsNum < 5) newErrors.odds = true;
         if (newVipTicket.matches.length === 0) newErrors.matches = true;
 
         if (Object.keys(newErrors).length > 0) {
@@ -133,6 +134,15 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
             newTicketStatus = 'pending';
         }
 
+        if (newTicketStatus !== 'pending' && ticket.status === 'pending') {
+            await addDoc(collection(db, 'vip_tickets_history'), {
+                ...ticket,
+                matches: updatedMatches,
+                status: newTicketStatus,
+                resolvedAt: serverTimestamp()
+            });
+        }
+
         await updateDoc(doc(db, 'vip_tickets', ticketId), {
             matches: updatedMatches,
             status: newTicketStatus
@@ -202,7 +212,7 @@ export default function VipBundlesManager({ vipTickets, getCurrentTime }: VipBun
                                 fontSize: '0.85rem'
                             }}
                         />
-                        {errors.odds && <span style={{ color: '#ef4444', fontSize: '0.6rem', marginTop: '0.2rem', display: 'block' }}>Required</span>}
+                        {errors.odds && <span style={{ color: '#ef4444', fontSize: '0.6rem', marginTop: '0.2rem', display: 'block' }}>Must be at least 5</span>}
                     </div>
                     <div style={{ flex: '1', minWidth: '120px' }}>
                         <label style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginBottom: '0.25rem' }}>Sportybet Code</label>
