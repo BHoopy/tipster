@@ -32,7 +32,10 @@ export default function HistoryManager({ historyTips, historyDate, setHistoryDat
                 <h2 style={{ margin: 0 }}>History</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <button
-                        onClick={onTogglePublic}
+                        onClick={() => {
+                            if (isDatePublic && !window.confirm('Hide this day from public view?')) return;
+                            onTogglePublic();
+                        }}
                         className="btn-outline"
                         style={{
                             display: 'flex',

@@ -37,7 +37,7 @@ export default function Home() {
     const [allVipTickets, setAllVipTickets] = useState<VipTicket[]>([]);
     const { isVip, isAdmin } = useAuth();
     const [showBottomTabs, setShowBottomTabs] = useState(false);
-    const [historyPublic, setHistoryPublic] = useState(true);
+    const [publicDates, setPublicDates] = useState<Record<string, boolean>>({});
     const tabsRef = useRef<HTMLDivElement>(null);
     const lastScrollY = useRef<number>(0);
 
@@ -71,7 +71,11 @@ export default function Home() {
 
         const fetchAllData = async () => {
             const allFree = await getDocs(query(collection(db, 'free_tips')));
-            setAllFreeTips(allFree.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)));
+            const allFreeHistory = await getDocs(query(collection(db, 'free_tips_history')));
+            setAllFreeTips([
+                ...allFree.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match)),
+                ...allFreeHistory.docs.map(doc => ({ id: doc.id, ...doc.data() } as Match))
+            ]);
 
             const allVip = await getDocs(query(collection(db, 'vip_tickets')));
             setAllVipTickets(allVip.docs.map(doc => ({ id: doc.id, ...doc.data() } as VipTicket)));
@@ -86,9 +90,9 @@ export default function Home() {
 
     useEffect(() => {
         const fetchVisibility = async () => {
-            const snap = await getDoc(doc(db, 'settings', 'history_public'));
+            const snap = await getDoc(doc(db, 'settings', 'history_visibility'));
             if (snap.exists()) {
-                setHistoryPublic(snap.data().visible === true);
+                setPublicDates(snap.data().dates || {});
             }
         };
         fetchVisibility();
@@ -234,26 +238,30 @@ export default function Home() {
             </div>
 
             {/* History Section */}
-            {historyPublic && (
-                activeTab === 'free' ? (
-                    freeHistory.length > 0 && (
+            {activeTab === 'free' ? (
+                (() => {
+                    const visible = freeHistory.filter(g => publicDates[g.date] === true);
+                    return visible.length > 0 && (
                         <HistorySection
                             type="free"
-                            data={freeHistory}
+                            data={visible}
                             historyDays={historyDays}
                             onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
                         />
-                    )
-                ) : (
-                    vipHistory.length > 0 && (
+                    );
+                })()
+            ) : (
+                (() => {
+                    const visible = vipHistory.filter(g => publicDates[g.date] === true);
+                    return visible.length > 0 && (
                         <HistorySection
                             type="vip"
-                            data={vipHistory}
+                            data={visible}
                             historyDays={historyDays}
                             onViewMore={() => setHistoryDays(prev => Math.min(prev + 5, 7))}
                         />
-                    )
-                )
+                    );
+                })()
             )}
 
             {/* Mobile Bottom Tabs - Appears when scrolling up */}
