@@ -4,6 +4,7 @@ export type Match = {
     league: string;
     teams: string;
     tips: string;
+    odds?: string;
     status: 'pending' | 'win' | 'lose';
     createdAt?: any;
     resolvedAt?: any;

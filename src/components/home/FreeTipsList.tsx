@@ -30,6 +30,7 @@ export default function FreeTipsList({ data }: FreeTipsListProps) {
                             <th style={{ width: '120px' }}>LEAGUE</th>
                             <th style={{ minWidth: '180px' }}>TEAMS</th>
                             <th style={{ width: '120px' }}>TIPS</th>
+                            <th style={{ width: '70px' }}>ODDS</th>
                             <th style={{ width: '100px' }}>RESULT</th>
                         </tr>
                     </thead>
@@ -44,14 +45,20 @@ export default function FreeTipsList({ data }: FreeTipsListProps) {
                                         fontWeight: 600,
                                         color: getContrastText(getLeagueColor(match.league)),
                                         background: getLeagueColor(match.league),
-                                        padding: '0.15rem 0.5rem',
-                                        borderRadius: '4px',
+                                        padding: '0.25rem 0.6rem',
+                                        borderRadius: '12px',
                                         textTransform: 'uppercase',
-                                        letterSpacing: '0.04em'
+                                        letterSpacing: '0.04em',
+                                        display: 'inline-block',
+                                        textAlign: 'center',
+                                        lineHeight: 1.4,
+                                        maxWidth: '130px',
+                                        wordBreak: 'break-word'
                                     }}>{match.league}</span>
                                 </td>
                                 <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>
                                 <td style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{match.tips}</td>
+                                <td style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--color-text)' }}>{match.odds || '-'}</td>
                                 <td>
                                     {match.status === 'pending' ? (
                                         <span className="badge badge-pending" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>⌛ Pending</span>

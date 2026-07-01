@@ -96,6 +96,11 @@ export default function FreeTipCard({ match, idx }: FreeTipCardProps) {
                 }}>
                     {match.tips}
                 </div>
+                {match.odds && (
+                    <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                        @{match.odds}
+                    </div>
+                )}
             </div>
         </div>
     );

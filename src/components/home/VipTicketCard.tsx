@@ -185,10 +185,15 @@ export default function VipTicketCard({ ticket }: VipTicketCardProps) {
                                             fontWeight: 600,
                                             color: getContrastText(getLeagueColor(match.league)),
                                             background: getLeagueColor(match.league),
-                                            padding: '0.15rem 0.5rem',
-                                            borderRadius: '4px',
+                                            padding: '0.25rem 0.6rem',
+                                            borderRadius: '12px',
                                             textTransform: 'uppercase',
-                                            letterSpacing: '0.04em'
+                                            letterSpacing: '0.04em',
+                                            display: 'inline-block',
+                                            textAlign: 'center',
+                                            lineHeight: 1.4,
+                                            maxWidth: '130px',
+                                            wordBreak: 'break-word'
                                         }}>{match.league}</span>
                                     </td>
                                     <td style={{ fontWeight: 700, fontSize: '0.85rem' }}><TeamsWithVs teams={match.teams} /></td>

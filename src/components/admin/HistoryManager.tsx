@@ -107,12 +107,13 @@ export default function HistoryManager({ historyTips, historyDate, setHistoryDat
                                     letterSpacing: '0.04em'
                                 }}>{tip.league}</span>
                                 <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{tip.teams}</span>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{tip.tips}</span>
-                                    <span className={`badge ${tip.status === 'win' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>
-                                        {tip.status === 'win' ? '✅ Won' : '❌ Lose'}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{ fontWeight: 800, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{tip.tips}</span>
+                                        {tip.odds && <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>@{tip.odds}</span>}
+                                        <span className={`badge ${tip.status === 'win' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>
+                                            {tip.status === 'win' ? '✅ Won' : '❌ Lose'}
+                                        </span>
                                     </span>
-                                </span>
                             </div>
                         </div>
                     ))}

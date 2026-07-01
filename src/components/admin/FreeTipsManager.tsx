@@ -30,7 +30,7 @@ export default function FreeTipsManager({
     const [homeTeam, setHomeTeam] = useState('');
     const [awayTeam, setAwayTeam] = useState('');
     const [newFreeTip, setNewFreeTip] = useState<Match>({
-        time: getCurrentTime(), league: '', teams: '', tips: '', status: 'pending'
+        time: getCurrentTime(), league: '', teams: '', tips: '', odds: '', status: 'pending'
     });
     const [tipErrors, setTipErrors] = useState<{ homeTeam?: boolean; awayTeam?: boolean; tips?: boolean }>({});
 
@@ -69,7 +69,7 @@ export default function FreeTipsManager({
 
         setHomeTeam('');
         setAwayTeam('');
-        setNewFreeTip({ ...newFreeTip, time: getCurrentTime(), teams: '', tips: '', status: 'pending' });
+        setNewFreeTip({ ...newFreeTip, time: getCurrentTime(), teams: '', tips: '', odds: '', status: 'pending' });
         teamAutocompleteHome.clearSuggestions();
         teamAutocompleteAway.clearSuggestions();
         tipAutocomplete.clearSuggestions();
@@ -225,6 +225,17 @@ export default function FreeTipsManager({
                                 }}
                             />
                         </div>
+                        <div>
+                            <label style={{ fontSize: '0.65rem', fontWeight: 700, display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase' }}>Odds</label>
+                            <input
+                                className="input"
+                                type="text"
+                                value={newFreeTip.odds}
+                                onChange={e => setNewFreeTip({ ...newFreeTip, odds: e.target.value })}
+                                placeholder="1.50"
+                                style={{ height: '32px', fontSize: '0.75rem', width: '80px' }}
+                            />
+                        </div>
                         <button onClick={handleAddFreeTip} className="btn btn-primary" style={{ height: '32px', padding: '0 1rem', fontSize: '0.75rem' }}>
                             <Plus size={14} /> Add Tip
                         </button>
@@ -312,6 +323,7 @@ export default function FreeTipsManager({
                             <th style={{ width: '100px' }}>LEAGUE</th>
                             <th>TEAMS</th>
                             <th style={{ width: '120px' }}>TIPS</th>
+                            <th style={{ width: '70px' }}>ODDS</th>
                             <th style={{ width: '100px' }}>STATUS</th>
                             <th style={{ width: '80px' }}>ACTIONS</th>
                         </tr>
@@ -334,6 +346,7 @@ export default function FreeTipsManager({
                                 </td>
                                 <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{tip.teams}</td>
                                 <td style={{ fontWeight: 700, color: 'var(--color-primary)', fontSize: '0.85rem' }}>{tip.tips}</td>
+                                <td style={{ fontWeight: 600, fontSize: '0.8rem', color: 'var(--color-text)' }}>{tip.odds || '-'}</td>
                                 <td>
                                     <select
                                         value={tip.status}
