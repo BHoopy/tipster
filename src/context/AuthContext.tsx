@@ -8,7 +8,8 @@ import {
   signOut,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import { auth, googleProvider, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -19,6 +20,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
   isVip: boolean;
@@ -83,9 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       await updateProfile(result.user, { displayName: name });
       await syncUserDoc(result.user, name);
+      await sendEmailVerification(result.user);
     } catch (error) {
       console.error('Error registering:', error);
       throw error;
+    }
+  };
+
+  const sendVerificationEmail = async () => {
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
     }
   };
 
@@ -117,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       loginWithEmail,
       registerWithEmail,
+      sendVerificationEmail,
       logout,
       isAdmin,
       isVip
