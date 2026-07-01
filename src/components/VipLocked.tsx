@@ -107,13 +107,6 @@ export default function VipLocked({ onSuccess }: VipLockedProps) {
                         </div>
                     </div>
                 )}
-                <p className={styles.subtitle}>
-                    {user
-                        ? `Get exclusive access to today's premium ticket bundle for GHS ${vipPrice}. Start winning big with our expert selections.`
-                        : 'Sign in to access our most accurate daily predictions and professional VIP ticket bundles.'
-                    }
-                </p>
-
                 <div className={styles.vipNote}>
                     GHS {vipPrice} for Full Access
                 </div>
