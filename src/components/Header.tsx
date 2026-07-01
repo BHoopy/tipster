@@ -99,144 +99,154 @@ export default function Header() {
         }}>
             <div className="container" style={{
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
                 width: '100%'
             }}>
-                <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Image src="/logo.png" alt="TF Logo" width={40} height={40} style={{ borderRadius: '8px' }} />
-                    <span style={{
-                        fontSize: '1.25rem',
-                        fontWeight: 800,
-                        letterSpacing: '-0.025em',
-                        color: 'white'
-                    }}>Tipster</span>
-                </Link>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flex: '1'
+                }}>
+                    {/* Logo */}
+                    <div style={{ marginRight: 'auto' }}>
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <Image src="/logo.png" alt="TF Logo" width={40} height={40} style={{ borderRadius: '8px' }} />
+                            <span style={{
+                                fontSize: '1.25rem',
+                                fontWeight: 800,
+                                letterSpacing: '-0.025em',
+                                color: 'white'
+                            }}>Tipster</span>
+                        </Link>
+                    </div>
 
-                {tabsEnabled && (
-                    <nav className="desktop-tabs" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        marginLeft: '1rem'
-                    }}>
-                        <button
-                            onClick={() => switchTab('free')}
-                            style={{
-                                padding: '0.3rem 0.75rem',
-                                fontSize: '0.8rem',
-                                height: '32px',
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: activeTab === 'free' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontWeight: activeTab === 'free' ? 700 : 500,
-                                letterSpacing: '0.02em'
-                            }}
-                        >
-                            Free Tips
-                        </button>
-                        <button
-                            onClick={() => switchTab('premium')}
-                            style={{
-                                padding: '0.3rem 0.75rem',
-                                fontSize: '0.8rem',
-                                height: '32px',
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: activeTab === 'premium' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontWeight: activeTab === 'premium' ? 700 : 500,
-                                letterSpacing: '0.02em'
-                            }}
-                        >
-                            Premium Tips
-                        </button>
-                        <button
-                            onClick={() => switchTab('history')}
-                            style={{
-                                padding: '0.3rem 0.75rem',
-                                fontSize: '0.8rem',
-                                height: '32px',
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: activeTab === 'history' ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                color: 'white',
-                                cursor: 'pointer',
-                                fontWeight: activeTab === 'history' ? 700 : 500,
-                                letterSpacing: '0.02em'
-                            }}
-                        >
-                            History
-                        </button>
-                    </nav>
-                )}
-
-                {/* Desktop Navigation */}
-                <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="desktop-nav">
-                    {user ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            {isAdmin && (
-                                <Link href="/admin" style={{
-                                    padding: '0.5rem 1rem',
-                                    fontSize: '0.8125rem',
-                                    fontWeight: 600,
-                                    borderRadius: 'var(--radius-sm)',
-                                    background: 'rgba(255,255,255,0.2)',
-                                    color: 'white'
-                                }}>
-                                    Admin
-                                </Link>
-                            )}
-                            <button onClick={logout} style={{
-                                padding: '0.5rem',
-                                borderRadius: 'var(--radius-sm)',
-                                background: 'rgba(255,255,255,0.15)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center'
-                            }}>
-                                <LogOut size={18} />
-                            </button>
-                        </div>
-                    ) : (
-                        <button onClick={openAuthModal} style={{
-                            padding: '0.5rem 1.25rem',
-                            fontWeight: 600,
-                            fontSize: '0.875rem',
-                            borderRadius: 'var(--radius-sm)',
-                            background: 'white',
-                            color: 'var(--color-primary)',
+                    {/* Tabs - centered */}
+                    {tabsEnabled && (
+                        <nav className="desktop-tabs" style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '0.5rem'
+                            gap: '0.25rem'
                         }}>
-                            <LogIn size={18} /> Sign In
-                        </button>
+                            <button
+                                onClick={() => switchTab('free')}
+                                style={{
+                                    padding: '0.3rem 0.75rem',
+                                    fontSize: '0.8rem',
+                                    height: '32px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: activeTab === 'free' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'free' ? 700 : 500,
+                                    letterSpacing: '0.02em'
+                                }}
+                            >
+                                Free Tips
+                            </button>
+                            <button
+                                onClick={() => switchTab('premium')}
+                                style={{
+                                    padding: '0.3rem 0.75rem',
+                                    fontSize: '0.8rem',
+                                    height: '32px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: activeTab === 'premium' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'premium' ? 700 : 500,
+                                    letterSpacing: '0.02em'
+                                }}
+                            >
+                                Premium Tips
+                            </button>
+                            <button
+                                onClick={() => switchTab('history')}
+                                style={{
+                                    padding: '0.3rem 0.75rem',
+                                    fontSize: '0.8rem',
+                                    height: '32px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: activeTab === 'history' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTab === 'history' ? 700 : 500,
+                                    letterSpacing: '0.02em'
+                                }}
+                            >
+                                History
+                            </button>
+                        </nav>
                     )}
-                </nav>
 
-                {/* Mobile Menu Button */}
-                <button 
-                    className="mobile-menu-btn"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    style={{
-                        display: 'none',
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(255,255,255,0.15)',
-                        border: '1px solid rgba(255,255,255,0.3)',
-                        color: 'white'
-                    }}
-                >
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                    {/* Right side */}
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {user ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    {isAdmin && (
+                                        <Link href="/admin" style={{
+                                            padding: '0.5rem 1rem',
+                                            fontSize: '0.8125rem',
+                                            fontWeight: 600,
+                                            borderRadius: 'var(--radius-sm)',
+                                            background: 'rgba(255,255,255,0.2)',
+                                            color: 'white'
+                                        }}>
+                                            Admin
+                                        </Link>
+                                    )}
+                                    <button onClick={logout} style={{
+                                        padding: '0.5rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        background: 'rgba(255,255,255,0.15)',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}>
+                                        <LogOut size={18} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button onClick={openAuthModal} style={{
+                                    padding: '0.5rem 1.25rem',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: 'white',
+                                    color: '#075E54',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    <LogIn size={18} /> Sign In
+                                </button>
+                            )}
+                        </nav>
+
+                        <button 
+                            className="mobile-menu-btn"
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            style={{
+                                display: 'none',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '8px',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'rgba(255,255,255,0.15)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white'
+                            }}
+                        >
+                            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        </button>
+                    </div>
+                </div>
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (

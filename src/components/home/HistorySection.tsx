@@ -18,6 +18,8 @@ export default function HistorySection({ type, data }: HistorySectionProps) {
                 <div key={group.date}>
                     <h3 style={{
                         fontSize: '1rem',
+                        fontWeight: 300,
+                        letterSpacing: '0.03em',
                         marginBottom: '0.75rem',
                         color: 'var(--color-text)',
                         display: 'flex',

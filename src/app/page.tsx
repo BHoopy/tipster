@@ -29,7 +29,7 @@ function HomeContent() {
 
     // Sync tab changes to URL
     useEffect(() => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(window.location.search);
         if (activeTab === 'premium') {
             params.set('tab', 'premium');
         } else if (activeTab === 'history') {
@@ -37,8 +37,9 @@ function HomeContent() {
         } else {
             params.delete('tab');
         }
-        router.replace(`?${params.toString()}`, { scroll: false });
-    }, [activeTab, router, searchParams]);
+        const qs = params.toString();
+        router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
+    }, [activeTab, router]);
 
     // Enable header tabs on mount
     useEffect(() => {
@@ -193,6 +194,43 @@ function HomeContent() {
     return (
         <div className="container" style={{ maxWidth: '900px', padding: '1rem' }}>
             <HomeHeader />
+
+            {/* Mobile tabs - glass style, hidden on desktop */}
+            <div className="mobile-glass-tabs" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '0.35rem',
+                marginBottom: '1.5rem',
+                padding: '0.3rem',
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: 'var(--radius-md)',
+                maxWidth: 'fit-content',
+                margin: '0 auto 2.5rem auto',
+                border: '1px solid var(--glass-border)'
+            }}>
+                <button
+                    onClick={() => switchTab('free')}
+                    className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
+                >
+                    Free Tips
+                </button>
+                <button
+                    onClick={() => switchTab('premium')}
+                    className={activeTab === 'premium' ? 'btn btn-primary' : 'btn btn-outline'}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
+                >
+                    Premium Tips
+                </button>
+                <button
+                    onClick={() => switchTab('history')}
+                    className={activeTab === 'history' ? 'btn btn-primary' : 'btn btn-outline'}
+                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'history' ? 'none' : '1px solid transparent' }}
+                >
+                    History
+                </button>
+            </div>
 
             {/* Today's Picks */}
             {activeTab !== 'history' && (
@@ -371,6 +409,7 @@ function HomeContent() {
 
             <style jsx>{`
                 @media (min-width: 769px) {
+                    .mobile-glass-tabs { display: none !important; }
                     .mobile-bottom-tabs { display: none !important; }
                 }
             `}</style>
