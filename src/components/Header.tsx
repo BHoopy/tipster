@@ -186,7 +186,18 @@ export default function Header() {
                     <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             {user ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    <span style={{
+                                        fontSize: '0.8rem',
+                                        color: 'rgba(255,255,255,0.8)',
+                                        fontWeight: 500,
+                                        maxWidth: '160px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        {user.email}
+                                    </span>
                                     {isAdmin && (
                                         <Link href="/admin" style={{
                                             padding: '0.5rem 1rem',
@@ -282,6 +293,20 @@ export default function Header() {
                     }}                    >
                         {user ? (
                             <>
+                                <div style={{
+                                    padding: '0.5rem 0.75rem',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    color: 'var(--color-text)',
+                                    background: 'rgba(0,168,107,0.06)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    border: '1px solid rgba(0,168,107,0.15)',
+                                    textAlign: 'center',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}>
+                                    {user.email}
+                                </div>
                                 {isAdmin && (
                                     <Link href="/admin" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
                                         Admin Dashboard

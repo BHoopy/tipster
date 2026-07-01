@@ -67,6 +67,10 @@ export default function RootLayout({
                                         Privacy Policy
                                     </a>
                                     <span>•</span>
+                                    <a href="/contact" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'none' }}>
+                                        Contact
+                                    </a>
+                                    <span>•</span>
                                     <span>© {new Date().getFullYear()} PLAY CHAMP TIPS TF Betting. All Rights Reserved.</span>
                                 </div>
                             </div>
