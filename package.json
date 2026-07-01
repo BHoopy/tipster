@@ -13,6 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.3.2",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/web-push": "^3.6.4",
@@ -25,6 +26,7 @@
     "genkit": "^1.0.1",
     "next": "^16.1.6",
     "next-cloudinary": "^6.17.5",
+    "nodemailer": "^9.0.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-icons": "^5.0.1",

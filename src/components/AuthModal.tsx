@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { LuX as X, LuMail as Mail, LuLock as Lock, LuLogIn as LogIn, LuUserPlus as UserPlus, LuEye as Eye, LuEyeOff as EyeOff, LuMailCheck as MailCheck, LuRefreshCw as RefreshCw, LuCheck as Check } from 'react-icons/lu';
 
@@ -19,7 +19,16 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [resent, setResent] = useState(false);
 
-  const { loginWithEmail, registerWithEmail, sendVerificationEmail, signInWithGoogle } = useAuth();
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const { loginWithEmail, registerWithEmail, sendEmailOtp, verifyEmailOtp, signInWithGoogle } = useAuth();
+
+  useEffect(() => {
+    if (signupStep === 'verify') {
+      sendEmailOtp().catch((err) => setError(err.message));
+    }
+  }, [signupStep]);
 
   if (!isOpen) return null;
 
@@ -31,6 +40,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setShowPassword(false);
     setResent(false);
     setSignupStep('form');
+    setOtp(['', '', '', '', '', '']);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,7 +58,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setSignupStep('verify');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      if (err?.code === 'auth/email-already-in-use') {
+        setMode('login');
+        setError('');
+      } else if (err?.code === 'auth/invalid-credential') {
+        setError('This email may use Google sign-in. Try the Google button above.');
+      } else {
+        setError(err.message || 'Authentication failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -66,21 +83,69 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     }
   };
 
-  const handleResend = async () => {
+  const handleResendOtp = async () => {
     try {
       setLoading(true);
-      await sendVerificationEmail();
+      setError('');
+      await sendEmailOtp();
       setResent(true);
       setTimeout(() => setResent(false), 5000);
     } catch (err: any) {
-      setError(err.message || 'Failed to resend verification email');
+      setError(err.message || 'Failed to resend code');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerified = () => {
-    onClose();
+  const handleVerifyOtp = async () => {
+    const code = otp.join('');
+    if (code.length !== 6) {
+      setError('Enter the full 6-digit code');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+      await verifyEmailOtp(code);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value && !/^\d$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!paste) return;
+
+    const newOtp = [...otp];
+    for (let i = 0; i < paste.length; i++) {
+      newOtp[i] = paste[i];
+    }
+    setOtp(newOtp);
+
+    const nextIndex = Math.min(paste.length, 5);
+    otpRefs.current[nextIndex]?.focus();
   };
 
   const switchMode = (newMode: 'login' | 'signup') => {
@@ -126,7 +191,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
               {signupStep === 'verify'
-                ? 'Almost there! Check your inbox to activate your account.'
+                ? 'Enter the 6-digit code sent to your email'
                 : mode === 'login'
                   ? 'Sign in to access premium picks'
                   : 'Create an account for expert predictions'
@@ -140,7 +205,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         <div style={{ padding: '1.5rem' }}>
           {signupStep === 'verify' ? (
-            /* Verify Email Step */
+            /* OTP Verify Step */
             <div style={{ textAlign: 'center' }}>
               <div style={{
                 width: '64px',
@@ -156,10 +221,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               </div>
 
               <p style={{ fontSize: '0.9rem', color: 'var(--color-text)', marginBottom: '0.75rem', lineHeight: 1.5 }}>
-                We sent a verification link to <strong style={{ color: 'var(--color-primary)' }}>{email}</strong>
+                We sent a code to <strong style={{ color: 'var(--color-primary)' }}>{email}</strong>
               </p>
               <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                Click the link in the email to verify your account. You may need to check your spam folder.
+                Enter the code below to activate your account.
               </p>
 
               {error && (
@@ -168,14 +233,41 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               )}
 
-              <button onClick={handleResend} className="btn btn-outline" style={{ width: '100%', height: '44px', marginBottom: '0.75rem' }} disabled={loading}>
-                <RefreshCw size={16} style={{ marginRight: '0.5rem' }} />
-                {resent ? 'Email Sent!' : 'Resend Verification Email'}
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }} onPaste={handleOtpPaste}>
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { otpRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    style={{
+                      width: '48px',
+                      height: '56px',
+                      textAlign: 'center',
+                      fontSize: '1.5rem',
+                      fontWeight: 700,
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border)',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-text)',
+                      outline: 'none',
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button onClick={handleVerifyOtp} className="btn btn-primary" style={{ width: '100%', height: '44px', marginBottom: '0.75rem' }} disabled={loading}>
+                <Check size={16} style={{ marginRight: '0.5rem' }} />
+                {loading ? 'Verifying...' : 'Verify & Continue'}
               </button>
 
-              <button onClick={handleVerified} className="btn btn-primary" style={{ width: '100%', height: '44px' }}>
-                <Check size={16} style={{ marginRight: '0.5rem' }} />
-                I&apos;ve Verified — Let Me In
+              <button onClick={handleResendOtp} className="btn btn-outline" style={{ width: '100%', height: '44px' }} disabled={loading}>
+                <RefreshCw size={16} style={{ marginRight: '0.5rem' }} />
+                {resent ? 'Code Sent!' : 'Resend Code'}
               </button>
             </div>
           ) : (

@@ -9,7 +9,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendEmailVerification
 } from 'firebase/auth';
 import { auth, googleProvider, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -20,7 +19,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   registerWithEmail: (email: string, pass: string, name: string) => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
+  sendEmailOtp: () => Promise<void>;
+  verifyEmailOtp: (otp: string) => Promise<void>;
   logout: () => Promise<void>;
   isAdmin: boolean;
   isVip: boolean;
@@ -85,17 +85,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       await updateProfile(result.user, { displayName: name });
       await syncUserDoc(result.user, name);
-      await sendEmailVerification(result.user);
     } catch (error) {
       console.error('Error registering:', error);
       throw error;
     }
   };
 
-  const sendVerificationEmail = async () => {
-    if (auth.currentUser) {
-      await sendEmailVerification(auth.currentUser);
-    }
+  const sendEmailOtp = async () => {
+    const u = auth.currentUser;
+    if (!u?.email) throw new Error('No user signed in');
+
+    const res = await fetch('/api/resend/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: u.email, uid: u.uid }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+  };
+
+  const verifyEmailOtp = async (otp: string) => {
+    const u = auth.currentUser;
+    if (!u) throw new Error('No user signed in');
+
+    const res = await fetch('/api/resend/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: u.uid, otp }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Invalid OTP');
   };
 
   const syncUserDoc = async (user: User, displayName?: string) => {
@@ -126,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       loginWithEmail,
       registerWithEmail,
-      sendVerificationEmail,
+      sendEmailOtp,
+      verifyEmailOtp,
       logout,
       isAdmin,
       isVip
