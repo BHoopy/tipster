@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '@/context/AuthContext';
+import { useHeaderTabs } from '@/context/HeaderTabsContext';
 import VipLocked from '@/components/VipLocked';
-
 import { Match, VipTicket, GroupedTips, GroupedTickets } from '@/types/game';
 import { formatDate, formatDateLabel, getDateRange } from '@/lib/utils';
 import HomeHeader from '@/components/home/HomeHeader';
@@ -19,19 +19,32 @@ function HomeContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const tabParam = searchParams.get('tab');
-    const [activeTab, setActiveTab] = useState<'free' | 'premium' | 'history'>(tabParam === 'premium' ? 'premium' : tabParam === 'history' ? 'history' : 'free');
-    const setTab = useCallback((tab: 'free' | 'premium' | 'history') => {
-        setActiveTab(tab);
+    const { activeTab, switchTab, setTabsEnabled } = useHeaderTabs();
+
+    // Sync initial tab from URL on mount
+    useEffect(() => {
+        const initTab = tabParam === 'premium' ? 'premium' : tabParam === 'history' ? 'history' : 'free';
+        switchTab(initTab);
+    }, []);
+
+    // Sync tab changes to URL
+    useEffect(() => {
         const params = new URLSearchParams(searchParams.toString());
-        if (tab === 'premium') {
+        if (activeTab === 'premium') {
             params.set('tab', 'premium');
-        } else if (tab === 'history') {
+        } else if (activeTab === 'history') {
             params.set('tab', 'history');
         } else {
             params.delete('tab');
         }
         router.replace(`?${params.toString()}`, { scroll: false });
-    }, [router, searchParams]);
+    }, [activeTab, router, searchParams]);
+
+    // Enable header tabs on mount
+    useEffect(() => {
+        setTabsEnabled(true);
+        return () => setTabsEnabled(false);
+    }, [setTabsEnabled]);
     const [historyDays, setHistoryDays] = useState(7);
     const [freeTips, setFreeTips] = useState<Match[]>([]);
     const [vipTickets, setVipTickets] = useState<VipTicket[]>([]);
@@ -40,7 +53,6 @@ function HomeContent() {
     const { isVip, isAdmin } = useAuth();
     const [showBottomTabs, setShowBottomTabs] = useState(false);
     const [publicDates, setPublicDates] = useState<Record<string, boolean>>({});
-    const tabsRef = useRef<HTMLDivElement>(null);
     const lastScrollY = useRef<number>(0);
 
     // Get today's date formatted
@@ -112,12 +124,8 @@ function HomeContent() {
 
     useEffect(() => {
         const handleScroll = () => {
-            if (!tabsRef.current) return;
-
-            const tabsRect = tabsRef.current.getBoundingClientRect();
-            const isTabsOutOfView = tabsRect.bottom < 0;
-
-            setShowBottomTabs(isTabsOutOfView);
+            // Show bottom tabs when scrolled past the header
+            setShowBottomTabs(window.scrollY > 120);
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
@@ -185,45 +193,6 @@ function HomeContent() {
     return (
         <div className="container" style={{ maxWidth: '900px', padding: '1rem' }}>
             <HomeHeader />
-
-            {/* Tabs */}
-            <div
-                ref={tabsRef}
-                style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '0.35rem',
-                    marginBottom: '1.5rem',
-                    padding: '0.3rem',
-                    background: 'var(--glass-bg)',
-                    backdropFilter: 'blur(12px)',
-                    borderRadius: 'var(--radius-md)',
-                    maxWidth: 'fit-content',
-                    margin: '0 auto 2.5rem auto',
-                    border: '1px solid var(--glass-border)'
-                }}>
-                <button
-                    onClick={() => setTab('free')}
-                    className={activeTab === 'free' ? 'btn btn-primary' : 'btn btn-outline'}
-                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'free' ? 'none' : '1px solid transparent' }}
-                >
-                    Free Tips
-                </button>
-                <button
-                    onClick={() => setTab('premium')}
-                    className={activeTab === 'premium' ? 'btn btn-primary' : 'btn btn-outline'}
-                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'premium' ? 'none' : '1px solid transparent' }}
-                >
-                    Premium Tips
-                </button>
-                <button
-                    onClick={() => setTab('history')}
-                    className={activeTab === 'history' ? 'btn btn-primary' : 'btn btn-outline'}
-                    style={{ width: '120px', fontSize: '0.8rem', height: '32px', padding: 0, border: activeTab === 'history' ? 'none' : '1px solid transparent' }}
-                >
-                    History
-                </button>
-            </div>
 
             {/* Today's Picks */}
             {activeTab !== 'history' && (
@@ -348,7 +317,7 @@ function HomeContent() {
                 }}
             >
                 <button
-                    onClick={() => { setTab('free'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { switchTab('free'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',
@@ -365,7 +334,7 @@ function HomeContent() {
                     Free Tips
                 </button>
                 <button
-                    onClick={() => { setTab('premium'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { switchTab('premium'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',
@@ -382,7 +351,7 @@ function HomeContent() {
                     Premium Tips
                 </button>
                 <button
-                    onClick={() => { setTab('history'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => { switchTab('history'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                     style={{
                         width: '120px',
                         fontSize: '0.8rem',

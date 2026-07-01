@@ -5,15 +5,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthModal } from '@/context/AuthModalContext';
+import { useHeaderTabs } from '@/context/HeaderTabsContext';
 import { LuLogOut as LogOut, LuLogIn as LogIn, LuMenu as Menu, LuX as X } from 'react-icons/lu';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();
     const { openAuthModal } = useAuthModal();
+    const { activeTab, switchTab, tabsEnabled } = useHeaderTabs();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [swipeNavOpen, setSwipeNavOpen] = useState(false);
     const [showBottomNav, setShowBottomNav] = useState(false);
-    const [activeTab, setActiveTab] = useState<'free' | 'vip'>('free');
     const touchStartX = useRef<number>(0);
     const touchCurrentX = useRef<number>(0);
     const swipeNavRef = useRef<HTMLDivElement>(null);
@@ -111,6 +112,67 @@ export default function Header() {
                         color: 'white'
                     }}>Tipster</span>
                 </Link>
+
+                {tabsEnabled && (
+                    <nav className="desktop-tabs" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        marginLeft: '1rem'
+                    }}>
+                        <button
+                            onClick={() => switchTab('free')}
+                            style={{
+                                padding: '0.3rem 0.75rem',
+                                fontSize: '0.8rem',
+                                height: '32px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: activeTab === 'free' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontWeight: activeTab === 'free' ? 700 : 500,
+                                letterSpacing: '0.02em'
+                            }}
+                        >
+                            Free Tips
+                        </button>
+                        <button
+                            onClick={() => switchTab('premium')}
+                            style={{
+                                padding: '0.3rem 0.75rem',
+                                fontSize: '0.8rem',
+                                height: '32px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: activeTab === 'premium' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontWeight: activeTab === 'premium' ? 700 : 500,
+                                letterSpacing: '0.02em'
+                            }}
+                        >
+                            Premium Tips
+                        </button>
+                        <button
+                            onClick={() => switchTab('history')}
+                            style={{
+                                padding: '0.3rem 0.75rem',
+                                fontSize: '0.8rem',
+                                height: '32px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: activeTab === 'history' ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                color: 'white',
+                                cursor: 'pointer',
+                                fontWeight: activeTab === 'history' ? 700 : 500,
+                                letterSpacing: '0.02em'
+                            }}
+                        >
+                            History
+                        </button>
+                    </nav>
+                )}
 
                 {/* Desktop Navigation */}
                 <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="desktop-nav">
@@ -221,13 +283,14 @@ export default function Header() {
                             </button>
                         )}
                     </div>
-                )}
+                    )}
             </div>
 
             <style jsx>{`
                 @media (max-width: 768px) {
                     .desktop-nav { display: none !important; }
                     .mobile-menu-btn { display: flex !important; }
+                    .desktop-tabs { display: none !important; }
                 }
                 @media (min-width: 769px) {
                     .mobile-menu { display: none !important; }
