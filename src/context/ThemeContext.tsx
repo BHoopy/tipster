@@ -26,7 +26,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const saved = localStorage.getItem('theme') as Theme | null;
-        const initial = saved || 'auto';
+        const initial = saved || 'light';
         setThemeState(initial);
         applyTheme(initial);
     }, []);
