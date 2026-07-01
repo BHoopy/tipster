@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthModal } from '@/context/AuthModalContext';
 import { useHeaderTabs } from '@/context/HeaderTabsContext';
-import { LuLogOut as LogOut, LuLogIn as LogIn, LuMenu as Menu, LuX as X } from 'react-icons/lu';
+import { LuLogOut as LogOut, LuLogIn as LogIn, LuUserPlus as UserPlus, LuMenu as Menu, LuX as X } from 'react-icons/lu';
 
 export default function Header() {
     const { user, logout, isAdmin } = useAuth();
@@ -212,19 +212,35 @@ export default function Header() {
                                     </button>
                                 </div>
                             ) : (
-                                <button onClick={openAuthModal} style={{
-                                    padding: '0.5rem 1.25rem',
-                                    fontWeight: 600,
-                                    fontSize: '0.875rem',
-                                    borderRadius: 'var(--radius-sm)',
-                                    background: 'white',
-                                    color: '#075E54',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <LogIn size={18} /> Sign In
-                                </button>
+                                <>
+                                    <button onClick={() => openAuthModal('signup')} style={{
+                                        padding: '0.5rem 1.25rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.875rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        background: 'transparent',
+                                        border: '1px solid rgba(255,255,255,0.4)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}>
+                                        <UserPlus size={18} /> Sign Up
+                                    </button>
+                                    <button onClick={() => openAuthModal()} style={{
+                                        padding: '0.5rem 1.25rem',
+                                        fontWeight: 600,
+                                        fontSize: '0.875rem',
+                                        borderRadius: 'var(--radius-sm)',
+                                        background: 'white',
+                                        color: '#075E54',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}>
+                                        <LogIn size={18} /> Sign In
+                                    </button>
+                                </>
                             )}
                         </nav>
 
@@ -276,21 +292,39 @@ export default function Header() {
                                 </button>
                             </>
                         ) : (
-                            <button style={{
-                                width: '100%',
-                                justifyContent: 'center',
-                                padding: '0.625rem 1.25rem',
-                                fontWeight: 600,
-                                fontSize: '0.875rem',
-                                borderRadius: 'var(--radius-sm)',
-                                background: '#075E54',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }} onClick={openAuthModal}>
-                                <LogIn size={18} /> Sign In
-                            </button>
+                            <>
+                                <button style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    padding: '0.625rem 1.25rem',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: 'transparent',
+                                    border: '1px solid var(--color-border)',
+                                    color: 'var(--color-text)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }} onClick={() => openAuthModal('signup')}>
+                                    <UserPlus size={18} /> Sign Up
+                                </button>
+                                <button style={{
+                                    width: '100%',
+                                    justifyContent: 'center',
+                                    padding: '0.625rem 1.25rem',
+                                    fontWeight: 600,
+                                    fontSize: '0.875rem',
+                                    borderRadius: 'var(--radius-sm)',
+                                    background: '#075E54',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem'
+                                }} onClick={() => openAuthModal()}>
+                                    <LogIn size={18} /> Sign In
+                                </button>
+                            </>
                         )}
                     </div>
                     )}

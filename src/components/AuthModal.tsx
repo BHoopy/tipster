@@ -7,10 +7,11 @@ import { LuX as X, LuMail as Mail, LuLock as Lock, LuLogIn as LogIn, LuUserPlus 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'login' | 'signup';
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalProps) {
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode || 'login');
   const [signupStep, setSignupStep] = useState<'form' | 'verify'>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +24,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const { loginWithEmail, registerWithEmail, sendEmailOtp, verifyEmailOtp, signInWithGoogle } = useAuth();
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode || 'login');
+      setSignupStep('form');
+      setOtp(['', '', '', '', '', '']);
+    }
+  }, [isOpen, initialMode]);
 
   useEffect(() => {
     if (signupStep === 'verify') {
